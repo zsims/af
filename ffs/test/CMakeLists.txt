@@ -1,4 +1,9 @@
-add_executable(ffs_test src/ffs_test_main.cpp)
+source_group("src" REGULAR_EXPRESSION "src/.*")
+
+add_executable(
+    ffs_test
+    src/ffs_test_main.cpp
+)
 
 set_property(TARGET ffs_test PROPERTY FOLDER "ffs")
 

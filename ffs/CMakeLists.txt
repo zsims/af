@@ -1,12 +1,12 @@
-source_group(src REGULAR_EXPRESSION "src/.*")
-source_group(include REGULAR_EXPRESSION "include/.*")
+source_group("src\\ffs" REGULAR_EXPRESSION "src/ffs/.*")
+source_group("include" REGULAR_EXPRESSION "include/.*")
 
 set(PUBLIC_INCLUDES
     include/ffs/FileSystem.hpp
 )
 
 set(SOURCES
-    src/FileSystem.cpp
+    src/ffs/FileSystem.cpp
 )
 
 add_library(ffs ${SOURCES} ${PUBLIC_INCLUDES})
