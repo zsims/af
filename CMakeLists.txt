@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(af)
+project(af CXX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
