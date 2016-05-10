@@ -34,6 +34,8 @@ private:
 	std::map<BlobAddress, BlobInfoModelPtr> _things;
 };
 
+typedef std::shared_ptr<BlobInfoRepository> BlobInfoRepositoryPtr;
+
 }
 }
 }

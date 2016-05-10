@@ -1,9 +1,10 @@
 source_group("src" REGULAR_EXPRESSION "src/.*")
-source_group("src\\repo" REGULAR_EXPRESSION "src/repo/.*")
+source_group("src\\blob" REGULAR_EXPRESSION "src/blob/.*")
 
 add_executable(
     ffs_test
     src/ffs_test_main.cpp
+    src/ForestIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
 )
 
