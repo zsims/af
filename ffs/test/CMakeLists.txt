@@ -1,11 +1,13 @@
 source_group("src" REGULAR_EXPRESSION "src/.*")
 source_group("src\\blob" REGULAR_EXPRESSION "src/blob/.*")
+source_group("src\\object" REGULAR_EXPRESSION "src/object/.*")
 
 add_executable(
     ffs_test
     src/ffs_test_main.cpp
     src/ForestIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
+    src/object/ObjectInfoRepositoryIntegrationTest.cpp
 )
 
 set_property(TARGET ffs_test PROPERTY FOLDER "ffs")

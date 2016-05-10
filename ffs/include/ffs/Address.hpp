@@ -10,6 +10,7 @@ namespace ffs {
 typedef std::array<uint32_t, 5> Address;
 
 typedef Address BlobAddress;
+typedef Address ObjectAddress;
 
 }
 }

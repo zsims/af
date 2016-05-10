@@ -17,8 +17,12 @@ TEST(ForestIntegrationTest, Opens)
 	const std::vector<uint8_t> content = {1, 2, 3, 4};
 	const auto blobAddress = directoryStore.CreateBlob(content);
 
-	// forest.CreateObject(address);
+	const object::ObjectBlobList objectBlobs = {
+		{"content", blobAddress}
+	};
+	const auto objectAddress = forest.CreateObject("file", objectBlobs);
 
+	// WOW!
 }
 
 }
