@@ -14,9 +14,9 @@ TEST(BlobInfoRepositoryIntegrationTest, GetAllBlobs)
 	// Arrange
 	BlobInfoRepository repo;
 
-	const BlobInfo blobInfo1({ 756, 22, 44, 5, 253 }, 3573975UL);
-	const BlobInfo blobInfo2({ 53, 2234, 444, 55, 32353 }, 75UL);
-	const BlobInfo blobInfo3({ 7756, 522, 244, 55, 3253 }, 444UL);
+	const BlobInfo blobInfo1(BlobAddress("cf23df2207d99a74fbe169e3eba035e633b65d94"), 3573975UL);
+	const BlobInfo blobInfo2(BlobAddress("5323df2207d99a74fbe169e3eba035e635779792"), 75UL);
+	const BlobInfo blobInfo3(BlobAddress("f259225215937593795395739753973973593571"), 444UL);
 
 	repo.AddBlob(blobInfo1);
 	repo.AddBlob(blobInfo2);
@@ -36,7 +36,7 @@ TEST(BlobInfoRepositoryIntegrationTest, AddBlobThrowsOnDuplicate)
 	// Arrange
 	BlobInfoRepository repo;
 
-	const BlobAddress key = {1, 2, 3, 4, 5};
+	const BlobAddress key("cf23df2207d99a74fbe169e3eba035e633b65d94");
 	const BlobInfo blobInfo1(key, 3573975UL);
 	const BlobInfo blobInfo2(key, 7UL);
 	repo.AddBlob(blobInfo1);

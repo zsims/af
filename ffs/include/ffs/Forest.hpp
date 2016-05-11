@@ -21,7 +21,7 @@ class ObjectInfoRepository;
 class Forest
 {
 public:
-	explicit Forest(const std::string& forestFile);
+	Forest();
 
 	/**
 	 * Creates a new object.
@@ -30,7 +30,6 @@ public:
 
 	std::shared_ptr<blob::BlobInfoRepository> GetBlobInfoRepository() const { return _blobInfoRepository; }
 private:
-	const std::string _forestFile;
 	std::shared_ptr<blob::BlobInfoRepository> _blobInfoRepository;
 	std::shared_ptr<object::ObjectInfoRepository> _objectInfoRepository;
 	std::mt19937 _random;

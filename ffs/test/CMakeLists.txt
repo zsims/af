@@ -5,6 +5,7 @@ source_group("src\\object" REGULAR_EXPRESSION "src/object/.*")
 add_executable(
     ffs_test
     src/ffs_test_main.cpp
+    src/AddressTest.cpp
     src/ForestIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/object/ObjectInfoRepositoryIntegrationTest.cpp

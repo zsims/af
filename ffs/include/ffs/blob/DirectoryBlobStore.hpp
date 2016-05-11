@@ -2,6 +2,8 @@
 
 #include "ffs/blob/BlobStore.hpp"
 
+#include <boost/filesystem/path.hpp>
+
 #include <string>
 
 namespace af {
@@ -14,12 +16,11 @@ namespace blob {
 class DirectoryBlobStore : public BlobStore
 {
 public:
-	DirectoryBlobStore(std::shared_ptr<BlobInfoRepository> repository, const std::string& rootPath);
+	DirectoryBlobStore(std::shared_ptr<BlobInfoRepository> repository, const boost::filesystem::path& rootPath);
 
 	BlobAddress CreateBlob(const std::vector<uint8_t>& content) override;
-
 private:
-	const std::string _rootPath;
+	const boost::filesystem::path _rootPath;
 };
 
 }

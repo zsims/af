@@ -11,7 +11,7 @@ namespace test {
 
 TEST(ForestIntegrationTest, Opens)
 {
-	Forest forest("test.db");
+	Forest forest;
 	blob::DirectoryBlobStore directoryStore(forest.GetBlobInfoRepository(), "C:\\here");
 
 	const std::vector<uint8_t> content = {1, 2, 3, 4};

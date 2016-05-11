@@ -15,6 +15,7 @@ set(PUBLIC_INCLUDES
 )
 
 set(SOURCES
+    src/ffs/Address.cpp
     src/ffs/Forest.cpp
     src/ffs/blob/BlobInfoRepository.cpp
     src/ffs/blob/BlobInfoRepository.hpp
@@ -33,7 +34,7 @@ target_include_directories(
     ffs
     PUBLIC include
     PRIVATE src
-    PRIVATE $<TARGET_PROPERTY:boost_filesystem,INTERFACE_INCLUDE_DIRECTORIES>
+    PUBLIC $<TARGET_PROPERTY:boost_filesystem,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(

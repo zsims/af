@@ -8,9 +8,8 @@
 namespace af {
 namespace ffs {
 
-Forest::Forest(const std::string& forestFile)
-	: _forestFile(forestFile)
-	, _blobInfoRepository(new blob::BlobInfoRepository())
+Forest::Forest()
+	: _blobInfoRepository(new blob::BlobInfoRepository())
 	, _objectInfoRepository(new object::ObjectInfoRepository())
 	, _random(static_cast<unsigned>(time(0)))
 {
@@ -18,8 +17,16 @@ Forest::Forest(const std::string& forestFile)
 
 ObjectAddress Forest::CreateObject(const std::string& type, const object::ObjectBlobList& objectBlobs)
 {
+	auto r = [this]() {
+		return static_cast<uint8_t>(_random());
+	};
 	// generate a new random address
-	ObjectAddress address = { _random(), _random(), _random(), _random(), _random() };
+	ObjectAddress address(binary_address{
+		r(), r(), r(), r(), r(),
+		r(), r(), r(), r(), r(),
+		r(), r(), r(), r(), r(),
+		r(), r(), r(), r(), r()
+	});
 	object::ObjectInfo info(address, type, objectBlobs);
 	_objectInfoRepository->AddObject(info);
 	return address;
