@@ -33,6 +33,12 @@ target_include_directories(
     ffs
     PUBLIC include
     PRIVATE src
+    PRIVATE $<TARGET_PROPERTY:boost_filesystem,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
+target_link_libraries(
+    ffs
+    PRIVATE boost_filesystem
 )
 
 add_subdirectory(test)
