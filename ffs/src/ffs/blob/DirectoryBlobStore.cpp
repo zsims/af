@@ -24,7 +24,7 @@ DirectoryBlobStore::DirectoryBlobStore(std::shared_ptr<BlobInfoRepository> repos
 
 BlobAddress DirectoryBlobStore::CreateBlob(const std::vector<uint8_t>& content)
 {
-	const auto address = CalculateAddress(content);
+	const auto address = BlobAddress::CalculateFromContent(content);
 	const auto stringAddress = address.ToString();
 
 	// Save the blob

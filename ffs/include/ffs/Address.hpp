@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <vector>
 
 namespace af {
 namespace ffs {
@@ -27,6 +28,11 @@ public:
 	binary_address ToBinary() const;
 	bool operator<(const Address& rhs) const;
 	bool operator==(const Address& rhs) const;
+
+	/**
+	 * Calculates a new address based on the given binary content.
+	 */
+	static Address CalculateFromContent(const std::vector<uint8_t>& content);
 private:
 	binary_address _address;
 };

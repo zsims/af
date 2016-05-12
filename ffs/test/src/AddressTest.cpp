@@ -63,6 +63,20 @@ TEST(AddressTest, ConstructFromBinary)
 	EXPECT_EQ("1234a123451234b123451234a123451234b12345", result.ToString());
 }
 
+TEST(AddressTest, CalculateFromContent)
+{
+	// Arrange
+	const std::vector<uint8_t> content = {
+		'h', 'e', 'l', 'l', 'o'
+	};
+
+	// Act
+	const auto result = Address::CalculateFromContent(content);
+
+	// Assert
+	EXPECT_EQ("aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d", result.ToString());
+}
+
 }
 }
 }

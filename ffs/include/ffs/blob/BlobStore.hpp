@@ -28,8 +28,6 @@ public:
 	virtual std::vector<uint8_t> GetBlob(const BlobAddress& address) = 0;
 
 protected:
-	BlobAddress CalculateAddress(const std::vector<uint8_t>& content);
-
 	std::shared_ptr<BlobInfoRepository> _repository;
 };
 

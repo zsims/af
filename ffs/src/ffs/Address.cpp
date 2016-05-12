@@ -1,7 +1,8 @@
 #include "ffs/Address.hpp"
 
+#include <boost/uuid/sha1.hpp>
+
 #include <sstream>
-#include <stdexcept>
 #include <iomanip>
 
 namespace af {
@@ -51,9 +52,27 @@ std::string Address::ToString() const
 	std::ostringstream result;
 	for (auto c: _address)
 	{
-		result << std::hex << static_cast<uint16_t>(c);
+		result << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(c);
 	}
 	return result.str();
+}
+
+Address Address::CalculateFromContent(const std::vector<uint8_t>& content)
+{
+	boost::uuids::detail::sha1 sha;
+	sha.process_bytes(&content[0], content.size());
+	unsigned int digest[5];
+	sha.get_digest(digest);
+	auto i = 0;
+	binary_address hash;
+	for (auto d : digest)
+	{
+		hash[i++] = (d >> 24) & 0xFF;
+		hash[i++] = (d >> 16) & 0xFF;
+		hash[i++] = (d >> 8) & 0xFF;
+		hash[i++] = d & 0xFF;
+	}
+	return Address(hash);
 }
 
 }
