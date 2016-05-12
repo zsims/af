@@ -32,6 +32,11 @@ ObjectAddress Forest::CreateObject(const std::string& type, const object::Object
 	return address;
 }
 
+object::ObjectInfo Forest::GetObject(const ObjectAddress& address) const
+{
+	return _objectInfoRepository->GetObject(address);
+}
+
 }
 }
 

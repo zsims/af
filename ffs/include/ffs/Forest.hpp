@@ -28,6 +28,12 @@ public:
 	 */
 	ObjectAddress CreateObject(const std::string& type, const object::ObjectBlobList& objectBlobs);
 
+	/**
+	 * Gets an object by address.
+	 * \throws ObjectNotFoundException No object with the given address could be found.
+	 */
+	object::ObjectInfo GetObject(const ObjectAddress& address) const;
+
 	std::shared_ptr<blob::BlobInfoRepository> GetBlobInfoRepository() const { return _blobInfoRepository; }
 private:
 	std::shared_ptr<blob::BlobInfoRepository> _blobInfoRepository;

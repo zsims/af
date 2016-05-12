@@ -31,6 +31,17 @@ TEST(ObjectInfoRepositoryIntegrationTest, GetAllObjects)
 	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo3)));
 }
 
+TEST(ObjectInfoRepositoryIntegrationTest, GetObject)
+{
+	// Arrange
+	ObjectInfoRepository repo;
+	const ObjectInfo objectInfo(ObjectAddress("5793273948759387987921653297557398753498"), "file", {});
+	repo.AddObject(objectInfo);
+	// Act
+	// Assert
+	EXPECT_EQ(repo.GetObject(objectInfo.GetAddress()), objectInfo);
+}
+
 TEST(ObjectInfoRepositoryIntegrationTest, AddObjectThrowsOnDuplicate)
 {
 	// Arrange
@@ -44,6 +55,18 @@ TEST(ObjectInfoRepositoryIntegrationTest, AddObjectThrowsOnDuplicate)
 	// Act
 	// Assert
 	ASSERT_THROW(repo.AddObject(objectInfo2), DuplicateObjectException);
+}
+
+TEST(ObjectInfoRepositoryIntegrationTest, GetObjectThrowsOnNotFound)
+{
+	// Arrange
+	ObjectInfoRepository repo;
+
+	const ObjectAddress key("7323df2207d99a74fbe169e3eba035e635779721");
+
+	// Act
+	// Assert
+	ASSERT_THROW(repo.GetObject(key), ObjectNotFoundException);
 }
 
 }

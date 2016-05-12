@@ -21,6 +21,7 @@ public:
 	std::vector<ObjectInfoPtr> GetAllObjects() const;
 
 	void AddObject(const ObjectInfo& info);
+	ObjectInfo GetObject(const ObjectAddress& address) const;
 private:
 	std::map<ObjectAddress, ObjectInfoPtr> _objects;
 };
