@@ -8,6 +8,7 @@ add_executable(
     src/AddressTest.cpp
     src/ForestIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
+    src/blob/DirectoryBlobStoreIntegrationTest.cpp
     src/object/ObjectInfoRepositoryIntegrationTest.cpp
 )
 
