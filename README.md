@@ -15,7 +15,7 @@ You'll need:
 
 
 ## Configure
- * Windows: `configure-vs2015-x64.bat`
+ * Windows: `configure-vs2015-win64.bat` or `configure-vs2015-win32.bat`
 
 ## Verify
 A verify will compile everything and run all tests. Test results can be found in the build directory
