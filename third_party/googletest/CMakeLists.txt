@@ -17,6 +17,7 @@ add_custom_target(
         --config $<CONFIG>
     WORKING_DIRECTORY "${BUILD_DIR}"
 )
+set_property(TARGET build_googletest PROPERTY FOLDER "third_party")
 
 set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX}")
 add_library(googletest STATIC IMPORTED GLOBAL)

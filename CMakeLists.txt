@@ -24,5 +24,12 @@ if(MSVC)
     add_definitions("-DBOOST_ALL_NO_LIB")
 endif()
 
+# Setup a verify target + place for tests
+set(TEST_RESULTS_DIR "${CMAKE_BINARY_DIR}/test_results")
+file(MAKE_DIRECTORY "${TEST_RESULTS_DIR}")
+add_custom_target(ALL_VERIFY)
+# make sure everything builds when we run ALL_VERIFY
+add_dependencies(ALL_VERIFY ALL_BUILD)
+
 add_subdirectory(third_party)
 add_subdirectory(ffs)

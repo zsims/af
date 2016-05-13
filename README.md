@@ -6,6 +6,23 @@ Simple content based backup system with the following goals:
  2. Allow backups to be monitored, to give confidence that data is still being backed up
  3. Allow backups to be stored where you want them to be
 
+# Building
+
+You'll need:
+ * CMake 3.5+
+ * Windows:
+  * Visual Studio 2015
+
+
+## Configure
+ * Windows: `configure-vs2015-x64.bat`
+
+## Verify
+A verify will compile everything and run all tests. Test results can be found in the build directory
+under `test_results`, e.g. `build64/test_results`.
+
+To verify run: `cmake --build build64 --config Release --target ALL_VERIFY`
+
 # Similar Projects
 This idea is not unique, there's several other projects that overlap with the above goals:
 

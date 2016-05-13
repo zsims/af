@@ -25,3 +25,10 @@ target_link_libraries(
     PRIVATE ffs
     PRIVATE googletest
 )
+
+add_custom_target(
+    ffs_test_verify
+    COMMAND "$<TARGET_FILE:ffs_test>" "--gtest_output=xml:${TEST_RESULTS_DIR}/ffs_test.xml"
+)
+set_property(TARGET ffs_test_verify PROPERTY FOLDER "ffs")
+add_dependencies(ALL_VERIFY ffs_test_verify)
