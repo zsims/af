@@ -2,15 +2,18 @@
 # This module provides a way to build external projects without including the cruft and complexity
 
 # ExternalBuild_Add
-#   TARGET          - Name of the target to create
-#   SOURCE_DIR      - Absolute location of the source
-#   BUILD_DIR_VAR   - Default working directory
+#   TARGET            - Name of the target to create
+#   SOURCE_DIR        - Absolute location of the source
+#   BUILD_DIR_VAR     - Default working directory
+#   CUSTOM_STAMP_FILE - Path to a file to use for determining if the target needs building.
+#                       If provided, callers should create this file to mark the build as "done."
 function(ExternalBuild_Add TARGET)
-    set(ONE_VALUE_ARGS SOURCE_DIR BUILD_DIR_VAR)
+    set(ONE_VALUE_ARGS SOURCE_DIR BUILD_DIR_VAR CUSTOM_STAMP_FILE)
     cmake_parse_arguments(ARGS "" "${ONE_VALUE_ARGS}" "" ${ARGN})
 
     set(EB_DIR "${CMAKE_CURRENT_BINARY_DIR}/eb" CACHE INTERNAL "" FORCE)
     set(EB_CURRENT_TARGET "${TARGET}" CACHE INTERNAL "" FORCE)
+    set(EB_CURRENT_CUSTOM_STAMP "${ARGS_CUSTOM_STAMP_FILE}" CACHE INTERNAL "" FORCE)
 
     set(BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/build_eb")
     set(${ARGS_BUILD_DIR_VAR} "${BUILD_DIR}" PARENT_SCOPE)
@@ -45,6 +48,11 @@ function(ExternalBuild_Add_Step)
     endif()
 
     set(STEP_STAMP "${EB_DIR}/${ARGS_NAME}-$<CONFIG>.success")
+    if(EB_CURRENT_CUSTOM_STAMP)
+        set(CHECK_STAMP "${EB_CURRENT_CUSTOM_STAMP}")
+    else()
+        set(CHECK_STAMP "${STEP_STAMP}")
+    endif()
     set(STEP_SCRIPT "${EB_DIR}/${ARGS_NAME}-$<CONFIG>.cmake")
     set(STEP_SCRIPT_LOG "${STEP_SCRIPT}.log")
     set(STEP_SCRIPT_ERROR_LOG "${STEP_SCRIPT}.error.log")
@@ -55,34 +63,31 @@ function(ExternalBuild_Add_Step)
     file(GENERATE
         OUTPUT "${STEP_SCRIPT}"
         CONTENT
-"if(NOT EXISTS \"${STEP_STAMP}\")
-    message(STATUS \"Running ${ARGS_NAME} of external build ${EB_CURRENT_TARGET}\")
-    set(LIST_ARGS \"${ESCAPED_ARGS}\")
-    execute_process(
-        COMMAND \${LIST_ARGS}
-        WORKING_DIRECTORY \"${ARGS_WORKING_DIRECTORY}\"
-        OUTPUT_FILE \"${STEP_SCRIPT_LOG}\"
-        ERROR_FILE \"${STEP_SCRIPT_ERROR_LOG}\"
-        RESULT_VARIABLE ERROR_CODE
-    )
-
-    if(ERROR_CODE)
-        message(FATAL_ERROR \"Failed with \${ERROR_CODE}, see ${STEP_SCRIPT_LOG} and ${STEP_SCRIPT_ERROR_LOG}\")
-    endif()
-
-    file(WRITE \"${STEP_STAMP}\" \":)\")
+"if(EXISTS \"${CHECK_STAMP}\")
+    message(STATUS \"Skipping ${ARGS_NAME} of external build ${EB_CURRENT_TARGET} as stamp exists: ${CHECK_STAMP}\")
+    return()
 endif()
+
+message(STATUS \"Running ${ARGS_NAME} of external build ${EB_CURRENT_TARGET}\")
+set(LIST_ARGS \"${ESCAPED_ARGS}\")
+execute_process(
+    COMMAND \${LIST_ARGS}
+    WORKING_DIRECTORY \"${ARGS_WORKING_DIRECTORY}\"
+    OUTPUT_FILE \"${STEP_SCRIPT_LOG}\"
+    ERROR_FILE \"${STEP_SCRIPT_ERROR_LOG}\"
+    RESULT_VARIABLE ERROR_CODE
+)
+
+if(ERROR_CODE)
+    message(FATAL_ERROR \"Failed with \${ERROR_CODE}, see ${STEP_SCRIPT_LOG} and ${STEP_SCRIPT_ERROR_LOG}\")
+endif()
+
+file(WRITE \"${STEP_STAMP}\" \":)\")
 "
     )
 
-    # Collect step stamp outputs so the IDE cleans them if it sees them
-    set(STAMP_OUTPUTS)
-    foreach(CONFIG IN LISTS CMAKE_CONFIGURATION_TYPES)
-        list(APPEND STAMP_OUTPUTS "${EB_DIR}/${ARGS_NAME}-${CONFIG}.success")
-    endforeach()
-
     add_custom_command(
-        OUTPUT "eb-phony" ${STAMP_OUTPUTS}
+        OUTPUT "eb-phony"
         COMMAND ${CMAKE_COMMAND} -P "${STEP_SCRIPT}"
         APPEND
     )
