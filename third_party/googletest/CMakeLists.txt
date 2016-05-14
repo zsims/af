@@ -1,21 +1,26 @@
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
-set(BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/b")
 
-file(MAKE_DIRECTORY "${BUILD_DIR}")
-
-add_custom_target(
+ExternalBuild_Add(
     build_googletest
-    COMMAND
-        ${CMAKE_COMMAND}
+    SOURCE_DIR "${SOURCE_DIR}"
+    BUILD_DIR_VAR BUILD_DIR
+)
+set_property(TARGET build_googletest PROPERTY FOLDER "third_party")
+
+ExternalBuild_Add_Step(
+    NAME "Configure"
+    COMMAND ${CMAKE_COMMAND}
         "${SOURCE_DIR}"
         -G "${CMAKE_GENERATOR}"
         -DCMAKE_BUILD_TYPE=$<CONFIG>
         -Dgtest_force_shared_crt=ON
-    COMMAND
-        ${CMAKE_COMMAND}
+)
+
+ExternalBuild_Add_Step(
+    NAME "Build"
+    COMMAND ${CMAKE_COMMAND}
         --build .
         --config $<CONFIG>
-    WORKING_DIRECTORY "${BUILD_DIR}"
 )
 
 set(LIBRARY_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX}")
