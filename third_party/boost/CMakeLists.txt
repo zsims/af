@@ -7,7 +7,7 @@ BuildCache_Get(
 )
 
 # Run build off this stamp (the cache)
-set(CUSTOM_STAMP_FILE "${CACHE_DIR}/eb.success")
+set(CUSTOM_STAMP_FILE "${CACHE_DIR}/$<CONFIG>.success")
 
 ExternalBuild_Add(
     build_boost
