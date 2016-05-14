@@ -21,7 +21,23 @@ class ObjectInfoRepository;
 class Forest
 {
 public:
-	Forest();
+	/**
+	 * Initializes forest with the given path for opening or creating.
+	 */
+	explicit Forest(const std::string& utf8DbPath);
+
+	/**
+	 * Opens an existing forest
+	 * \throws DatabaseNotFoundException The forest database couldn't be found
+	 */
+	void Open();
+
+	/**
+	 * Creates a new forest database and opens it.
+	 * \throws DatabaseAlreadyExistsException A database (or path) already exists at the given path
+	 * \throws CreateDatabaseFailedException Couldn't create the database at the given path
+	 */
+	void Create();
 
 	/**
 	 * Creates a new object.
@@ -36,6 +52,7 @@ public:
 
 	std::shared_ptr<blob::BlobInfoRepository> GetBlobInfoRepository() const { return _blobInfoRepository; }
 private:
+	const std::string _utf8DbPath;
 	std::shared_ptr<blob::BlobInfoRepository> _blobInfoRepository;
 	std::shared_ptr<object::ObjectInfoRepository> _objectInfoRepository;
 	std::mt19937 _random;

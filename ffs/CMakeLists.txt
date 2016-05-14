@@ -1,6 +1,7 @@
 source_group("src\\ffs" REGULAR_EXPRESSION "src/ffs/.*")
 source_group("src\\ffs\\blob" REGULAR_EXPRESSION "src/ffs/blob/.*")
 source_group("src\\ffs\\object" REGULAR_EXPRESSION "src/ffs/object/.*")
+source_group("src\\ffs\\sqlite" REGULAR_EXPRESSION "src/ffs/sqlite/.*")
 source_group("include\\ffs" REGULAR_EXPRESSION "include/ffs/.*")
 source_group("include\\blob\\ffs" REGULAR_EXPRESSION "include/ffs/blob/.*")
 source_group("include\\object\\ffs" REGULAR_EXPRESSION "include/ffs/object/.*")
@@ -16,6 +17,7 @@ set(PUBLIC_INCLUDES
 
 set(SOURCES
     src/ffs/Address.cpp
+    src/ffs/exceptions.hpp
     src/ffs/Forest.cpp
     src/ffs/blob/BlobInfoRepository.cpp
     src/ffs/blob/BlobInfoRepository.hpp
@@ -35,11 +37,13 @@ target_include_directories(
     PUBLIC include
     PRIVATE src
     PUBLIC $<TARGET_PROPERTY:boost_filesystem,INTERFACE_INCLUDE_DIRECTORIES>
+    PRIVATE $<TARGET_PROPERTY:sqlite,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(
     ffs
     PRIVATE boost_filesystem
+    PRIVATE sqlite
 )
 
 add_subdirectory(test)
