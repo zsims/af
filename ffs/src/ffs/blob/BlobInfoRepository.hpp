@@ -5,9 +5,11 @@
 
 #include <cstdint>
 #include <exception>
-#include <map>
 #include <memory>
+#include <string>
 #include <vector>
+
+struct sqlite3;
 
 namespace af {
 namespace ffs {
@@ -20,6 +22,12 @@ class BlobInfoRepository
 {
 public:
 	/**
+	 * Creates a new blob info repository given an existing database path.
+	 */
+	explicit BlobInfoRepository(const std::string& utf8DbPath);
+	~BlobInfoRepository();
+
+	/**
 	 * Returns all of the blobs known.
 	 */
 	std::vector<BlobInfoModelPtr> GetAllBlobs() const;
@@ -29,9 +37,8 @@ public:
 	 * \throws DuplicateBlobException if the address has already been stored
 	 */
 	void AddBlob(const BlobInfo& info);
-
 private:
-	std::map<BlobAddress, BlobInfoModelPtr> _things;
+	sqlite3* _db;
 };
 
 typedef std::shared_ptr<BlobInfoRepository> BlobInfoRepositoryPtr;
