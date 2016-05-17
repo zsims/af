@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ffs/Address.hpp"
-
 #include <stdexcept>
 
 namespace af {
@@ -20,8 +18,35 @@ public:
 class ObjectNotFoundException : public std::runtime_error
 {
 public:
-	explicit ObjectNotFoundException(const ObjectAddress& address)
-		: std::runtime_error(address.ToString())
+	explicit ObjectNotFoundException(const std::string& message)
+		: std::runtime_error(message)
+	{
+	}
+};
+
+class PrepareRepositoryFailedException : public std::runtime_error
+{
+public:
+	explicit PrepareRepositoryFailedException(const std::string& message)
+		: std::runtime_error(message)
+	{
+	}
+};
+
+class AddObjectFailedException : public std::runtime_error
+{
+public:
+	explicit AddObjectFailedException(const std::string& message)
+		: std::runtime_error(message)
+	{
+	}
+};
+
+class GetObjectsFailedException : public std::runtime_error
+{
+public:
+	explicit GetObjectsFailedException(const std::string& message)
+		: std::runtime_error(message)
 	{
 	}
 };

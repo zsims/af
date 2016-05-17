@@ -28,7 +28,7 @@ void Forest::Open()
 	}
 
 	_blobInfoRepository.reset(new blob::BlobInfoRepository(_utf8DbPath));
-	_objectInfoRepository.reset(new object::ObjectInfoRepository());
+	_objectInfoRepository.reset(new object::ObjectInfoRepository(_utf8DbPath));
 }
 
 void Forest::Create()

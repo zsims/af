@@ -31,6 +31,7 @@ set(SOURCES
     src/ffs/sqlite/handles.hpp
     src/ffs/sqlite/ScopedTransaction.hpp
     src/ffs/sqlite/ScopedTransaction.cpp
+    src/ffs/sqlite/ScopedStatementReset.hpp
 )
 
 add_library(ffs ${SOURCES} ${PUBLIC_INCLUDES})
@@ -47,7 +48,7 @@ target_include_directories(
 target_link_libraries(
     ffs
     PRIVATE boost_filesystem
-    PRIVATE sqlite
+    PUBLIC sqlite
 )
 
 add_subdirectory(test)
