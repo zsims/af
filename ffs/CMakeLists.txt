@@ -27,6 +27,7 @@ set(SOURCES
     src/ffs/object/ObjectInfoRepository.cpp
     src/ffs/object/ObjectInfoRepository.hpp
     src/ffs/object/exceptions.hpp
+    src/ffs/sqlite/handles.hpp
 )
 
 add_library(ffs ${SOURCES} ${PUBLIC_INCLUDES})

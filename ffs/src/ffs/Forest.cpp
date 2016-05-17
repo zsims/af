@@ -3,6 +3,7 @@
 #include "ffs/exceptions.hpp"
 #include "ffs/blob/BlobInfoRepository.hpp"
 #include "ffs/object/ObjectInfoRepository.hpp"
+#include "ffs/sqlite/handles.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -38,9 +39,8 @@ void Forest::Create()
 			throw DatabaseAlreadyExistsException((boost::format("Cannot create database, a file already exists at %1%") % _utf8DbPath).str());
 		}
 
-		sqlite3* handle;
-		const auto result = sqlite3_open_v2(_utf8DbPath.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
-		std::unique_ptr<sqlite3, decltype(&sqlite3_close_v2)> db(handle, sqlite3_close_v2);
+		sqlite::ScopedSqlite3Object db;
+		const auto result = sqlite3_open_v2(_utf8DbPath.c_str(), db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
 		if (result != SQLITE_OK)
 		{
 			throw CreateDatabaseFailedException((boost::format("Cannot create database at %1%. SQLite returned %2%") % _utf8DbPath % result).str());
@@ -60,12 +60,11 @@ void Forest::Create()
 			);
 		)";
 
-		char* errorMessage = 0;
-		const auto execResult = sqlite3_exec(db.get(), sql, 0, 0, &errorMessage);
+		sqlite::ScopedErrorMessage errorMessage;
+		const auto execResult = sqlite3_exec(db, sql, 0, 0, errorMessage);
 		if (execResult != SQLITE_OK)
 		{
-			sqlite3_free(errorMessage);
-			throw CreateDatabaseFailedException((boost::format("Cannot create database at %1%. SQLite returned %2%") % _utf8DbPath % execResult).str());
+			throw CreateDatabaseFailedException((boost::format("Cannot create database at %1%. SQLite returned %2%: %3%") % _utf8DbPath % execResult % errorMessage).str());
 		}
 	}
 
