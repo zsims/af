@@ -5,6 +5,7 @@
 #include "ffs/blob/exceptions.hpp"
 #include "ffs/exceptions.hpp"
 #include "ffs/sqlite/handles.hpp"
+#include "ffs/sqlite/ScopedTransaction.hpp"
 
 #include <boost/format.hpp>
 #include <sqlite3.h>
@@ -35,15 +36,7 @@ std::vector<BlobInfoModelPtr> BlobInfoRepository::GetAllBlobs() const
 {
 	std::vector<BlobInfoModelPtr> result;
 
-	{
-		sqlite::ScopedErrorMessage errorMessage;
-		const auto beginResult = sqlite3_exec(_db, "BEGIN TRANSACTION", 0, 0, errorMessage);
-		if (beginResult != SQLITE_OK)
-		{
-			throw GetBlobsFailedException((boost::format("Failed to start transaction. SQLite error %1%: %2%") % beginResult % errorMessage).str());
-		}
-	}
-
+	sqlite::ScopedTransaction transaction(_db);
 	sqlite::ScopedStatement statement;
 	const auto prepareResult = sqlite3_prepare_v2(_db, "SELECT Address, SizeBytes FROM Blob", -1, statement, 0);
 	if (prepareResult != SQLITE_OK)
@@ -68,14 +61,7 @@ std::vector<BlobInfoModelPtr> BlobInfoRepository::GetAllBlobs() const
 		result.push_back(std::make_shared<BlobInfo>(BlobAddress(address), sizeBytes));
 	}
 
-	{
-		sqlite::ScopedErrorMessage errorMessage;
-		const auto rollbackResult = sqlite3_exec(_db, "ROLLBACK", 0, 0, errorMessage);
-		if (rollbackResult != SQLITE_OK)
-		{
-			throw GetBlobsFailedException((boost::format("Failed to rollback transaction for read blobs. SQLite error %1%: %2%") % rollbackResult % errorMessage).str());
-		}
-	}
+	transaction.Rollback();
 
 	return result;
 }
@@ -84,15 +70,8 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 {
 	// binary address, note this has to be kept in scope until SQLite has finished as we've opted not to make a copy
 	const auto binaryAddress = info.GetAddress().ToBinary();
-	{
-		sqlite::ScopedErrorMessage errorMessage;
-		const auto beginResult = sqlite3_exec(_db, "BEGIN TRANSACTION", 0, 0, errorMessage);
-		if (beginResult != SQLITE_OK)
-		{
-			throw AddBlobFailedException((boost::format("Failed to start transaction. SQLite error %1%: %2%") % beginResult % errorMessage).str());
-		}
-	}
 
+	sqlite::ScopedTransaction transaction(_db);
 	sqlite::ScopedStatement statement;
 	const auto prepareResult = sqlite3_prepare_v2(_db, "INSERT INTO Blob (Address, SizeBytes) VALUES (?, ?)", -1, statement, 0);
 	if (prepareResult != SQLITE_OK)
@@ -128,14 +107,7 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 		throw AddBlobFailedException((boost::format("Failed to execute statement for insert blob. SQLite error %2%") % info.GetAddress().ToString() % stepResult).str());
 	}
 
-	{
-		sqlite::ScopedErrorMessage errorMessage;
-		const auto commitResult = sqlite3_exec(_db, "COMMIT", 0, 0, errorMessage);
-		if (commitResult != SQLITE_OK)
-		{
-			throw AddBlobFailedException((boost::format("Failed to commit insert blob for blob %1%. SQLite error %2%: %3%") % info.GetAddress().ToString() % commitResult % errorMessage).str());
-		}
-	}
+	transaction.Commit();
 }
 
 }
