@@ -30,18 +30,3 @@ A verify will compile everything and run all tests. Test results can be found in
 under `test_results`, e.g. `build64/test_results`.
 
 To verify run: `cmake --build build64 --config Release --target ALL_VERIFY`
-
-# Similar Projects
-This idea is not unique, there's several other projects that overlap with the above goals:
-
- * [camlistore](https://camlistore.org/) - "personal storage" project designed for sharing, syncing, claims, etc.
- * [Fossil](https://en.wikipedia.org/wiki/Fossil_(file_system)) - recursive content-addressable file system
- * [Tahoe-LAFS](http://tahoe-lafs.org/) - open and decerntralised cloud storage system
- 
-## Why another?
-af aims to be for end-users, the above projects are highly techinical or research based. af aims to bring some of these ideas for solving end user backups. af was prompted by:
-
- * Existing projects being too complex for end users to grasp
- * Goals of existing projects being very broad (e.g. not just for backups)
- * Existing backup solutions are focused on just the file system or system images
- * Some of the concerns raised by "rogue archivists" the [Archive Team](http://www.archiveteam.org/) apply to end users. Your data is locked in these third party services and you're at their mercy.
