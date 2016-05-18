@@ -6,6 +6,8 @@ Simple content based backup system with the following goals:
  2. Allow backups to be monitored, to give confidence that data is still being backed up
  3. Allow backups to be stored where you want them to be
 
+See [the wiki](https://github.com/zsims/af/wiki) for internal documentation.
+
 # Contributing
  1. Raise a PR for your changes
  2. Get a :shipit: from someone, unless it's small (e.g. doco or updating a `.gitignore`)
