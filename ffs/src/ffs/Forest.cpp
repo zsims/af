@@ -3,6 +3,7 @@
 #include "ffs/exceptions.hpp"
 #include "ffs/blob/BlobInfoRepository.hpp"
 #include "ffs/object/ObjectInfoRepository.hpp"
+#include "ffs/ScopedUnitOfWork.hpp"
 #include "ffs/sqlitepp/handles.hpp"
 
 #include <boost/filesystem.hpp>
@@ -84,6 +85,7 @@ void Forest::Create()
 
 ObjectAddress Forest::CreateObject(const std::string& type, const object::ObjectBlobList& objectBlobs)
 {
+	ScopedUnitOfWork uow(*_connection);
 	auto r = [this]() {
 		return static_cast<uint8_t>(_random());
 	};
@@ -96,11 +98,14 @@ ObjectAddress Forest::CreateObject(const std::string& type, const object::Object
 	});
 	object::ObjectInfo info(address, type, objectBlobs);
 	_objectInfoRepository->AddObject(info);
+
+	uow.Commit();
 	return address;
 }
 
 object::ObjectInfo Forest::GetObject(const ObjectAddress& address) const
 {
+	ScopedUnitOfWork uow(*_connection);
 	return _objectInfoRepository->GetObject(address);
 }
 

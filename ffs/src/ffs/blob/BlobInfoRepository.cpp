@@ -32,7 +32,6 @@ BlobInfoRepository::BlobInfoRepository(const sqlitepp::ScopedSqlite3Object& conn
 std::vector<BlobInfoModelPtr> BlobInfoRepository::GetAllBlobs() const
 {
 	std::vector<BlobInfoModelPtr> result;
-	sqlitepp::ScopedTransaction transaction(_db);
 	sqlitepp::ScopedStatementReset reset(_getAllBlobsStatement);
 
 	auto stepResult = 0;
@@ -44,9 +43,6 @@ std::vector<BlobInfoModelPtr> BlobInfoRepository::GetAllBlobs() const
 		const auto sizeBytes = static_cast<uint64_t>(sqlite3_column_int64(_getAllBlobsStatement, GetAllBlobs_ColumnIndex_SizeBytes));
 		result.push_back(std::make_shared<BlobInfo>(address, sizeBytes));
 	}
-
-	transaction.Rollback();
-
 	return result;
 }
 

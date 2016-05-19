@@ -56,7 +56,6 @@ ObjectInfoRepository::ObjectInfoRepository(const sqlitepp::ScopedSqlite3Object& 
 std::vector<ObjectInfoPtr> ObjectInfoRepository::GetAllObjects() const
 {
 	std::vector<ObjectInfoPtr> result;
-	sqlitepp::ScopedTransaction transaction(_db);
 	sqlitepp::ScopedStatementReset reset(_getAllObjectsStatement);
 
 	ObjectAddress currentAddress;
@@ -106,8 +105,6 @@ std::vector<ObjectInfoPtr> ObjectInfoRepository::GetAllObjects() const
 	{
 		result.push_back(std::make_unique<ObjectInfo>(ObjectAddress(currentAddress), currentType, currentObjectBlobs));
 	}
-
-	transaction.Rollback();
 	return result;
 }
 
@@ -171,7 +168,6 @@ void ObjectInfoRepository::AddObject(const ObjectInfo& info)
 	// binary address, note this has to be kept in scope until SQLite has finished as we've opted not to make a copy
 	const auto binaryAddress = info.GetAddress().ToBinary();
 	const auto type = info.GetType();
-	sqlitepp::ScopedTransaction transaction(_db);
 	sqlitepp::ScopedStatementReset reset(_insertObjectStatement);
 	
 	{
@@ -203,14 +199,11 @@ void ObjectInfoRepository::AddObject(const ObjectInfo& info)
 	}
 
 	InsertObjectBlobs(binaryAddress, info.GetBlobs());
-
-	transaction.Commit();
 }
 
 ObjectInfo ObjectInfoRepository::GetObject(const ObjectAddress& address) const
 {
 	const auto binaryAddress = address.ToBinary();
-	sqlitepp::ScopedTransaction transaction(_db);
 	sqlitepp::ScopedStatementReset reset(_getObjectStatement);
 
 	const auto index = sqlite3_bind_parameter_index(_getObjectStatement, ":Address");
@@ -251,8 +244,6 @@ ObjectInfo ObjectInfoRepository::GetObject(const ObjectAddress& address) const
 	{
 		throw ObjectNotFoundException((boost::format("Object with address %1% not found.") % address.ToString()).str());
 	}
-
-	transaction.Rollback();
 	return ObjectInfo(address, type, objectBlobs);
 }
 

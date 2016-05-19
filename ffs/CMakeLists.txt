@@ -19,6 +19,7 @@ set(PUBLIC_INCLUDES
 set(SOURCES
     src/ffs/Address.cpp
     src/ffs/Forest.cpp
+    src/ffs/ScopedUnitOfWork.hpp
     src/ffs/blob/BlobInfoRepository.cpp
     src/ffs/blob/BlobInfoRepository.hpp
     src/ffs/blob/BlobStore.cpp
