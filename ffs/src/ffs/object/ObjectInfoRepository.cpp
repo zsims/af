@@ -15,6 +15,26 @@ namespace af {
 namespace ffs {
 namespace object {
 
+namespace {
+enum GetObjectColumnIndex
+{
+	GetObject_ColumnIndex_ObjectAddress = 0,
+	GetObject_ColumnIndex_ObjectType,
+	GetObject_ColumnIndex_ObjectBlobBlobAddress,
+	GetObject_ColumnIndex_ObjectBlobKey,
+	GetObject_ColumnIndex_ObjectBlobPosition
+};
+
+enum GetAllObjectsColumnIndex
+{
+	GetAllObjects_ColumnIndex_ObjectAddress = 0,
+	GetAllObjects_ColumnIndex_ObjectType,
+	GetAllObjects_ColumnIndex_ObjectBlobBlobAddress,
+	GetAllObjects_ColumnIndex_ObjectBlobKey,
+	GetAllObjects_ColumnIndex_ObjectBlobPosition
+};
+}
+
 ObjectInfoRepository::ObjectInfoRepository(const std::string& utf8DbPath)
 {
 	const auto result = sqlite3_open_v2(utf8DbPath.c_str(), _db, SQLITE_OPEN_READWRITE, 0);
@@ -50,16 +70,12 @@ std::vector<ObjectInfoPtr> ObjectInfoRepository::GetAllObjects() const
 	ObjectBlobList currentObjectBlobs;
 	bool haveOpenObject = false;
 
-	const auto objectAddressIndex = 0;
-	const auto typeIndex = 1;
-	const auto blobAddressIndex = 2;
-	const auto keyIndex = 3;
 	auto stepResult = 0;
 	while ((stepResult = sqlite3_step(_getAllObjectsStatement)) == SQLITE_ROW)
 	{
 		binary_address objectAddress;
-		const auto objectAddressBytes = sqlite3_column_blob(_getAllObjectsStatement, objectAddressIndex);
-		const auto objectAddressBytesCount = sqlite3_column_bytes(_getAllObjectsStatement, objectAddressIndex);
+		const auto objectAddressBytes = sqlite3_column_blob(_getAllObjectsStatement, GetAllObjects_ColumnIndex_ObjectAddress);
+		const auto objectAddressBytesCount = sqlite3_column_bytes(_getAllObjectsStatement, GetAllObjects_ColumnIndex_ObjectAddress);
 		std::copy_n(static_cast<const uint8_t*>(objectAddressBytes), objectAddressBytesCount, objectAddress.begin());
 
 		if (!haveOpenObject)
@@ -76,22 +92,22 @@ std::vector<ObjectInfoPtr> ObjectInfoRepository::GetAllObjects() const
 			currentType = "";
 		}
 
-		const auto rawType = sqlite3_column_text(_getAllObjectsStatement, typeIndex);
+		const auto rawType = sqlite3_column_text(_getAllObjectsStatement, GetAllObjects_ColumnIndex_ObjectType);
 		currentType = std::string(reinterpret_cast<const char*>(rawType));
 		haveOpenObject = true;
 		
 		// We have an object blob, and it's in order of position (low -> high)
 		binary_address blobAddress;
-		const auto blobAddressBytes = sqlite3_column_blob(_getAllObjectsStatement, blobAddressIndex);
+		const auto blobAddressBytes = sqlite3_column_blob(_getAllObjectsStatement, GetAllObjects_ColumnIndex_ObjectBlobBlobAddress);
 		if (blobAddressBytes == 0)
 		{
 			// no blob details, just skip
 			continue;
 		}
 
-		const auto blobAddressBytesCount = sqlite3_column_bytes(_getAllObjectsStatement, blobAddressIndex);
+		const auto blobAddressBytesCount = sqlite3_column_bytes(_getAllObjectsStatement, GetAllObjects_ColumnIndex_ObjectBlobBlobAddress);
 		std::copy_n(static_cast<const uint8_t*>(blobAddressBytes), blobAddressBytesCount, blobAddress.begin());
-		const auto rawKey = reinterpret_cast<const char*>(sqlite3_column_text(_getAllObjectsStatement, keyIndex));
+		const auto rawKey = reinterpret_cast<const char*>(sqlite3_column_text(_getAllObjectsStatement, GetAllObjects_ColumnIndex_ObjectBlobKey));
 		currentObjectBlobs.push_back(std::make_pair<std::string, BlobAddress>(std::string(rawKey), BlobAddress(blobAddress)));
 	}
 
@@ -217,13 +233,10 @@ ObjectInfo ObjectInfoRepository::GetObject(const ObjectAddress& address) const
 	bool found = false;
 	ObjectBlobList objectBlobs;
 
-	const auto typeIndex = 1;
-	const auto blobAddressIndex = 2;
-	const auto keyIndex = 3;
 	auto stepResult = 0;
 	while ((stepResult = sqlite3_step(_getObjectStatement)) == SQLITE_ROW)
 	{
-		const auto rawType = sqlite3_column_text(_getObjectStatement, typeIndex);
+		const auto rawType = sqlite3_column_text(_getObjectStatement, GetObject_ColumnIndex_ObjectType);
 		if (!found)
 		{
 			type = std::string(reinterpret_cast<const char*>(rawType));
@@ -232,21 +245,21 @@ ObjectInfo ObjectInfoRepository::GetObject(const ObjectAddress& address) const
 
 		// We have a object blob, and it's in order of position (low -> high)
 		binary_address blobAddress;
-		const auto blobAddressBytes = sqlite3_column_blob(_getObjectStatement, blobAddressIndex);
+		const auto blobAddressBytes = sqlite3_column_blob(_getObjectStatement, GetObject_ColumnIndex_ObjectBlobBlobAddress);
 		if (blobAddressBytes == 0)
 		{
 			// no blob details, just skip
 			continue;
 		}
 
-		const auto blobAddressBytesCount = sqlite3_column_bytes(_getObjectStatement, blobAddressIndex);
+		const auto blobAddressBytesCount = sqlite3_column_bytes(_getObjectStatement, GetObject_ColumnIndex_ObjectBlobBlobAddress);
 		if (blobAddressBytesCount > static_cast<int>(blobAddress.max_size()))
 		{
 			throw ObjectNotFoundException((boost::format("Failed to read blob address, too big (%1% bytes).") % blobAddressBytes).str());
 		}
 		std::copy_n(static_cast<const uint8_t*>(blobAddressBytes), blobAddressBytesCount, blobAddress.begin());
 
-		const auto rawKey = reinterpret_cast<const char*>(sqlite3_column_text(_getObjectStatement, keyIndex));
+		const auto rawKey = reinterpret_cast<const char*>(sqlite3_column_text(_getObjectStatement, GetObject_ColumnIndex_ObjectBlobKey));
 		objectBlobs.push_back(std::make_pair<std::string, BlobAddress>(std::string(rawKey), BlobAddress(blobAddress)));
 	}
 
