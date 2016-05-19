@@ -1,10 +1,13 @@
 #include "ffs/blob/BlobInfoRepository.hpp"
 #include "ffs/blob/DirectoryBlobStore.hpp"
 #include "ffs/blob/exceptions.hpp"
+#include "ffs/Forest.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <memory>
 
 namespace af {
 namespace ffs {
@@ -18,13 +21,20 @@ protected:
 	{
 		_storagePath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 		boost::filesystem::create_directories(_storagePath);
+
+		_forestDbPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb");
+		_forest.reset(new Forest(_forestDbPath.string()));
+		_forest->Create();
 	}
 
 	virtual void TearDown() override
 	{
-		boost::filesystem::remove_all(_storagePath);
+		boost::system::error_code ec;
+		boost::filesystem::remove_all(_storagePath, ec);
 	}
 
+	std::unique_ptr<Forest> _forest;
+	boost::filesystem::path _forestDbPath;
 	boost::filesystem::path _storagePath;
 };
 
@@ -32,8 +42,7 @@ protected:
 TEST_F(DirectoryBlobStoreIntegrationTest, SaveLoad)
 {
 	// Arrange
-	auto repo = std::make_shared<BlobInfoRepository>();
-	DirectoryBlobStore store(repo, _storagePath.string());
+	DirectoryBlobStore store(_forest->GetBlobInfoRepository(), _storagePath.string());
 
 	const std::vector<uint8_t> content = {
 		1, 2, 3, 4, 4, 5, 3, 2, 1
@@ -50,8 +59,7 @@ TEST_F(DirectoryBlobStoreIntegrationTest, SaveLoad)
 TEST_F(DirectoryBlobStoreIntegrationTest, GetBlobThrowsIfNotExist)
 {
 	// Arrange
-	auto repo = std::make_shared<BlobInfoRepository>();
-	DirectoryBlobStore store(repo, _storagePath.string());
+	DirectoryBlobStore store(_forest->GetBlobInfoRepository(), _storagePath.string());
 
 	const std::vector<uint8_t> content = {
 		1, 2, 3, 4, 4, 5, 3, 2, 1

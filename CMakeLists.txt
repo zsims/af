@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_SOURCE_DIR}/cmake")
 
-project(af CXX)
+project(af LANGUAGES CXX C)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Modules

@@ -16,7 +16,6 @@ public:
 	}
 };
 
-// E.g. a SHA-1
 typedef std::array<uint8_t, 20> binary_address;
 
 class Address

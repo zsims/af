@@ -26,6 +26,24 @@ public:
 	}
 };
 
+class AddBlobFailedException : public std::runtime_error
+{
+public:
+	explicit AddBlobFailedException(const std::string& message)
+		: std::runtime_error(message)
+	{
+	}
+};
+
+class GetBlobsFailedException : public std::runtime_error
+{
+public:
+	explicit GetBlobsFailedException(const std::string& message)
+		: std::runtime_error(message)
+	{
+	}
+};
+
 }
 }
 }

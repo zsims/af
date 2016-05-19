@@ -18,6 +18,7 @@ target_include_directories(
     ffs_test
     PRIVATE $<TARGET_PROPERTY:ffs,INTERFACE_INCLUDE_DIRECTORIES>
     PRIVATE ../src
+    PRIVATE $<TARGET_PROPERTY:sqlite,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(
