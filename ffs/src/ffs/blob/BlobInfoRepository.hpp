@@ -2,14 +2,12 @@
 
 #include "ffs/address.hpp"
 #include "ffs/blob/BlobInfo.hpp"
+#include "ffs/sqlitepp/handles.hpp"
 
 #include <cstdint>
-#include <exception>
 #include <memory>
 #include <string>
 #include <vector>
-
-struct sqlite3;
 
 namespace af {
 namespace ffs {
@@ -25,7 +23,6 @@ public:
 	 * Creates a new blob info repository given an existing database path.
 	 */
 	explicit BlobInfoRepository(const std::string& utf8DbPath);
-	~BlobInfoRepository();
 
 	/**
 	 * Returns all of the blobs known.
@@ -38,7 +35,9 @@ public:
 	 */
 	void AddBlob(const BlobInfo& info);
 private:
-	sqlite3* _db;
+	sqlitepp::ScopedSqlite3Object _db;
+	sqlitepp::ScopedStatement _getAllBlobsStatement;
+	sqlitepp::ScopedStatement _insertBlobStatement;
 };
 
 typedef std::shared_ptr<BlobInfoRepository> BlobInfoRepositoryPtr;
