@@ -203,9 +203,9 @@ void ObjectInfoRepository::AddObject(const ObjectInfo& info)
 	{
 		if (stepResult == SQLITE_CONSTRAINT)
 		{
-			throw DuplicateObjectException((boost::format("Attempted to insert duplicate object %1%. SQLite error %2%") % info.GetAddress().ToString() % stepResult).str());
+			throw DuplicateObjectException(info.GetAddress());
 		}
-		throw AddObjectFailedException((boost::format("Failed to execute statement for insert blob. SQLite error %2%") % info.GetAddress().ToString() % stepResult).str());
+		throw AddObjectFailedException((boost::format("Failed to execute statement for insert blob for object %1%. SQLite error %2%") % info.GetAddress().ToString() % stepResult).str());
 	}
 
 	InsertObjectBlobs(binaryAddress, info.GetBlobs());
