@@ -11,8 +11,8 @@ namespace ffs {
 class DatabaseAlreadyExistsException : public std::runtime_error
 {
 public:
-	explicit DatabaseAlreadyExistsException(const std::string& message)
-		: std::runtime_error(message)
+	explicit DatabaseAlreadyExistsException(const std::string& path)
+		: std::runtime_error("Database already exists at " + path)
 	{
 	}
 };
@@ -29,8 +29,8 @@ public:
 class DatabaseNotFoundException : public std::runtime_error
 {
 public:
-	explicit DatabaseNotFoundException(const std::string& message)
-		: std::runtime_error(message)
+	explicit DatabaseNotFoundException(const std::string& path)
+		: std::runtime_error("Database not found at " + path)
 	{
 	}
 };
