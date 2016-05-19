@@ -6,7 +6,7 @@
 
 namespace af {
 namespace ffs {
-namespace sqlite {
+namespace sqlitepp {
 
 template <typename T>
 class ScopedHandleBase

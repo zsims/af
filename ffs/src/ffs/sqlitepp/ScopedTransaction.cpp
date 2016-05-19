@@ -1,20 +1,20 @@
-#include "ffs/sqlite/ScopedTransaction.hpp"
+#include "ffs/sqlitepp/ScopedTransaction.hpp"
 
-#include "ffs/sqlite/exceptions.hpp"
-#include "ffs/sqlite/handles.hpp"
+#include "ffs/sqlitepp/exceptions.hpp"
+#include "ffs/sqlitepp/handles.hpp"
 
 #include <boost/format.hpp>
 #include <sqlite3.h>
 
 namespace af {
 namespace ffs {
-namespace sqlite {
+namespace sqlitepp {
 
 ScopedTransaction::ScopedTransaction(sqlite3* db)
 	: _db(db)
 	, _isOpen(false)
 {
-	sqlite::ScopedErrorMessage errorMessage;
+	sqlitepp::ScopedErrorMessage errorMessage;
 	const auto beginResult = sqlite3_exec(_db, "BEGIN TRANSACTION", 0, 0, errorMessage);
 	if (beginResult != SQLITE_OK)
 	{
@@ -39,7 +39,7 @@ void ScopedTransaction::Rollback()
 		throw RollbackTransactionFailedException("Failed to rollback transaction. Already ended.");
 	}
 
-	sqlite::ScopedErrorMessage errorMessage;
+	sqlitepp::ScopedErrorMessage errorMessage;
 	const auto commitResult = sqlite3_exec(_db, "ROLLBACK", 0, 0, errorMessage);
 	if (commitResult != SQLITE_OK)
 	{
@@ -56,7 +56,7 @@ void ScopedTransaction::Commit()
 		throw CommitTransactionFailedException("Failed to commit transaction. Already ended.");
 	}
 
-	sqlite::ScopedErrorMessage errorMessage;
+	sqlitepp::ScopedErrorMessage errorMessage;
 	const auto commitResult = sqlite3_exec(_db, "COMMIT", 0, 0, errorMessage);
 	if (commitResult != SQLITE_OK)
 	{

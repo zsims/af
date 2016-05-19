@@ -4,8 +4,8 @@
 #include "ffs/blob/BlobInfo.hpp"
 #include "ffs/blob/exceptions.hpp"
 #include "ffs/exceptions.hpp"
-#include "ffs/sqlite/handles.hpp"
-#include "ffs/sqlite/ScopedTransaction.hpp"
+#include "ffs/sqlitepp/handles.hpp"
+#include "ffs/sqlitepp/ScopedTransaction.hpp"
 
 #include <boost/format.hpp>
 #include <sqlite3.h>
@@ -36,8 +36,8 @@ std::vector<BlobInfoModelPtr> BlobInfoRepository::GetAllBlobs() const
 {
 	std::vector<BlobInfoModelPtr> result;
 
-	sqlite::ScopedTransaction transaction(_db);
-	sqlite::ScopedStatement statement;
+	sqlitepp::ScopedTransaction transaction(_db);
+	sqlitepp::ScopedStatement statement;
 	const auto prepareResult = sqlite3_prepare_v2(_db, "SELECT Address, SizeBytes FROM Blob", -1, statement, 0);
 	if (prepareResult != SQLITE_OK)
 	{
@@ -71,8 +71,8 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 	// binary address, note this has to be kept in scope until SQLite has finished as we've opted not to make a copy
 	const auto binaryAddress = info.GetAddress().ToBinary();
 
-	sqlite::ScopedTransaction transaction(_db);
-	sqlite::ScopedStatement statement;
+	sqlitepp::ScopedTransaction transaction(_db);
+	sqlitepp::ScopedStatement statement;
 	const auto prepareResult = sqlite3_prepare_v2(_db, "INSERT INTO Blob (Address, SizeBytes) VALUES (?, ?)", -1, statement, 0);
 	if (prepareResult != SQLITE_OK)
 	{

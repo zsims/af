@@ -3,9 +3,9 @@
 #include "ffs/exceptions.hpp"
 #include "ffs/object/ObjectInfo.hpp"
 #include "ffs/object/exceptions.hpp"
-#include "ffs/sqlite/handles.hpp"
-#include "ffs/sqlite/ScopedTransaction.hpp"
-#include "ffs/sqlite/ScopedStatementReset.hpp"
+#include "ffs/sqlitepp/handles.hpp"
+#include "ffs/sqlitepp/ScopedTransaction.hpp"
+#include "ffs/sqlitepp/ScopedStatementReset.hpp"
 
 #include <boost/format.hpp>
 #include <sqlite3.h>
@@ -82,8 +82,8 @@ void ObjectInfoRepository::PrepareGetAllObjectsStatement()
 std::vector<ObjectInfoPtr> ObjectInfoRepository::GetAllObjects() const
 {
 	std::vector<ObjectInfoPtr> result;
-	sqlite::ScopedTransaction transaction(_db);
-	sqlite::ScopedStatementReset reset(_getAllObjectsStatement);
+	sqlitepp::ScopedTransaction transaction(_db);
+	sqlitepp::ScopedStatementReset reset(_getAllObjectsStatement);
 
 	binary_address currentAddress;
 	std::string currentType;
@@ -154,7 +154,7 @@ void ObjectInfoRepository::InsertObjectBlobs(const binary_address& objectAddress
 	auto position = 0;
 	for (const auto& ob : objectBlobs)
 	{
-		sqlite::ScopedStatementReset reset(_insertObjectBlobStatement);
+		sqlitepp::ScopedStatementReset reset(_insertObjectBlobStatement);
 		const auto& key = ob.first;
 		const auto& blobAddress = ob.second;
 		const auto binaryBlobAddress = blobAddress.ToBinary();
@@ -204,8 +204,8 @@ void ObjectInfoRepository::AddObject(const ObjectInfo& info)
 	// binary address, note this has to be kept in scope until SQLite has finished as we've opted not to make a copy
 	const auto binaryAddress = info.GetAddress().ToBinary();
 	const auto type = info.GetType();
-	sqlite::ScopedTransaction transaction(_db);
-	sqlite::ScopedStatementReset reset(_insertObjectStatement);
+	sqlitepp::ScopedTransaction transaction(_db);
+	sqlitepp::ScopedStatementReset reset(_insertObjectStatement);
 	
 	{
 		const auto index = sqlite3_bind_parameter_index(_insertObjectStatement, ":Address");
@@ -243,8 +243,8 @@ void ObjectInfoRepository::AddObject(const ObjectInfo& info)
 ObjectInfo ObjectInfoRepository::GetObject(const ObjectAddress& address) const
 {
 	const auto binaryAddress = address.ToBinary();
-	sqlite::ScopedTransaction transaction(_db);
-	sqlite::ScopedStatementReset reset(_getObjectStatement);
+	sqlitepp::ScopedTransaction transaction(_db);
+	sqlitepp::ScopedStatementReset reset(_getObjectStatement);
 
 	const auto index = sqlite3_bind_parameter_index(_getObjectStatement, ":Address");
 	const auto bindResult = sqlite3_bind_blob(_getObjectStatement, index, &binaryAddress[0], static_cast<int>(binaryAddress.size()), 0);
