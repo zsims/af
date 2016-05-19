@@ -24,15 +24,6 @@ public:
 	}
 };
 
-class PrepareRepositoryFailedException : public std::runtime_error
-{
-public:
-	explicit PrepareRepositoryFailedException(const std::string& message)
-		: std::runtime_error(message)
-	{
-	}
-};
-
 class AddObjectFailedException : public std::runtime_error
 {
 public:

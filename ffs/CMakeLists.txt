@@ -32,6 +32,8 @@ set(SOURCES
     src/ffs/sqlitepp/ScopedTransaction.hpp
     src/ffs/sqlitepp/ScopedTransaction.cpp
     src/ffs/sqlitepp/ScopedStatementReset.hpp
+    src/ffs/sqlitepp/sqlitepp.cpp
+    src/ffs/sqlitepp/sqlitepp.hpp
 )
 
 add_library(ffs ${SOURCES} ${PUBLIC_INCLUDES})

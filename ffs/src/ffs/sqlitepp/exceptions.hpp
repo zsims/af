@@ -41,5 +41,17 @@ public:
 	}
 };
 
+/**
+ * A statement could not be prepared
+ */
+class PrepareStatementFailedException : public std::runtime_error
+{
+public:
+	explicit PrepareStatementFailedException(int sqliteError)
+		: std::runtime_error("Failed to prepare statement, error " + sqliteError)
+	{
+	}
+};
+
 }
 }

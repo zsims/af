@@ -29,10 +29,6 @@ public:
 	void AddObject(const ObjectInfo& info);
 	ObjectInfo GetObject(const ObjectAddress& address) const;
 private:
-	void PrepareInsertObjectStatement();
-	void PrepareInsertObjectBlobStatement();
-	void PrepareGetObjectStatement();
-	void PrepareGetAllObjectsStatement();
 	void InsertObjectBlobs(const binary_address& objectAddress, const ObjectBlobList& objectBlobs);
 
 	sqlitepp::ScopedSqlite3Object _db;
