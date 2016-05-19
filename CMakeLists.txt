@@ -7,6 +7,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Modules
 include(ExternalBuild)
+include(BuildCache)
 
 if(MSVC)
     # Enable warnings as errors
