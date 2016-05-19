@@ -4,9 +4,19 @@
 
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 namespace af {
 namespace ffs {
+
+Address::Address(const void* rawBuffer, int bufferLength)
+{
+	if (bufferLength != static_cast<int>(_address.max_size()))
+	{
+		throw InvalidAddressException("Given buffer is not of the correct size, expected " + _address.max_size());
+	}
+	std::copy_n(static_cast<const uint8_t*>(rawBuffer), bufferLength, _address.begin());
+}
 
 Address::Address(const binary_address& address)
 	: _address(address)
@@ -40,6 +50,11 @@ bool Address::operator<(const Address& rhs) const
 bool Address::operator==(const Address& rhs) const
 {
 	return _address == rhs._address;
+}
+
+bool Address::operator!=(const Address& rhs) const
+{
+	return _address != rhs._address;
 }
 
 binary_address Address::ToBinary() const

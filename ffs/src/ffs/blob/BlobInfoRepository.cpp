@@ -9,7 +9,6 @@
 #include <boost/format.hpp>
 #include <sqlite3.h>
 
-#include <algorithm>
 #include <memory>
 
 namespace af {
@@ -45,18 +44,11 @@ std::vector<BlobInfoModelPtr> BlobInfoRepository::GetAllBlobs() const
 	auto stepResult = 0;
 	while ((stepResult = sqlite3_step(_getAllBlobsStatement)) == SQLITE_ROW)
 	{
-		binary_address address;
 		const auto addressBytesCount = sqlite3_column_bytes(_getAllBlobsStatement, GetAllBlobs_ColumnIndex_Address);
 		const auto addressBytes = sqlite3_column_blob(_getAllBlobsStatement, GetAllBlobs_ColumnIndex_Address);
-
-		if (addressBytesCount > static_cast<int>(address.max_size()))
-		{
-			throw GetBlobsFailedException((boost::format("Failed to read blob address, too big (%1% bytes).") % addressBytes).str());
-		}
-
-		std::copy_n(static_cast<const uint8_t*>(addressBytes), addressBytesCount, address.begin());
+		BlobAddress address(addressBytes, addressBytesCount);
 		const auto sizeBytes = static_cast<uint64_t>(sqlite3_column_int64(_getAllBlobsStatement, GetAllBlobs_ColumnIndex_SizeBytes));
-		result.push_back(std::make_shared<BlobInfo>(BlobAddress(address), sizeBytes));
+		result.push_back(std::make_shared<BlobInfo>(address, sizeBytes));
 	}
 
 	transaction.Rollback();

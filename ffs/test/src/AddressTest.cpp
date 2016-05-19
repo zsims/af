@@ -1,11 +1,47 @@
+#include "ffs/Address.hpp"
+
+#include <array>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-#include "ffs/Address.hpp"
+#include <vector>
 
 namespace af {
 namespace ffs {
 namespace test {
+
+TEST(AddressTest, ConstructFromVoidBuffer)
+{
+	// Arrange
+	const std::array<uint8_t, 20> expectedBinaryAddress = {
+		0x12, 0x34, 0xa1, 0x23, 0x45,
+		0x12, 0x34, 0xb1, 0x23, 0x45,
+		0x12, 0x34, 0xa1, 0x23, 0x45,
+		0x12, 0x34, 0xb1, 0x23, 0x45
+	};
+	const void* rawAddress = &expectedBinaryAddress[0];
+
+	// Act
+	const Address result(rawAddress, static_cast<int>(expectedBinaryAddress.size()));
+
+	// Assert
+	EXPECT_EQ(expectedBinaryAddress, result.ToBinary());
+}
+
+TEST(AddressTest, ConstructFromVoidBufferLongThrows)
+{
+	// Arrange
+	const std::vector<uint8_t> expectedBinaryAddress = {
+		0x12, 0x34, 0xa1, 0x23, 0x45,
+		0x12, 0x34, 0xb1, 0x23, 0x45,
+		0x12, 0x34, 0xa1, 0x23, 0x45,
+		0x12, 0x34, 0xb1, 0x23, 0x45, 0x42
+	};
+
+	const void* rawAddress = &expectedBinaryAddress[0];
+	// Act
+	// Assert
+	EXPECT_THROW(Address(rawAddress, static_cast<int>(expectedBinaryAddress.size())), InvalidAddressException);
+}
 
 TEST(AddressTest, ConstructFromString)
 {

@@ -21,12 +21,15 @@ typedef std::array<uint8_t, 20> binary_address;
 class Address
 {
 public:
+	Address() { }
+	Address(const void* rawBuffer, int bufferLength);
 	explicit Address(const binary_address& address);
 	explicit Address(const std::string& address);
 	std::string ToString() const;
 	binary_address ToBinary() const;
 	bool operator<(const Address& rhs) const;
 	bool operator==(const Address& rhs) const;
+	bool operator!=(const Address& rhs) const;
 
 	/**
 	 * Calculates a new address based on the given binary content.
