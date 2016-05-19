@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-#include "ffs/sqlite/handles.hpp"
+#include "ffs/sqlitepp/handles.hpp"
 
 namespace af {
 namespace ffs {
@@ -29,17 +29,13 @@ public:
 	void AddObject(const ObjectInfo& info);
 	ObjectInfo GetObject(const ObjectAddress& address) const;
 private:
-	void PrepareInsertObjectStatement();
-	void PrepareInsertObjectBlobStatement();
-	void PrepareGetObjectStatement();
-	void PrepareGetAllObjectsStatement();
 	void InsertObjectBlobs(const binary_address& objectAddress, const ObjectBlobList& objectBlobs);
 
-	sqlite::ScopedSqlite3Object _db;
-	sqlite::ScopedStatement _insertObjectStatement;
-	sqlite::ScopedStatement _insertObjectBlobStatement;
-	sqlite::ScopedStatement _getObjectStatement;
-	sqlite::ScopedStatement _getAllObjectsStatement;
+	sqlitepp::ScopedSqlite3Object _db;
+	sqlitepp::ScopedStatement _insertObjectStatement;
+	sqlitepp::ScopedStatement _insertObjectBlobStatement;
+	sqlitepp::ScopedStatement _getObjectStatement;
+	sqlitepp::ScopedStatement _getAllObjectsStatement;
 };
 
 typedef std::shared_ptr<ObjectInfoRepository> ObjectInfoRepositoryPtr;

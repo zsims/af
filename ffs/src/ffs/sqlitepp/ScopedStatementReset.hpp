@@ -4,7 +4,7 @@
 
 namespace af {
 namespace ffs {
-namespace sqlite {
+namespace sqlitepp {
 
 /**
  * Resets a statement using sqlite3_reset, meaning the statement can be re-used.

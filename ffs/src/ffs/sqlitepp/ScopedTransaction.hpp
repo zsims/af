@@ -4,7 +4,7 @@ struct sqlite3;
 
 namespace af {
 namespace ffs {
-namespace sqlite {
+namespace sqlitepp {
 
 class ScopedTransaction
 {

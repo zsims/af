@@ -3,7 +3,7 @@
 #include "ffs/exceptions.hpp"
 #include "ffs/blob/BlobInfoRepository.hpp"
 #include "ffs/object/ObjectInfoRepository.hpp"
-#include "ffs/sqlite/handles.hpp"
+#include "ffs/sqlitepp/handles.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -39,7 +39,7 @@ void Forest::Create()
 			throw DatabaseAlreadyExistsException((boost::format("Cannot create database, a file already exists at %1%") % _utf8DbPath).str());
 		}
 
-		sqlite::ScopedSqlite3Object db;
+		sqlitepp::ScopedSqlite3Object db;
 		const auto result = sqlite3_open_v2(_utf8DbPath.c_str(), db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
 		if (result != SQLITE_OK)
 		{
@@ -60,7 +60,7 @@ void Forest::Create()
 			);
 		)";
 
-		sqlite::ScopedErrorMessage errorMessage;
+		sqlitepp::ScopedErrorMessage errorMessage;
 		const auto execResult = sqlite3_exec(db, sql, 0, 0, errorMessage);
 		if (execResult != SQLITE_OK)
 		{

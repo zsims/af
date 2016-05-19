@@ -1,7 +1,7 @@
 source_group("src\\ffs" REGULAR_EXPRESSION "src/ffs/.*")
 source_group("src\\ffs\\blob" REGULAR_EXPRESSION "src/ffs/blob/.*")
 source_group("src\\ffs\\object" REGULAR_EXPRESSION "src/ffs/object/.*")
-source_group("src\\ffs\\sqlite" REGULAR_EXPRESSION "src/ffs/sqlite/.*")
+source_group("src\\ffs\\sqlitepp" REGULAR_EXPRESSION "src/ffs/sqlitepp/.*")
 source_group("include\\ffs" REGULAR_EXPRESSION "include/ffs/.*")
 source_group("include\\blob\\ffs" REGULAR_EXPRESSION "include/ffs/blob/.*")
 source_group("include\\object\\ffs" REGULAR_EXPRESSION "include/ffs/object/.*")
@@ -27,11 +27,13 @@ set(SOURCES
     src/ffs/object/ObjectInfoRepository.cpp
     src/ffs/object/ObjectInfoRepository.hpp
     src/ffs/object/exceptions.hpp
-    src/ffs/sqlite/exceptions.hpp
-    src/ffs/sqlite/handles.hpp
-    src/ffs/sqlite/ScopedTransaction.hpp
-    src/ffs/sqlite/ScopedTransaction.cpp
-    src/ffs/sqlite/ScopedStatementReset.hpp
+    src/ffs/sqlitepp/exceptions.hpp
+    src/ffs/sqlitepp/handles.hpp
+    src/ffs/sqlitepp/ScopedTransaction.hpp
+    src/ffs/sqlitepp/ScopedTransaction.cpp
+    src/ffs/sqlitepp/ScopedStatementReset.hpp
+    src/ffs/sqlitepp/sqlitepp.cpp
+    src/ffs/sqlitepp/sqlitepp.hpp
 )
 
 add_library(ffs ${SOURCES} ${PUBLIC_INCLUDES})

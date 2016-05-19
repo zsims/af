@@ -3,9 +3,7 @@
 #include "ffs/exceptions.hpp"
 #include "ffs/object/ObjectInfo.hpp"
 #include "ffs/object/exceptions.hpp"
-#include "ffs/sqlite/handles.hpp"
-#include "ffs/sqlite/ScopedTransaction.hpp"
-#include "ffs/sqlite/ScopedStatementReset.hpp"
+#include "ffs/sqlitepp/sqlitepp.hpp"
 
 #include <boost/format.hpp>
 #include <sqlite3.h>
@@ -25,65 +23,27 @@ ObjectInfoRepository::ObjectInfoRepository(const std::string& utf8DbPath)
 		throw OpenDatabaseFailedException((boost::format("Cannot open database at %1%. SQLite returned %2%") % utf8DbPath % result).str());
 	}
 
-	PrepareInsertObjectStatement();
-	PrepareInsertObjectBlobStatement();
-	PrepareGetObjectStatement();
-	PrepareGetAllObjectsStatement();
-}
-
-void ObjectInfoRepository::PrepareInsertObjectStatement()
-{
-	const auto prepareResult = sqlite3_prepare_v2(_db, "INSERT INTO Object (Address, Type) VALUES (:Address, :Type)", -1, _insertObjectStatement, 0);
-	if (prepareResult != SQLITE_OK)
-	{
-		throw PrepareRepositoryFailedException((boost::format("Failed to prepare object insert statement. SQLite error %1%") % prepareResult).str());
-	}
-}
-
-void ObjectInfoRepository::PrepareInsertObjectBlobStatement()
-{
-	const auto prepareResult = sqlite3_prepare_v2(_db,
-		"INSERT INTO ObjectBlob (ObjectAddress, BlobAddress, Key, Position) VALUES (:ObjectAddress, :BlobAddress, :Key, :Position)",
-		-1, _insertObjectBlobStatement, 0);
-	if (prepareResult != SQLITE_OK)
-	{
-		throw PrepareRepositoryFailedException((boost::format("Failed to prepare object blob insert statement. SQLite error %1%") % prepareResult).str());
-	}
-}
-
-void ObjectInfoRepository::PrepareGetObjectStatement()
-{
-	const auto prepareResult = sqlite3_prepare_v2(_db, R"(
+	// Prepare statements so they're good to go
+	sqlitepp::prepare_or_throw(_db, "INSERT INTO Object (Address, Type) VALUES (:Address, :Type)", _insertObjectStatement);
+	sqlitepp::prepare_or_throw(_db, "INSERT INTO ObjectBlob (ObjectAddress, BlobAddress, Key, Position) VALUES (:ObjectAddress, :BlobAddress, :Key, :Position)", _insertObjectBlobStatement);
+	sqlitepp::prepare_or_throw(_db, R"(
 		SELECT Object.Address, Object.Type, ObjectBlob.BlobAddress, ObjectBlob.Key, ObjectBlob.Position FROM Object
 		LEFT OUTER JOIN ObjectBlob ON Object.Address = ObjectBlob.ObjectAddress
 		WHERE Object.Address = :Address
 		ORDER BY ObjectBlob.Position ASC
-		)" , -1, _getObjectStatement, 0);
-	if (prepareResult != SQLITE_OK)
-	{
-		const auto ffs = sqlite3_errmsg(_db);
-		throw PrepareRepositoryFailedException((boost::format("Failed to prepare object get statement. SQLite error %1%: %2%") % prepareResult % ffs).str());
-	}
-}
-
-void ObjectInfoRepository::PrepareGetAllObjectsStatement()
-{
-	const auto prepareResult = sqlite3_prepare_v2(_db, R"(
+	)", _getObjectStatement);
+	sqlitepp::prepare_or_throw(_db, R"(
 		SELECT Object.Address, Object.Type, ObjectBlob.BlobAddress, ObjectBlob.Key, ObjectBlob.Position FROM Object
 		LEFT OUTER JOIN ObjectBlob ON Object.Address = ObjectBlob.ObjectAddress
 		ORDER BY Object.Address, ObjectBlob.Position ASC
-	)", -1, _getAllObjectsStatement, 0);
-	if (prepareResult != SQLITE_OK)
-	{
-		throw PrepareRepositoryFailedException((boost::format("Failed to prepare get all objects statement. SQLite error %1%") % prepareResult).str());
-	}
+	)", _getAllObjectsStatement);
 }
 
 std::vector<ObjectInfoPtr> ObjectInfoRepository::GetAllObjects() const
 {
 	std::vector<ObjectInfoPtr> result;
-	sqlite::ScopedTransaction transaction(_db);
-	sqlite::ScopedStatementReset reset(_getAllObjectsStatement);
+	sqlitepp::ScopedTransaction transaction(_db);
+	sqlitepp::ScopedStatementReset reset(_getAllObjectsStatement);
 
 	binary_address currentAddress;
 	std::string currentType;
@@ -154,7 +114,7 @@ void ObjectInfoRepository::InsertObjectBlobs(const binary_address& objectAddress
 	auto position = 0;
 	for (const auto& ob : objectBlobs)
 	{
-		sqlite::ScopedStatementReset reset(_insertObjectBlobStatement);
+		sqlitepp::ScopedStatementReset reset(_insertObjectBlobStatement);
 		const auto& key = ob.first;
 		const auto& blobAddress = ob.second;
 		const auto binaryBlobAddress = blobAddress.ToBinary();
@@ -204,8 +164,8 @@ void ObjectInfoRepository::AddObject(const ObjectInfo& info)
 	// binary address, note this has to be kept in scope until SQLite has finished as we've opted not to make a copy
 	const auto binaryAddress = info.GetAddress().ToBinary();
 	const auto type = info.GetType();
-	sqlite::ScopedTransaction transaction(_db);
-	sqlite::ScopedStatementReset reset(_insertObjectStatement);
+	sqlitepp::ScopedTransaction transaction(_db);
+	sqlitepp::ScopedStatementReset reset(_insertObjectStatement);
 	
 	{
 		const auto index = sqlite3_bind_parameter_index(_insertObjectStatement, ":Address");
@@ -243,8 +203,8 @@ void ObjectInfoRepository::AddObject(const ObjectInfo& info)
 ObjectInfo ObjectInfoRepository::GetObject(const ObjectAddress& address) const
 {
 	const auto binaryAddress = address.ToBinary();
-	sqlite::ScopedTransaction transaction(_db);
-	sqlite::ScopedStatementReset reset(_getObjectStatement);
+	sqlitepp::ScopedTransaction transaction(_db);
+	sqlitepp::ScopedStatementReset reset(_getObjectStatement);
 
 	const auto index = sqlite3_bind_parameter_index(_getObjectStatement, ":Address");
 	const auto bindResult = sqlite3_bind_blob(_getObjectStatement, index, &binaryAddress[0], static_cast<int>(binaryAddress.size()), 0);
