@@ -18,6 +18,10 @@ namespace object {
 class ObjectInfoRepository;
 }
 
+namespace sqlitepp {
+class ScopedSqlite3Object;
+}
+
 class Forest
 {
 public:
@@ -25,6 +29,7 @@ public:
 	 * Initializes forest with the given path for opening or creating.
 	 */
 	explicit Forest(const std::string& utf8DbPath);
+	~Forest();
 
 	/**
 	 * Opens an existing forest
@@ -53,6 +58,7 @@ public:
 	std::shared_ptr<blob::BlobInfoRepository> GetBlobInfoRepository() const { return _blobInfoRepository; }
 private:
 	const std::string _utf8DbPath;
+	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
 	std::shared_ptr<blob::BlobInfoRepository> _blobInfoRepository;
 	std::shared_ptr<object::ObjectInfoRepository> _objectInfoRepository;
 	std::mt19937 _random;

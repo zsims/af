@@ -3,7 +3,6 @@
 
 #include "ffs/blob/BlobInfo.hpp"
 #include "ffs/blob/exceptions.hpp"
-#include "ffs/exceptions.hpp"
 #include "ffs/sqlitepp/sqlitepp.hpp"
 
 #include <boost/format.hpp>
@@ -23,14 +22,9 @@ enum GetAllBlobsColumnIndex
 };
 }
 
-BlobInfoRepository::BlobInfoRepository(const std::string& utf8DbPath)
+BlobInfoRepository::BlobInfoRepository(const sqlitepp::ScopedSqlite3Object& connection)
+	: _db(connection)
 {
-	const auto result = sqlite3_open_v2(utf8DbPath.c_str(), _db, SQLITE_OPEN_READWRITE, 0);
-	if (result != SQLITE_OK)
-	{
-		throw OpenDatabaseFailedException((boost::format("Cannot open database at %1%. SQLite returned %2%") % utf8DbPath % result).str());
-	}
-
 	sqlitepp::prepare_or_throw(_db, "INSERT INTO Blob (Address, SizeBytes) VALUES (:Address, :SizeBytes)", _insertBlobStatement);
 	sqlitepp::prepare_or_throw(_db, "SELECT Address, SizeBytes FROM Blob", _getAllBlobsStatement);
 }

@@ -6,7 +6,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace af {
@@ -20,9 +19,9 @@ class BlobInfoRepository
 {
 public:
 	/**
-	 * Creates a new blob info repository given an existing database path.
+	 * Creates a new blob info repository given an existing database connection
 	 */
-	explicit BlobInfoRepository(const std::string& utf8DbPath);
+	explicit BlobInfoRepository(const sqlitepp::ScopedSqlite3Object& connection);
 
 	/**
 	 * Returns all of the blobs known.
@@ -35,7 +34,7 @@ public:
 	 */
 	void AddBlob(const BlobInfo& info);
 private:
-	sqlitepp::ScopedSqlite3Object _db;
+	const sqlitepp::ScopedSqlite3Object& _db;
 	sqlitepp::ScopedStatement _getAllBlobsStatement;
 	sqlitepp::ScopedStatement _insertBlobStatement;
 };

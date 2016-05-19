@@ -1,6 +1,5 @@
 #include "ffs/object/ObjectInfoRepository.hpp"
 
-#include "ffs/exceptions.hpp"
 #include "ffs/object/ObjectInfo.hpp"
 #include "ffs/object/exceptions.hpp"
 #include "ffs/sqlitepp/sqlitepp.hpp"
@@ -35,14 +34,9 @@ enum GetAllObjectsColumnIndex
 };
 }
 
-ObjectInfoRepository::ObjectInfoRepository(const std::string& utf8DbPath)
+ObjectInfoRepository::ObjectInfoRepository(const sqlitepp::ScopedSqlite3Object& connection)
+	: _db(connection)
 {
-	const auto result = sqlite3_open_v2(utf8DbPath.c_str(), _db, SQLITE_OPEN_READWRITE, 0);
-	if (result != SQLITE_OK)
-	{
-		throw OpenDatabaseFailedException((boost::format("Cannot open database at %1%. SQLite returned %2%") % utf8DbPath % result).str());
-	}
-
 	// Prepare statements so they're good to go
 	sqlitepp::prepare_or_throw(_db, "INSERT INTO Object (Address, Type) VALUES (:Address, :Type)", _insertObjectStatement);
 	sqlitepp::prepare_or_throw(_db, "INSERT INTO ObjectBlob (ObjectAddress, BlobAddress, Key, Position) VALUES (:ObjectAddress, :BlobAddress, :Key, :Position)", _insertObjectBlobStatement);

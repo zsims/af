@@ -7,7 +7,6 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <sqlite3.h>
 
 #include <ctime>
 
@@ -20,6 +19,11 @@ Forest::Forest(const std::string& utf8DbPath)
 {
 }
 
+Forest::~Forest()
+{
+	// Needed to delete incomplete types
+}
+
 void Forest::Open()
 {
 	if (!boost::filesystem::exists(_utf8DbPath))
@@ -27,8 +31,15 @@ void Forest::Open()
 		throw DatabaseNotFoundException(_utf8DbPath);
 	}
 
-	_blobInfoRepository.reset(new blob::BlobInfoRepository(_utf8DbPath));
-	_objectInfoRepository.reset(new object::ObjectInfoRepository(_utf8DbPath));
+	// Share the connection between the repos, note that the repos should be destroyed before this connection is
+	_connection.reset(new sqlitepp::ScopedSqlite3Object());
+	const auto result = sqlite3_open_v2(_utf8DbPath.c_str(), *_connection, SQLITE_OPEN_READWRITE, 0);
+	if (result != SQLITE_OK)
+	{
+		throw OpenDatabaseFailedException((boost::format("Cannot open database at %1%. SQLite returned %2%") % _utf8DbPath % result).str());
+	}
+	_blobInfoRepository.reset(new blob::BlobInfoRepository(*_connection));
+	_objectInfoRepository.reset(new object::ObjectInfoRepository(*_connection));
 }
 
 void Forest::Create()
