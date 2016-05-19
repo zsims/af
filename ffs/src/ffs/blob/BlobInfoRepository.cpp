@@ -87,9 +87,9 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 	{
 		if (stepResult == SQLITE_CONSTRAINT)
 		{
-			throw DuplicateBlobException((boost::format("Attempted to insert duplicate blob %1%. SQLite error %2%") % info.GetAddress().ToString() % stepResult).str());
+			throw DuplicateBlobException(info.GetAddress());
 		}
-		throw AddBlobFailedException((boost::format("Failed to execute statement for insert blob. SQLite error %2%") % info.GetAddress().ToString() % stepResult).str());
+		throw AddBlobFailedException((boost::format("Failed to execute statement for insert blob %1%. SQLite error %2%") % info.GetAddress().ToString() % stepResult).str());
 	}
 
 	transaction.Commit();
