@@ -2,6 +2,7 @@
 
 #include "ffs/exceptions.hpp"
 #include "ffs/blob/BlobInfoRepository.hpp"
+#include "ffs/blob/BlobStore.hpp"
 #include "ffs/object/ObjectInfoRepository.hpp"
 #include "ffs/ScopedUnitOfWork.hpp"
 #include "ffs/sqlitepp/handles.hpp"
@@ -14,9 +15,10 @@
 namespace af {
 namespace ffs {
 
-Forest::Forest(const std::string& utf8DbPath)
+Forest::Forest(const std::string& utf8DbPath, std::shared_ptr<blob::BlobStore> blobStore)
 	: _utf8DbPath(utf8DbPath)
 	, _random(static_cast<unsigned>(time(0)))
+	, _blobStore(blobStore)
 {
 }
 
@@ -107,6 +109,23 @@ object::ObjectInfo Forest::GetObject(const ObjectAddress& address) const
 {
 	ScopedUnitOfWork uow(*_connection);
 	return _objectInfoRepository->GetObject(address);
+}
+
+BlobAddress Forest::CreateBlob(const std::vector<uint8_t>& content)
+{
+	ScopedUnitOfWork uow(*_connection);
+	const auto address = BlobAddress::CalculateFromContent(content);
+	_blobStore->CreateBlob(address, content);
+	_blobInfoRepository->AddBlob(blob::BlobInfo(address, content.size()));
+	uow.Commit();
+	return address;
+}
+
+std::vector<uint8_t> Forest::GetBlob(const BlobAddress& address)
+{
+	ScopedUnitOfWork uow(*_connection);
+	// TODO: does this need to be tracked/looked up?
+	return _blobStore->GetBlob(address);
 }
 
 }

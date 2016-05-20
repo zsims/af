@@ -20,8 +20,10 @@ protected:
 	{
 		_directoryBlobStorePath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 		boost::filesystem::create_directories(_directoryBlobStorePath);
+		_blobStore = std::make_shared<blob::DirectoryBlobStore>(_directoryBlobStorePath.string());
+
 		_forestDbPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb");
-		_forest.reset(new Forest(_forestDbPath.string()));
+		_forest.reset(new Forest(_forestDbPath.string(), _blobStore));
 	}
 
 	virtual void TearDown() override
@@ -43,6 +45,7 @@ protected:
 	boost::filesystem::path _directoryBlobStorePath;
 	boost::filesystem::path _forestDbPath;
 	std::unique_ptr<Forest> _forest;
+	std::shared_ptr<blob::DirectoryBlobStore> _blobStore;
 };
 
 TEST_F(ForestIntegrationTest, CreateSuccess)
@@ -78,10 +81,8 @@ TEST_F(ForestIntegrationTest, Stuff)
 	boost::filesystem::create_directories(storagePath);
 
 	_forest->Create();
-	blob::DirectoryBlobStore directoryStore(_forest->GetBlobInfoRepository(), storagePath.string());
-
 	const std::vector<uint8_t> content = {1, 2, 3, 4};
-	const auto blobAddress = directoryStore.CreateBlob(content);
+	const auto blobAddress = _forest->CreateBlob(content);
 
 	const object::ObjectBlobList objectBlobs = {
 		{"content", blobAddress}

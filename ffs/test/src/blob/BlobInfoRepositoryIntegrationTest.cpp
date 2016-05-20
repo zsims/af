@@ -1,5 +1,6 @@
 #include "ffs/blob/BlobInfoRepository.hpp"
 #include "ffs/blob/exceptions.hpp"
+#include "ffs/blob/NullBlobStore.hpp"
 #include "ffs/forest.hpp"
 #include "ffs/sqlitepp/sqlitepp.hpp"
 
@@ -20,7 +21,7 @@ protected:
 	virtual void SetUp() override
 	{
 		_forestDbPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb");
-		Forest forest(_forestDbPath.string());
+		Forest forest(_forestDbPath.string(), std::make_shared<blob::NullBlobStore>());
 		forest.Create();
 
 		_connection = std::make_unique<sqlitepp::ScopedSqlite3Object>();

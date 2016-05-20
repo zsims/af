@@ -13,6 +13,7 @@ set(PUBLIC_INCLUDES
     include/ffs/blob/BlobInfo.hpp
     include/ffs/blob/BlobStore.hpp
     include/ffs/blob/DirectoryBlobStore.hpp
+    include/ffs/blob/NullBlobStore.hpp
     include/ffs/object/ObjectInfo.hpp
 )
 
@@ -22,7 +23,6 @@ set(SOURCES
     src/ffs/ScopedUnitOfWork.hpp
     src/ffs/blob/BlobInfoRepository.cpp
     src/ffs/blob/BlobInfoRepository.hpp
-    src/ffs/blob/BlobStore.cpp
     src/ffs/blob/DirectoryBlobStore.cpp
     src/ffs/blob/exceptions.hpp
     src/ffs/object/ObjectInfoRepository.cpp

@@ -16,9 +16,8 @@ namespace blob {
 class DirectoryBlobStore : public BlobStore
 {
 public:
-	DirectoryBlobStore(std::shared_ptr<BlobInfoRepository> repository, const boost::filesystem::path& rootPath);
-
-	BlobAddress CreateBlob(const std::vector<uint8_t>& content) override;
+	explicit DirectoryBlobStore(const boost::filesystem::path& rootPath);
+	void CreateBlob(const BlobAddress& address, const std::vector<uint8_t>& content) override;
 	std::vector<uint8_t> GetBlob(const BlobAddress& address) override;
 private:
 	const boost::filesystem::path _rootPath;

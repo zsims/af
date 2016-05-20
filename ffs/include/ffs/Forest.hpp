@@ -12,6 +12,7 @@ namespace ffs {
 
 namespace blob {
 class BlobInfoRepository;
+class BlobStore;
 }
 
 namespace object {
@@ -28,7 +29,7 @@ public:
 	/**
 	 * Initializes forest with the given path for opening or creating.
 	 */
-	explicit Forest(const std::string& utf8DbPath);
+	explicit Forest(const std::string& utf8DbPath, std::shared_ptr<blob::BlobStore> blobStore);
 	~Forest();
 
 	/**
@@ -55,10 +56,20 @@ public:
 	 */
 	object::ObjectInfo GetObject(const ObjectAddress& address) const;
 
-	std::shared_ptr<blob::BlobInfoRepository> GetBlobInfoRepository() const { return _blobInfoRepository; }
+	/**
+	 * Creates a new blob.
+	 */
+	BlobAddress CreateBlob(const std::vector<uint8_t>& content);
+
+	/**
+	 * Gets a blob by address.
+	 * \exception BlobReadException The blob with the given address couldn't be read, e.g. it doesn't exist or a permissions failure.
+	 */
+	std::vector<uint8_t> GetBlob(const BlobAddress& address);
 private:
 	const std::string _utf8DbPath;
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
+	std::shared_ptr<blob::BlobStore> _blobStore;
 	std::shared_ptr<blob::BlobInfoRepository> _blobInfoRepository;
 	std::shared_ptr<object::ObjectInfoRepository> _objectInfoRepository;
 	std::mt19937 _random;

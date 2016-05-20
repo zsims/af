@@ -54,7 +54,6 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 	const auto addressIndex = sqlite3_bind_parameter_index(_insertBlobStatement, ":Address");
 	const auto sizeBytesIndex = sqlite3_bind_parameter_index(_insertBlobStatement, ":SizeBytes");
 
-	sqlitepp::ScopedTransaction transaction(_db);
 	sqlitepp::ScopedStatementReset reset(_insertBlobStatement);
 	{
 		const auto bindResult = sqlite3_bind_blob(_insertBlobStatement, addressIndex, &binaryAddress[0], static_cast<int>(binaryAddress.size()), 0);
@@ -81,8 +80,6 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 		}
 		throw AddBlobFailedException((boost::format("Failed to execute statement for insert blob %1%. SQLite error %2%") % info.GetAddress().ToString() % stepResult).str());
 	}
-
-	transaction.Commit();
 }
 
 }
