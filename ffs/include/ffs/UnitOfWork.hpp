@@ -31,7 +31,7 @@ public:
 	virtual object::ObjectInfo GetObject(const ObjectAddress& address) const = 0;
 
 	/**
-	 * Creates a new blob.
+	 * Creates a new blob. If a blob with the same content already exists, then its address is returned.
 	 */
 	virtual BlobAddress CreateBlob(const std::vector<uint8_t>& content) = 0;
 

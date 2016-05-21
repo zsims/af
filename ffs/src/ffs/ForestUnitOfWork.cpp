@@ -49,6 +49,13 @@ object::ObjectInfo ForestUnitOfWork::GetObject(const ObjectAddress& address) con
 BlobAddress ForestUnitOfWork::CreateBlob(const std::vector<uint8_t>& content)
 {
 	const auto address = BlobAddress::CalculateFromContent(content);
+	const auto existingBlob = _blobInfoRepository.FindBlob(address);
+	if (existingBlob)
+	{
+		// TOOD: Should get the store to double check at least?
+		return address;
+	}
+
 	_blobStore.CreateBlob(address, content);
 	_blobInfoRepository.AddBlob(blob::BlobInfo(address, content.size()));
 	return address;

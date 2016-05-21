@@ -136,6 +136,21 @@ TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
 	}
 }
 
+TEST_F(ForestIntegrationTest, CreateBlobDuplicateSuccess)
+{
+	// Arrange
+	_forest->Create();
+	auto uow = _forest->CreateUnitOfWork();
+	const std::vector<uint8_t> content = {1, 2, 3, 4};
+
+	// Act
+	const auto blobAddress = uow->CreateBlob(content);
+	const auto blobAddress2 = uow->CreateBlob(content);
+
+	// Assert
+	EXPECT_EQ(blobAddress, blobAddress2);
+}
+
 TEST_F(ForestIntegrationTest, Stuff)
 {
 	_forest->Create();

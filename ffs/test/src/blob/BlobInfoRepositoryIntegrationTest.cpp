@@ -76,6 +76,42 @@ TEST_F(BlobInfoRepositoryIntegrationTest, AddBlobThrowsOnDuplicate)
 	ASSERT_THROW(repo.AddBlob(blobInfo2), DuplicateBlobException);
 }
 
+TEST_F(BlobInfoRepositoryIntegrationTest, FindBlobNullIfNotFound)
+{
+	// Arrange
+	BlobInfoRepository repo(*_connection);
+
+	const BlobAddress key("cf23df2207d99a74fbe169e3eba035e633b65d94");
+	const BlobAddress key2("ef23df2207d99a74fbe169e3eba035e633b65d94");
+	const BlobInfo blobInfo1(key, 3573975UL);
+	repo.AddBlob(blobInfo1);
+
+	// Act
+	const auto result = repo.FindBlob(key2);
+
+	// Assert
+	EXPECT_FALSE(result);
+}
+
+TEST_F(BlobInfoRepositoryIntegrationTest, FindBlobSuccess)
+{
+	// Arrange
+	BlobInfoRepository repo(*_connection);
+
+	const BlobInfo blobInfo1(BlobAddress("cf23df2207d99a74fbe169e3eba035e633b65d94"), 3573975UL);
+	const BlobInfo blobInfo2(BlobAddress("5323df2207d99a74fbe169e3eba035e635779792"), 75UL);
+
+	repo.AddBlob(blobInfo1);
+	repo.AddBlob(blobInfo2);
+
+	// Act
+	const auto result = repo.FindBlob(blobInfo1.GetAddress());
+
+	// Assert
+	ASSERT_TRUE(result);
+	EXPECT_EQ(blobInfo1, *result);
+}
+
 }
 }
 }

@@ -20,6 +20,11 @@ enum GetAllBlobsColumnIndex
 	GetAllBlobs_ColumnIndex_Address = 0,
 	GetAllBlobs_ColumnIndex_SizeBytes
 };
+
+enum FindBlobColumnIndex
+{
+	FindBlob_ColumnIndex_SizeBytes = 0
+};
 }
 
 BlobInfoRepository::BlobInfoRepository(const sqlitepp::ScopedSqlite3Object& connection)
@@ -27,6 +32,7 @@ BlobInfoRepository::BlobInfoRepository(const sqlitepp::ScopedSqlite3Object& conn
 {
 	sqlitepp::prepare_or_throw(_db, "INSERT INTO Blob (Address, SizeBytes) VALUES (:Address, :SizeBytes)", _insertBlobStatement);
 	sqlitepp::prepare_or_throw(_db, "SELECT Address, SizeBytes FROM Blob", _getAllBlobsStatement);
+	sqlitepp::prepare_or_throw(_db, "SELECT SizeBytes FROM Blob WHERE Address = :Address", _findBlobStatement);
 }
 
 std::vector<std::shared_ptr<BlobInfo>> BlobInfoRepository::GetAllBlobs() const
@@ -80,6 +86,27 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 		}
 		throw AddBlobFailedException((boost::format("Failed to execute statement for insert blob %1%. SQLite error %2%") % info.GetAddress().ToString() % stepResult).str());
 	}
+}
+
+std::unique_ptr<BlobInfo> BlobInfoRepository::FindBlob(const BlobAddress& address)
+{
+	const auto binaryAddress = address.ToBinary();
+	sqlitepp::ScopedStatementReset reset(_findBlobStatement);
+	const auto index = sqlite3_bind_parameter_index(_findBlobStatement, ":Address");
+	const auto bindResult = sqlite3_bind_blob(_findBlobStatement, index, &binaryAddress[0], static_cast<int>(binaryAddress.size()), 0);
+	if (bindResult != SQLITE_OK)
+	{
+		throw BlobNotFoundException((boost::format("Failed to bind object parameter address %1%. SQLite error %2%") % address.ToString() % bindResult).str());
+	}
+
+	const auto stepResult = sqlite3_step(_findBlobStatement);
+	if (stepResult != SQLITE_ROW)
+	{
+		return std::unique_ptr<BlobInfo>();
+	}
+
+	const auto sizeBytes = static_cast<uint64_t>(sqlite3_column_int64(_findBlobStatement, FindBlob_ColumnIndex_SizeBytes));
+	return std::make_unique<BlobInfo>(address, sizeBytes);
 }
 
 }

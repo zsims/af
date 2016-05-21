@@ -33,10 +33,17 @@ public:
 	 * \throws DuplicateBlobException if the address has already been stored
 	 */
 	void AddBlob(const BlobInfo& info);
+
+	/**
+	 * Finds a blob by address.
+	 * \return a NULL pointer if the blob couldn't be found, else its information.
+	 */
+	std::unique_ptr<BlobInfo> FindBlob(const BlobAddress& address);
 private:
 	const sqlitepp::ScopedSqlite3Object& _db;
 	sqlitepp::ScopedStatement _getAllBlobsStatement;
 	sqlitepp::ScopedStatement _insertBlobStatement;
+	sqlitepp::ScopedStatement _findBlobStatement;
 };
 
 }
