@@ -24,7 +24,7 @@ void Forest::Open()
 {
 	if (!boost::filesystem::exists(_utf8DbPath))
 	{
-		throw DatabaseNotFoundException((boost::format("No database found at %1%") % _utf8DbPath).str());
+		throw DatabaseNotFoundException(_utf8DbPath);
 	}
 
 	_blobInfoRepository.reset(new blob::BlobInfoRepository(_utf8DbPath));
@@ -36,7 +36,7 @@ void Forest::Create()
 	{
 		if (boost::filesystem::exists(_utf8DbPath))
 		{
-			throw DatabaseAlreadyExistsException((boost::format("Cannot create database, a file already exists at %1%") % _utf8DbPath).str());
+			throw DatabaseAlreadyExistsException(_utf8DbPath);
 		}
 
 		sqlitepp::ScopedSqlite3Object db;
