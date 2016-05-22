@@ -2,6 +2,7 @@
 #include "ffs/Forest.hpp"
 #include "ffs/blob/DirectoryBlobStore.hpp"
 #include "ffs/blob/exceptions.hpp"
+#include "ffs/object/exceptions.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -75,25 +76,88 @@ TEST_F(ForestIntegrationTest, OpenThrowsIfNotExists)
 	EXPECT_THROW(_forest->Open(), DatabaseNotFoundException);
 }
 
+TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
+{
+	// Arrange
+	_forest->Create();
+
+	ObjectAddress objectAddress;
+	{
+		auto uow = _forest->CreateUnitOfWork();
+		const std::vector<uint8_t> content = { 1, 2, 3, 4 };
+		const auto blobAddress = uow->CreateBlob(content);
+		const object::ObjectBlobList objectBlobs = {
+			{"content", blobAddress}
+		};
+		objectAddress = uow->CreateObject("file", objectBlobs);
+		// Act
+		uow->Commit();
+	}
+
+	// Assert
+	{
+		auto uow = _forest->CreateUnitOfWork();
+		EXPECT_EQ(objectAddress, uow->GetObject(objectAddress).GetAddress());
+	}
+}
+
+TEST_F(ForestIntegrationTest, CreateUnitOfWorkTwiceFails)
+{
+	// Arrange
+	_forest->Create();
+
+	// Act
+	// Assert
+	// No support for multiple connections yet, so this isn't possible
+	auto uow1 = _forest->CreateUnitOfWork();
+	EXPECT_THROW(_forest->CreateUnitOfWork(), std::runtime_error);
+}
+
+TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
+{
+	// Arrange
+	_forest->Create();
+
+	// Act
+	ObjectAddress objectAddress;
+	{
+		auto uow = _forest->CreateUnitOfWork();
+
+		const std::vector<uint8_t> content = { 1, 2, 3, 4 };
+		const auto blobAddress = uow->CreateBlob(content);
+		const object::ObjectBlobList objectBlobs = {
+			{"content", blobAddress}
+		};
+		objectAddress = uow->CreateObject("file", objectBlobs);
+	}
+
+	// Assert
+	{
+		auto uow = _forest->CreateUnitOfWork();
+		EXPECT_THROW(uow->GetObject(objectAddress), object::ObjectNotFoundException);
+	}
+}
+
 TEST_F(ForestIntegrationTest, Stuff)
 {
-	const auto storagePath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-	boost::filesystem::create_directories(storagePath);
-
 	_forest->Create();
+
+	auto uow = _forest->CreateUnitOfWork();
 	const std::vector<uint8_t> content = {1, 2, 3, 4};
-	const auto blobAddress = _forest->CreateBlob(content);
+	const auto blobAddress = uow->CreateBlob(content);
 
 	const object::ObjectBlobList objectBlobs = {
 		{"content", blobAddress}
 	};
-	const auto objectAddress = _forest->CreateObject("file", objectBlobs);
+	const auto objectAddress = uow->CreateObject("file", objectBlobs);
 
 	// WOW!
-	const auto storedObject = _forest->GetObject(objectAddress);
+	const auto storedObject = uow->GetObject(objectAddress);
 	EXPECT_EQ(objectAddress, storedObject.GetAddress());
 	EXPECT_EQ("file", storedObject.GetType());
 	EXPECT_EQ(objectBlobs, storedObject.GetBlobs());
+
+	uow->Commit();
 }
 
 }

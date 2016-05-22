@@ -4,20 +4,17 @@
 #include "ffs/blob/BlobInfoRepository.hpp"
 #include "ffs/blob/BlobStore.hpp"
 #include "ffs/object/ObjectInfoRepository.hpp"
-#include "ffs/ScopedUnitOfWork.hpp"
 #include "ffs/sqlitepp/handles.hpp"
+#include "ffs/ForestUnitOfWork.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-
-#include <ctime>
 
 namespace af {
 namespace ffs {
 
 Forest::Forest(const std::string& utf8DbPath, std::shared_ptr<blob::BlobStore> blobStore)
 	: _utf8DbPath(utf8DbPath)
-	, _random(static_cast<unsigned>(time(0)))
 	, _blobStore(blobStore)
 {
 }
@@ -85,48 +82,12 @@ void Forest::Create()
 	Open();
 }
 
-ObjectAddress Forest::CreateObject(const std::string& type, const object::ObjectBlobList& objectBlobs)
-{
-	ScopedUnitOfWork uow(*_connection);
-	auto r = [this]() {
-		return static_cast<uint8_t>(_random());
-	};
-	// generate a new random address
-	ObjectAddress address(binary_address{
-		r(), r(), r(), r(), r(),
-		r(), r(), r(), r(), r(),
-		r(), r(), r(), r(), r(),
-		r(), r(), r(), r(), r()
-	});
-	object::ObjectInfo info(address, type, objectBlobs);
-	_objectInfoRepository->AddObject(info);
 
-	uow.Commit();
-	return address;
+std::unique_ptr<UnitOfWork> Forest::CreateUnitOfWork()
+{
+	return std::make_unique<ForestUnitOfWork>(*_connection, _blobStore, _blobInfoRepository, _objectInfoRepository);
 }
 
-object::ObjectInfo Forest::GetObject(const ObjectAddress& address) const
-{
-	ScopedUnitOfWork uow(*_connection);
-	return _objectInfoRepository->GetObject(address);
-}
-
-BlobAddress Forest::CreateBlob(const std::vector<uint8_t>& content)
-{
-	ScopedUnitOfWork uow(*_connection);
-	const auto address = BlobAddress::CalculateFromContent(content);
-	_blobStore->CreateBlob(address, content);
-	_blobInfoRepository->AddBlob(blob::BlobInfo(address, content.size()));
-	uow.Commit();
-	return address;
-}
-
-std::vector<uint8_t> Forest::GetBlob(const BlobAddress& address)
-{
-	ScopedUnitOfWork uow(*_connection);
-	// TODO: does this need to be tracked/looked up?
-	return _blobStore->GetBlob(address);
-}
 
 }
 }
