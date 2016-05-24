@@ -24,7 +24,7 @@ public:
 	 */
 	explicit ObjectInfoRepository(const sqlitepp::ScopedSqlite3Object& connection);
 
-	std::vector<ObjectInfoPtr> GetAllObjects() const;
+	std::vector<std::shared_ptr<ObjectInfo>> GetAllObjects() const;
 
 	void AddObject(const ObjectInfo& info);
 	ObjectInfo GetObject(const ObjectAddress& address) const;
@@ -37,8 +37,6 @@ private:
 	sqlitepp::ScopedStatement _getObjectStatement;
 	sqlitepp::ScopedStatement _getAllObjectsStatement;
 };
-
-typedef std::shared_ptr<ObjectInfoRepository> ObjectInfoRepositoryPtr;
 
 }
 }

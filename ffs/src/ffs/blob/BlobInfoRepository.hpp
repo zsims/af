@@ -26,7 +26,7 @@ public:
 	/**
 	 * Returns all of the blobs known.
 	 */
-	std::vector<BlobInfoModelPtr> GetAllBlobs() const;
+	std::vector<std::shared_ptr<BlobInfo>> GetAllBlobs() const;
 
 	/**
 	 * Adds a blob.
@@ -38,8 +38,6 @@ private:
 	sqlitepp::ScopedStatement _getAllBlobsStatement;
 	sqlitepp::ScopedStatement _insertBlobStatement;
 };
-
-typedef std::shared_ptr<BlobInfoRepository> BlobInfoRepositoryPtr;
 
 }
 }

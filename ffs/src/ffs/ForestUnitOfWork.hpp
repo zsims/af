@@ -21,9 +21,9 @@ class ForestUnitOfWork : public UnitOfWork
 public:
 	ForestUnitOfWork(
 		sqlite3* connection,
-		std::shared_ptr<blob::BlobStore> blobStore,
-		std::shared_ptr<blob::BlobInfoRepository> blobInfoRepository,
-		std::shared_ptr<object::ObjectInfoRepository> objectInfoRepository);
+		blob::BlobStore& blobStore,
+		blob::BlobInfoRepository& blobInfoRepository,
+		object::ObjectInfoRepository& objectInfoRepository);
 
 	void Commit() override;
 
@@ -34,9 +34,9 @@ public:
 private:
 	std::mt19937 _random;
 	sqlitepp::ScopedTransaction _transaction;
-	std::shared_ptr<blob::BlobStore> _blobStore;
-	std::shared_ptr<blob::BlobInfoRepository> _blobInfoRepository;
-	std::shared_ptr<object::ObjectInfoRepository> _objectInfoRepository;
+	blob::BlobStore& _blobStore;
+	blob::BlobInfoRepository& _blobInfoRepository;
+	object::ObjectInfoRepository& _objectInfoRepository;
 };
 
 

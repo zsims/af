@@ -35,8 +35,6 @@ private:
 	const ObjectBlobList _blobs;
 };
 
-typedef std::shared_ptr<ObjectInfo> ObjectInfoPtr;
-
 }
 }
 }

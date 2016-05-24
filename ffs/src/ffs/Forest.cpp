@@ -13,9 +13,9 @@
 namespace af {
 namespace ffs {
 
-Forest::Forest(const std::string& utf8DbPath, std::shared_ptr<blob::BlobStore> blobStore)
+Forest::Forest(const std::string& utf8DbPath, std::unique_ptr<blob::BlobStore> blobStore)
 	: _utf8DbPath(utf8DbPath)
-	, _blobStore(blobStore)
+	, _blobStore(std::move(blobStore))
 {
 }
 
@@ -85,7 +85,7 @@ void Forest::Create()
 
 std::unique_ptr<UnitOfWork> Forest::CreateUnitOfWork()
 {
-	return std::make_unique<ForestUnitOfWork>(*_connection, _blobStore, _blobInfoRepository, _objectInfoRepository);
+	return std::make_unique<ForestUnitOfWork>(*_connection, *_blobStore, *_blobInfoRepository, *_objectInfoRepository);
 }
 
 

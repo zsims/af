@@ -27,8 +27,6 @@ private:
 	const uint64_t _sizeBytes;
 };
 
-typedef std::shared_ptr<BlobInfo> BlobInfoModelPtr;
-
 }
 }
 }

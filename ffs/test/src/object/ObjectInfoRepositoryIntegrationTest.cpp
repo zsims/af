@@ -22,7 +22,7 @@ protected:
 	virtual void SetUp() override
 	{
 		_forestDbPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb");
-		Forest forest(_forestDbPath.string(), std::make_shared<blob::NullBlobStore>());
+		Forest forest(_forestDbPath.string(), std::make_unique<blob::NullBlobStore>());
 		forest.Create();
 
 		_connection = std::make_unique<sqlitepp::ScopedSqlite3Object>();
@@ -104,11 +104,11 @@ TEST_F(ObjectInfoRepositoryIntegrationTest, GetALlObjectsPreservesObjectBlobs)
 	const auto result = repo.GetAllObjects();
 
 	// Assert
-	const auto o1it = std::find_if(result.begin(), result.end(), [&](ObjectInfoPtr o) { return *o == objectInfo1; });
+	const auto o1it = std::find_if(result.begin(), result.end(), [&](auto o) { return *o == objectInfo1; });
 	ASSERT_NE(o1it, result.end());
 	EXPECT_EQ(expectedBlobList1, (*o1it)->GetBlobs());
 
-	const auto o2it = std::find_if(result.begin(), result.end(), [&](ObjectInfoPtr o) { return *o == objectInfo2; });
+	const auto o2it = std::find_if(result.begin(), result.end(), [&](auto o) { return *o == objectInfo2; });
 	ASSERT_NE(o2it, result.end());
 	EXPECT_EQ(expectedBlobList2, (*o2it)->GetBlobs());
 
