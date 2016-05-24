@@ -9,6 +9,8 @@
 #include "ffs/sqlitepp/ScopedTransaction.hpp"
 #include "ffs/UnitOfWork.hpp"
 
+#include <boost/core/noncopyable.hpp>
+
 #include <random>
 
 namespace af {
@@ -17,9 +19,6 @@ namespace ffs {
 class ForestUnitOfWork : public UnitOfWork
 {
 public:
-	ForestUnitOfWork(const ForestUnitOfWork& that) = delete;
-	ForestUnitOfWork& operator=(const ForestUnitOfWork&) = delete;
-
 	ForestUnitOfWork(
 		sqlite3* connection,
 		std::shared_ptr<blob::BlobStore> blobStore,

@@ -1,17 +1,16 @@
 #pragma once
 
+#include <boost/core/noncopyable.hpp>
+
 struct sqlite3;
 
 namespace af {
 namespace ffs {
 namespace sqlitepp {
 
-class ScopedTransaction
+class ScopedTransaction : private boost::noncopyable
 {
 public:
-	ScopedTransaction(const ScopedTransaction& that) = delete;
-	ScopedTransaction& operator=(const ScopedTransaction&) = delete;
-
 	/**
 	 * Start a new scoped transaction.
 	 * \throws BeginTransactionFailedException The transaction cannot be committed.
