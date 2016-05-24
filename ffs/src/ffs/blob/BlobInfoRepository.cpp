@@ -3,7 +3,6 @@
 
 #include "ffs/blob/BlobInfo.hpp"
 #include "ffs/blob/exceptions.hpp"
-#include "ffs/exceptions.hpp"
 #include "ffs/sqlitepp/sqlitepp.hpp"
 
 #include <boost/format.hpp>
@@ -23,14 +22,9 @@ enum GetAllBlobsColumnIndex
 };
 }
 
-BlobInfoRepository::BlobInfoRepository(const std::string& utf8DbPath)
+BlobInfoRepository::BlobInfoRepository(const sqlitepp::ScopedSqlite3Object& connection)
+	: _db(connection)
 {
-	const auto result = sqlite3_open_v2(utf8DbPath.c_str(), _db, SQLITE_OPEN_READWRITE, 0);
-	if (result != SQLITE_OK)
-	{
-		throw OpenDatabaseFailedException((boost::format("Cannot open database at %1%. SQLite returned %2%") % utf8DbPath % result).str());
-	}
-
 	sqlitepp::prepare_or_throw(_db, "INSERT INTO Blob (Address, SizeBytes) VALUES (:Address, :SizeBytes)", _insertBlobStatement);
 	sqlitepp::prepare_or_throw(_db, "SELECT Address, SizeBytes FROM Blob", _getAllBlobsStatement);
 }
@@ -38,7 +32,6 @@ BlobInfoRepository::BlobInfoRepository(const std::string& utf8DbPath)
 std::vector<BlobInfoModelPtr> BlobInfoRepository::GetAllBlobs() const
 {
 	std::vector<BlobInfoModelPtr> result;
-	sqlitepp::ScopedTransaction transaction(_db);
 	sqlitepp::ScopedStatementReset reset(_getAllBlobsStatement);
 
 	auto stepResult = 0;
@@ -50,9 +43,6 @@ std::vector<BlobInfoModelPtr> BlobInfoRepository::GetAllBlobs() const
 		const auto sizeBytes = static_cast<uint64_t>(sqlite3_column_int64(_getAllBlobsStatement, GetAllBlobs_ColumnIndex_SizeBytes));
 		result.push_back(std::make_shared<BlobInfo>(address, sizeBytes));
 	}
-
-	transaction.Rollback();
-
 	return result;
 }
 
@@ -64,7 +54,6 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 	const auto addressIndex = sqlite3_bind_parameter_index(_insertBlobStatement, ":Address");
 	const auto sizeBytesIndex = sqlite3_bind_parameter_index(_insertBlobStatement, ":SizeBytes");
 
-	sqlitepp::ScopedTransaction transaction(_db);
 	sqlitepp::ScopedStatementReset reset(_insertBlobStatement);
 	{
 		const auto bindResult = sqlite3_bind_blob(_insertBlobStatement, addressIndex, &binaryAddress[0], static_cast<int>(binaryAddress.size()), 0);
@@ -91,8 +80,6 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 		}
 		throw AddBlobFailedException((boost::format("Failed to execute statement for insert blob %1%. SQLite error %2%") % info.GetAddress().ToString() % stepResult).str());
 	}
-
-	transaction.Commit();
 }
 
 }

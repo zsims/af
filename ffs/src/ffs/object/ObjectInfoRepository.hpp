@@ -20,9 +20,9 @@ class ObjectInfoRepository
 {
 public:
 	/**
-	 * Creates a new object info repository given an existing database path.
+	 * Creates a new object info repository given an existing connection.
 	 */
-	explicit ObjectInfoRepository(const std::string& utf8DbPath);
+	explicit ObjectInfoRepository(const sqlitepp::ScopedSqlite3Object& connection);
 
 	std::vector<ObjectInfoPtr> GetAllObjects() const;
 
@@ -31,7 +31,7 @@ public:
 private:
 	void InsertObjectBlobs(const binary_address& objectAddress, const ObjectBlobList& objectBlobs);
 
-	sqlitepp::ScopedSqlite3Object _db;
+	const sqlitepp::ScopedSqlite3Object& _db;
 	sqlitepp::ScopedStatement _insertObjectStatement;
 	sqlitepp::ScopedStatement _insertObjectBlobStatement;
 	sqlitepp::ScopedStatement _getObjectStatement;

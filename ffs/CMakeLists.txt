@@ -9,19 +9,22 @@ source_group("include\\object\\ffs" REGULAR_EXPRESSION "include/ffs/object/.*")
 set(PUBLIC_INCLUDES
     include/ffs/Address.hpp
     include/ffs/Forest.hpp
+    include/ffs/UnitOfWork.hpp
     include/ffs/exceptions.hpp
     include/ffs/blob/BlobInfo.hpp
     include/ffs/blob/BlobStore.hpp
     include/ffs/blob/DirectoryBlobStore.hpp
+    include/ffs/blob/NullBlobStore.hpp
     include/ffs/object/ObjectInfo.hpp
 )
 
 set(SOURCES
     src/ffs/Address.cpp
     src/ffs/Forest.cpp
+    src/ffs/ForestUnitOfWork.cpp
+    src/ffs/ForestUnitOfWork.hpp
     src/ffs/blob/BlobInfoRepository.cpp
     src/ffs/blob/BlobInfoRepository.hpp
-    src/ffs/blob/BlobStore.cpp
     src/ffs/blob/DirectoryBlobStore.cpp
     src/ffs/blob/exceptions.hpp
     src/ffs/object/ObjectInfoRepository.cpp

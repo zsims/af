@@ -1,11 +1,15 @@
 #include "ffs/forest.hpp"
 #include "ffs/blob/BlobInfoRepository.hpp"
+#include "ffs/blob/NullBlobStore.hpp"
 #include "ffs/object/ObjectInfoRepository.hpp"
 #include "ffs/object/exceptions.hpp"
+#include "ffs/sqlitepp/sqlitepp.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <memory>
 
 namespace af {
 namespace ffs {
@@ -18,23 +22,29 @@ protected:
 	virtual void SetUp() override
 	{
 		_forestDbPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb");
-		Forest forest(_forestDbPath.string());
+		Forest forest(_forestDbPath.string(), std::make_shared<blob::NullBlobStore>());
 		forest.Create();
+
+		_connection = std::make_unique<sqlitepp::ScopedSqlite3Object>();
+		const auto result = sqlite3_open_v2(_forestDbPath.string().c_str(), *_connection, SQLITE_OPEN_READWRITE, 0);
+		ASSERT_EQ(SQLITE_OK, result);
 	}
 
 	virtual void TearDown() override
 	{
+		_connection.reset();
 		boost::system::error_code ec;
 		boost::filesystem::remove(_forestDbPath, ec);
 	}
 
+	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
 	boost::filesystem::path _forestDbPath;
 };
 
 TEST_F(ObjectInfoRepositoryIntegrationTest, GetAllObjects)
 {
 	// Arrange
-	ObjectInfoRepository repo(_forestDbPath.string());
+	ObjectInfoRepository repo(*_connection);
 
 	const ObjectInfo objectInfo1(ObjectAddress("5323df2207d99a74fbe169e3eba035e635779792"), "file", {});
 	const ObjectInfo objectInfo2(ObjectAddress("f5979d9f79727592759272503253405739475393"), "content", {});
@@ -56,8 +66,8 @@ TEST_F(ObjectInfoRepositoryIntegrationTest, GetAllObjects)
 TEST_F(ObjectInfoRepositoryIntegrationTest, GetALlObjectsPreservesObjectBlobs)
 {
 	// Arrange
-	ObjectInfoRepository repo(_forestDbPath.string());
-	blob::BlobInfoRepository blobRepo(_forestDbPath.string());
+	ObjectInfoRepository repo(*_connection);
+	blob::BlobInfoRepository blobRepo(*_connection);
 
 	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
 	const blob::BlobInfo blobInfo2(BlobAddress("2f59225215937593795395739753973973593571"), 157UL);
@@ -107,7 +117,7 @@ TEST_F(ObjectInfoRepositoryIntegrationTest, GetALlObjectsPreservesObjectBlobs)
 TEST_F(ObjectInfoRepositoryIntegrationTest, GetObject)
 {
 	// Arrange
-	ObjectInfoRepository repo(_forestDbPath.string());
+	ObjectInfoRepository repo(*_connection);
 	const ObjectInfo objectInfo(ObjectAddress("5793273948759387987921653297557398753498"), "file", {});
 	repo.AddObject(objectInfo);
 	// Act
@@ -118,8 +128,8 @@ TEST_F(ObjectInfoRepositoryIntegrationTest, GetObject)
 TEST_F(ObjectInfoRepositoryIntegrationTest, GetObjectPreservesObjectBlobs)
 {
 	// Arrange
-	ObjectInfoRepository repo(_forestDbPath.string());
-	blob::BlobInfoRepository blobRepo(_forestDbPath.string());
+	ObjectInfoRepository repo(*_connection);
+	blob::BlobInfoRepository blobRepo(*_connection);
 
 	const blob::BlobInfo blobInfo1(BlobAddress("f259225215937593795395739753973973593571"), 444UL);
 	const blob::BlobInfo blobInfo2(BlobAddress("cf59225215937593795395739753973973593571"), 57UL);
@@ -147,7 +157,7 @@ TEST_F(ObjectInfoRepositoryIntegrationTest, GetObjectPreservesObjectBlobs)
 TEST_F(ObjectInfoRepositoryIntegrationTest, AddObjectThrowsOnDuplicate)
 {
 	// Arrange
-	ObjectInfoRepository repo(_forestDbPath.string());
+	ObjectInfoRepository repo(*_connection);
 
 	const ObjectAddress key("7323df2207d99a74fbe169e3eba035e635779721");
 	const ObjectInfo objectInfo1(key, "type", {});
@@ -162,7 +172,7 @@ TEST_F(ObjectInfoRepositoryIntegrationTest, AddObjectThrowsOnDuplicate)
 TEST_F(ObjectInfoRepositoryIntegrationTest, GetObjectThrowsOnNotFound)
 {
 	// Arrange
-	ObjectInfoRepository repo(_forestDbPath.string());
+	ObjectInfoRepository repo(*_connection);
 
 	const ObjectAddress key("7323df2207d99a74fbe169e3eba035e635779721");
 
