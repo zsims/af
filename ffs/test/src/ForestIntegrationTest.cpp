@@ -17,17 +17,16 @@ namespace test {
 class ForestIntegrationTest : public testing::Test
 {
 protected:
-	virtual void SetUp() override
+	ForestIntegrationTest()
+		: _directoryBlobStorePath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path())
+		, _forestDbPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb"))
 	{
-		_directoryBlobStorePath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 		boost::filesystem::create_directories(_directoryBlobStorePath);
 		auto blobStore = std::make_unique<blob::DirectoryBlobStore>(_directoryBlobStorePath.string());
-
-		_forestDbPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb");
 		_forest.reset(new Forest(_forestDbPath.string(), std::move(blobStore)));
 	}
 
-	virtual void TearDown() override
+	~ForestIntegrationTest()
 	{
 		_forest.reset();
 
@@ -43,8 +42,8 @@ protected:
 		std::ofstream f(path.string(), std::ofstream::out | std::ofstream::app);
 	}
 
-	boost::filesystem::path _directoryBlobStorePath;
-	boost::filesystem::path _forestDbPath;
+	const boost::filesystem::path _directoryBlobStorePath;
+	const boost::filesystem::path _forestDbPath;
 	std::unique_ptr<Forest> _forest;
 };
 

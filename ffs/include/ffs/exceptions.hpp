@@ -41,14 +41,5 @@ public:
 	}
 };
 
-class OpenDatabaseFailedException : public std::runtime_error
-{
-public:
-	OpenDatabaseFailedException(const std::string& path, int sqliteError)
-		: std::runtime_error("Cannot open database at " + path + ". SQLite returned " + std::to_string(sqliteError))
-	{
-	}
-};
-
 }
 }

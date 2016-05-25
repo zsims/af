@@ -4,7 +4,7 @@
 #include "ffs/blob/BlobInfoRepository.hpp"
 #include "ffs/blob/BlobStore.hpp"
 #include "ffs/object/ObjectInfoRepository.hpp"
-#include "ffs/sqlitepp/handles.hpp"
+#include "ffs/sqlitepp/sqlitepp.hpp"
 #include "ffs/ForestUnitOfWork.hpp"
 
 #include <boost/filesystem.hpp>
@@ -33,11 +33,7 @@ void Forest::Open()
 
 	// Share the connection between the repos, note that the repos should be destroyed before this connection is
 	_connection.reset(new sqlitepp::ScopedSqlite3Object());
-	const auto result = sqlite3_open_v2(_utf8DbPath.c_str(), *_connection, SQLITE_OPEN_READWRITE, 0);
-	if (result != SQLITE_OK)
-	{
-		throw OpenDatabaseFailedException(_utf8DbPath, result);
-	}
+	sqlitepp::open_database_or_throw(_utf8DbPath.c_str(), *_connection, SQLITE_OPEN_READWRITE);
 	_blobInfoRepository.reset(new blob::BlobInfoRepository(*_connection));
 	_objectInfoRepository.reset(new object::ObjectInfoRepository(*_connection));
 }
