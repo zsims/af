@@ -12,6 +12,15 @@ namespace ffs {
 namespace sqlitepp {
 
 /**
+ * Opens a database or throws an exception. This is equivalent to calling sqlite3_open_v2 and checking the return code.
+ * \param db The database connection (UTF-8)
+ * \param ppDb the SQLite db handle
+ * \param flags Flags
+ * \throws std::runtime_exception The database couldn't be opened
+ */
+void open_database_or_throw(const char* filename, sqlite3** ppDb, int flags);
+
+/**
  * Prepares a statement or throws an exception. This is equivalent to calling sqlite3_prepare_v2 and checking the return code.
  * \param db The database connection
  * \param sql The statement SQL

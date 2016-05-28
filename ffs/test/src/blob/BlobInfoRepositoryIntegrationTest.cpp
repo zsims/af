@@ -18,18 +18,17 @@ namespace test {
 class BlobInfoRepositoryIntegrationTest : public testing::Test
 {
 protected:
-	virtual void SetUp() override
+	BlobInfoRepositoryIntegrationTest()
+		: _forestDbPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb"))
 	{
-		_forestDbPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb");
 		Forest forest(_forestDbPath.string(), std::make_unique<blob::NullBlobStore>());
 		forest.Create();
 
 		_connection = std::make_unique<sqlitepp::ScopedSqlite3Object>();
-		const auto result = sqlite3_open_v2(_forestDbPath.string().c_str(), *_connection, SQLITE_OPEN_READWRITE, 0);
-		ASSERT_EQ(SQLITE_OK, result);
+		sqlitepp::open_database_or_throw(_forestDbPath.string().c_str(), *_connection, SQLITE_OPEN_READWRITE);
 	}
 
-	virtual void TearDown() override
+	~BlobInfoRepositoryIntegrationTest()
 	{
 		_connection.reset();
 		boost::system::error_code ec;
@@ -37,7 +36,7 @@ protected:
 	}
 
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
-	boost::filesystem::path _forestDbPath;
+	const boost::filesystem::path _forestDbPath;
 };
 
 TEST_F(BlobInfoRepositoryIntegrationTest, GetAllBlobs)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <string>
 
 namespace af {
 namespace ffs {
@@ -49,6 +50,15 @@ class PrepareStatementFailedException : public std::runtime_error
 public:
 	explicit PrepareStatementFailedException(int sqliteError)
 		: std::runtime_error("Failed to prepare statement, error " + sqliteError)
+	{
+	}
+};
+
+class OpenDatabaseFailedException : public std::runtime_error
+{
+public:
+	OpenDatabaseFailedException(const std::string& path, int sqliteError)
+		: std::runtime_error("Cannot open database at " + path + ". SQLite returned " + std::to_string(sqliteError))
 	{
 	}
 };
