@@ -3,14 +3,14 @@
 #include "ffs/Address.hpp"
 #include "ffs/object/ObjectInfo.hpp"
 
+#include <boost/core/noncopyable.hpp>
+
 namespace af {
 namespace ffs {
 
-class UnitOfWork
+class UnitOfWork : private boost::noncopyable
 {
 public:
-	UnitOfWork(const UnitOfWork& that) = delete;
-	UnitOfWork& operator=(const UnitOfWork&) = delete;
 	UnitOfWork() { }
 	virtual ~UnitOfWork() { }
 

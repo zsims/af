@@ -53,9 +53,9 @@ ObjectInfoRepository::ObjectInfoRepository(const sqlitepp::ScopedSqlite3Object& 
 	)", _getAllObjectsStatement);
 }
 
-std::vector<ObjectInfoPtr> ObjectInfoRepository::GetAllObjects() const
+std::vector<std::shared_ptr<ObjectInfo>> ObjectInfoRepository::GetAllObjects() const
 {
-	std::vector<ObjectInfoPtr> result;
+	std::vector<std::shared_ptr<ObjectInfo>> result;
 	sqlitepp::ScopedStatementReset reset(_getAllObjectsStatement);
 
 	ObjectAddress currentAddress;
@@ -103,7 +103,7 @@ std::vector<ObjectInfoPtr> ObjectInfoRepository::GetAllObjects() const
 
 	if (haveOpenObject)
 	{
-		result.push_back(std::make_unique<ObjectInfo>(ObjectAddress(currentAddress), currentType, currentObjectBlobs));
+		result.push_back(std::make_shared<ObjectInfo>(ObjectAddress(currentAddress), currentType, currentObjectBlobs));
 	}
 	return result;
 }

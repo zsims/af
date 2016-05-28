@@ -13,9 +13,9 @@
 namespace af {
 namespace ffs {
 
-Forest::Forest(const std::string& utf8DbPath, std::shared_ptr<blob::BlobStore> blobStore)
+Forest::Forest(const std::string& utf8DbPath, std::unique_ptr<blob::BlobStore> blobStore)
 	: _utf8DbPath(utf8DbPath)
-	, _blobStore(blobStore)
+	, _blobStore(std::move(blobStore))
 {
 }
 
@@ -36,7 +36,7 @@ void Forest::Open()
 	const auto result = sqlite3_open_v2(_utf8DbPath.c_str(), *_connection, SQLITE_OPEN_READWRITE, 0);
 	if (result != SQLITE_OK)
 	{
-		throw OpenDatabaseFailedException((boost::format("Cannot open database at %1%. SQLite returned %2%") % _utf8DbPath % result).str());
+		throw OpenDatabaseFailedException(_utf8DbPath, result);
 	}
 	_blobInfoRepository.reset(new blob::BlobInfoRepository(*_connection));
 	_objectInfoRepository.reset(new object::ObjectInfoRepository(*_connection));
@@ -54,7 +54,7 @@ void Forest::Create()
 		const auto result = sqlite3_open_v2(_utf8DbPath.c_str(), db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
 		if (result != SQLITE_OK)
 		{
-			throw CreateDatabaseFailedException((boost::format("Cannot create database at %1%. SQLite returned %2%") % _utf8DbPath % result).str());
+			throw CreateDatabaseFailedException(_utf8DbPath, result);
 		}
 
 		// Create tables
@@ -75,7 +75,7 @@ void Forest::Create()
 		const auto execResult = sqlite3_exec(db, sql, 0, 0, errorMessage);
 		if (execResult != SQLITE_OK)
 		{
-			throw CreateDatabaseFailedException((boost::format("Cannot create database at %1%. SQLite returned %2%: %3%") % _utf8DbPath % execResult % errorMessage).str());
+			throw CreateDatabaseFailedException(_utf8DbPath, execResult, errorMessage);
 		}
 	}
 
@@ -85,7 +85,7 @@ void Forest::Create()
 
 std::unique_ptr<UnitOfWork> Forest::CreateUnitOfWork()
 {
-	return std::make_unique<ForestUnitOfWork>(*_connection, _blobStore, _blobInfoRepository, _objectInfoRepository);
+	return std::make_unique<ForestUnitOfWork>(*_connection, *_blobStore, *_blobInfoRepository, *_objectInfoRepository);
 }
 
 

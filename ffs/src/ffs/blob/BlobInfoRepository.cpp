@@ -29,9 +29,9 @@ BlobInfoRepository::BlobInfoRepository(const sqlitepp::ScopedSqlite3Object& conn
 	sqlitepp::prepare_or_throw(_db, "SELECT Address, SizeBytes FROM Blob", _getAllBlobsStatement);
 }
 
-std::vector<BlobInfoModelPtr> BlobInfoRepository::GetAllBlobs() const
+std::vector<std::shared_ptr<BlobInfo>> BlobInfoRepository::GetAllBlobs() const
 {
-	std::vector<BlobInfoModelPtr> result;
+	std::vector<std::shared_ptr<BlobInfo>> result;
 	sqlitepp::ScopedStatementReset reset(_getAllBlobsStatement);
 
 	auto stepResult = 0;

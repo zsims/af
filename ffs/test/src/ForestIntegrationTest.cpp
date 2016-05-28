@@ -21,10 +21,10 @@ protected:
 	{
 		_directoryBlobStorePath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 		boost::filesystem::create_directories(_directoryBlobStorePath);
-		_blobStore = std::make_shared<blob::DirectoryBlobStore>(_directoryBlobStorePath.string());
+		auto blobStore = std::make_unique<blob::DirectoryBlobStore>(_directoryBlobStorePath.string());
 
 		_forestDbPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb");
-		_forest.reset(new Forest(_forestDbPath.string(), _blobStore));
+		_forest.reset(new Forest(_forestDbPath.string(), std::move(blobStore)));
 	}
 
 	virtual void TearDown() override
@@ -46,7 +46,6 @@ protected:
 	boost::filesystem::path _directoryBlobStorePath;
 	boost::filesystem::path _forestDbPath;
 	std::unique_ptr<Forest> _forest;
-	std::shared_ptr<blob::DirectoryBlobStore> _blobStore;
 };
 
 TEST_F(ForestIntegrationTest, CreateSuccess)

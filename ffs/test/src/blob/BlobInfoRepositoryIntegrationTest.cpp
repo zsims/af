@@ -21,7 +21,7 @@ protected:
 	virtual void SetUp() override
 	{
 		_forestDbPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb");
-		Forest forest(_forestDbPath.string(), std::make_shared<blob::NullBlobStore>());
+		Forest forest(_forestDbPath.string(), std::make_unique<blob::NullBlobStore>());
 		forest.Create();
 
 		_connection = std::make_unique<sqlitepp::ScopedSqlite3Object>();

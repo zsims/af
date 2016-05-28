@@ -29,11 +29,11 @@ public:
 	/**
 	 * Initializes forest with the given path for opening or creating.
 	 */
-	explicit Forest(const std::string& utf8DbPath, std::shared_ptr<blob::BlobStore> blobStore);
+	explicit Forest(const std::string& utf8DbPath, std::unique_ptr<blob::BlobStore> blobStore);
 	~Forest();
 
 	/**
-	 * Creates a new unit of work.
+	 * Creates a new unit of work. Note that the forest must remain open while the unit of work is being used.
 	 */
 	std::unique_ptr<UnitOfWork> CreateUnitOfWork();
 
@@ -52,9 +52,9 @@ public:
 private:
 	const std::string _utf8DbPath;
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
-	std::shared_ptr<blob::BlobStore> _blobStore;
-	std::shared_ptr<blob::BlobInfoRepository> _blobInfoRepository;
-	std::shared_ptr<object::ObjectInfoRepository> _objectInfoRepository;
+	std::unique_ptr<blob::BlobStore> _blobStore;
+	std::unique_ptr<blob::BlobInfoRepository> _blobInfoRepository;
+	std::unique_ptr<object::ObjectInfoRepository> _objectInfoRepository;
 };
 
 }

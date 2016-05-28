@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/core/noncopyable.hpp>
 #include <sqlite3.h>
 
 #include <string>
@@ -9,12 +10,9 @@ namespace ffs {
 namespace sqlitepp {
 
 template <typename T>
-class ScopedHandleBase
+class ScopedHandleBase : private boost::noncopyable
 {
 public:
-	ScopedHandleBase(const ScopedHandleBase& that) = delete;
-	ScopedHandleBase& operator=(const ScopedHandleBase&) = delete;
-
 	ScopedHandleBase()
 		: _handle(nullptr)
 	{
@@ -25,7 +23,7 @@ public:
 	{
 	}
 
-	virtual ~ScopedHandleBase() { };
+	virtual ~ScopedHandleBase() { }
 	operator T() const { return _handle; }
 	operator T*() { return &_handle; }
 	operator bool() const { return _handle != nullptr; }

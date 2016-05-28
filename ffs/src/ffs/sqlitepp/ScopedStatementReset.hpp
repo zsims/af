@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/core/noncopyable.hpp>
 #include <sqlite3.h>
 
 namespace af {
@@ -10,12 +11,9 @@ namespace sqlitepp {
  * Resets a statement using sqlite3_reset, meaning the statement can be re-used.
  * Note that bindings are also reset.
  */
-class ScopedStatementReset
+class ScopedStatementReset : private boost::noncopyable
 {
 public:
-	ScopedStatementReset(const ScopedStatementReset& that) = delete;
-	ScopedStatementReset& operator=(const ScopedStatementReset&) = delete;
-
 	explicit ScopedStatementReset(sqlite3_stmt* statement)
 		: _statement(statement)
 	{

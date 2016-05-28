@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <string>
 
 namespace af {
 namespace ffs {
@@ -20,8 +21,13 @@ public:
 class CreateDatabaseFailedException : public std::runtime_error
 {
 public:
-	explicit CreateDatabaseFailedException(const std::string& message)
-		: std::runtime_error(message)
+	CreateDatabaseFailedException(const std::string& path, int sqliteError)
+		: std::runtime_error("Cannot create database at " + path + ". SQLite returned " + std::to_string(sqliteError))
+	{
+	}
+
+	CreateDatabaseFailedException(const std::string& path, int sqliteError, const std::string& sqliteErrorMessage)
+		: std::runtime_error("Cannot create database at " + path + ". SQLite returned " + std::to_string(sqliteError))
 	{
 	}
 };
@@ -38,8 +44,8 @@ public:
 class OpenDatabaseFailedException : public std::runtime_error
 {
 public:
-	explicit OpenDatabaseFailedException(const std::string& message)
-		: std::runtime_error(message)
+	OpenDatabaseFailedException(const std::string& path, int sqliteError)
+		: std::runtime_error("Cannot open database at " + path + ". SQLite returned " + std::to_string(sqliteError))
 	{
 	}
 };
