@@ -6,8 +6,10 @@ source_group("include\\ffs" REGULAR_EXPRESSION "include/ffs/.*")
 source_group("include\\blob\\ffs" REGULAR_EXPRESSION "include/ffs/blob/.*")
 source_group("include\\object\\ffs" REGULAR_EXPRESSION "include/ffs/object/.*")
 
-set(PUBLIC_INCLUDES
+add_library(
+    ffs
     include/ffs/Address.hpp
+    include/ffs/ffs_fwd.hpp
     include/ffs/Forest.hpp
     include/ffs/UnitOfWork.hpp
     include/ffs/exceptions.hpp
@@ -16,9 +18,6 @@ set(PUBLIC_INCLUDES
     include/ffs/blob/DirectoryBlobStore.hpp
     include/ffs/blob/NullBlobStore.hpp
     include/ffs/object/ObjectInfo.hpp
-)
-
-set(SOURCES
     src/ffs/Address.cpp
     src/ffs/Forest.cpp
     src/ffs/ForestUnitOfWork.cpp
@@ -38,8 +37,6 @@ set(SOURCES
     src/ffs/sqlitepp/sqlitepp.cpp
     src/ffs/sqlitepp/sqlitepp.hpp
 )
-
-add_library(ffs ${SOURCES} ${PUBLIC_INCLUDES})
 set_property(TARGET ffs PROPERTY FOLDER "ffs")
 
 target_include_directories(
