@@ -35,6 +35,20 @@ public:
 	}
 };
 
+class BlobNotFoundException : public std::runtime_error
+{
+public:
+	explicit BlobNotFoundException(const std::string& message)
+		: std::runtime_error(message)
+	{
+	}
+
+	explicit BlobNotFoundException(const BlobAddress& address)
+		: std::runtime_error("Blob with the address " + address.ToString() + " could not be found")
+	{
+	}
+};
+
 }
 }
 }
