@@ -2,7 +2,6 @@
 
 source_group("src" REGULAR_EXPRESSION "src/.*")
 set(SOURCES
-    src/shell.c
     src/sqlite3.c
     src/sqlite3.h
     src/sqlite3ext.h
