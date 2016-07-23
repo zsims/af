@@ -2,7 +2,7 @@ set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
 
 BuildCache_Get(
     # -3 for our build config, add extra things here to control cache sharing
-    KEY "boost-1.60.0-${PLATFORM_NAME}-3"
+    KEY "boost-1.60.0-${PLATFORM_NAME}-4"
     CACHE_DIR_VAR CACHE_DIR
 )
 
@@ -31,6 +31,7 @@ ExternalBuild_Add_Step(
         --with-system
         --with-filesystem
         --with-program_options
+        --with-regex
         --build-dir=${BUILD_DIR}
         --prefix=${CACHE_DIR}
         link=static
@@ -56,6 +57,9 @@ set(INCLUDE_DIR "${CACHE_DIR}/include")
 file(GENERATE OUTPUT "${INCLUDE_DIR}/.eb" CONTENT "")
 
 set(LIBRARY_DIR "${CACHE_DIR}/lib")
+
+set(BOOST_INCLUDE_DIR "${INCLUDE_DIR}" PARENT_SCOPE)
+
 # boost_system
 add_library(boost_system STATIC IMPORTED GLOBAL)
 set_target_properties(
@@ -90,3 +94,14 @@ set_target_properties(
 )
 target_link_libraries(boost_program_options LINK_INTERFACE_LIBRARIES boost_system)
 add_dependencies(boost_program_options build_boost)
+
+# boost_regex
+add_library(boost_regex STATIC IMPORTED GLOBAL)
+set_target_properties(
+    boost_regex
+    PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${INCLUDE_DIR}"
+    IMPORTED_LOCATION_DEBUG "${LIBRARY_DIR}/libboost_regex-mt-gd${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    IMPORTED_LOCATION_RELEASE "${LIBRARY_DIR}/libboost_regex-mt${CMAKE_STATIC_LIBRARY_SUFFIX}"
+)
+add_dependencies(boost_regex build_boost)
