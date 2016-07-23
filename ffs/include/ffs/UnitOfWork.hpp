@@ -1,9 +1,11 @@
 #pragma once
 
 #include "ffs/Address.hpp"
-#include "ffs/object/ObjectInfo.hpp"
+#include "ffs/object/FileObjectInfo.hpp"
 
 #include <boost/core/noncopyable.hpp>
+
+#include <string>
 
 namespace af {
 namespace ffs {
@@ -22,13 +24,13 @@ public:
 	/**
 	 * Creates a new object.
 	 */
-	virtual ObjectAddress CreateObject(const std::string& type, const object::ObjectBlobList& objectBlobs) = 0;
+	virtual ObjectAddress CreateFileObject(const std::string& fullPath, const BlobAddress& contentBlobAddress) = 0;
 
 	/**
-	 * Gets an object by address.
+	 * Gets a file object by address.
 	 * \throws ObjectNotFoundException No object with the given address could be found.
 	 */
-	virtual object::ObjectInfo GetObject(const ObjectAddress& address) const = 0;
+	virtual object::FileObjectInfo GetFileObject(const ObjectAddress& address) const = 0;
 
 	/**
 	 * Creates a new blob. If a blob with the same content already exists, then its address is returned.

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ffs/Address.hpp"
-#include "ffs/object/ObjectInfo.hpp"
+#include "ffs/object/FileObjectInfo.hpp"
 #include "ffs/UnitOfWork.hpp"
 
 #include <memory>
@@ -16,7 +16,7 @@ class BlobStore;
 }
 
 namespace object {
-class ObjectInfoRepository;
+class FileObjectInfoRepository;
 }
 
 namespace sqlitepp {
@@ -54,7 +54,7 @@ private:
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
 	std::unique_ptr<blob::BlobStore> _blobStore;
 	std::unique_ptr<blob::BlobInfoRepository> _blobInfoRepository;
-	std::unique_ptr<object::ObjectInfoRepository> _objectInfoRepository;
+	std::unique_ptr<object::FileObjectInfoRepository> _fileObjectInfoRepository;
 };
 
 }
