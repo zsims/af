@@ -33,4 +33,4 @@ add_custom_target(ALL_VERIFY)
 add_dependencies(ALL_VERIFY ALL_BUILD)
 
 add_subdirectory(third_party)
-add_subdirectory(ffs)
+add_subdirectory(bslib)
