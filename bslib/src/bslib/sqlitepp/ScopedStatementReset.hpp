@@ -4,7 +4,7 @@
 #include <sqlite3.h>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace sqlitepp {
 
 /**

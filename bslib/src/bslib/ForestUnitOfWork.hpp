@@ -1,20 +1,20 @@
 #pragma once
 
-#include "ffs/Address.hpp"
-#include "ffs/blob/BlobInfo.hpp"
-#include "ffs/blob/BlobStore.hpp"
-#include "ffs/blob/BlobInfoRepository.hpp"
-#include "ffs/object/FileObjectInfo.hpp"
-#include "ffs/object/FileObjectInfoRepository.hpp"
-#include "ffs/sqlitepp/ScopedTransaction.hpp"
-#include "ffs/UnitOfWork.hpp"
+#include "bslib/Address.hpp"
+#include "bslib/blob/BlobInfo.hpp"
+#include "bslib/blob/BlobStore.hpp"
+#include "bslib/blob/BlobInfoRepository.hpp"
+#include "bslib/object/FileObjectInfo.hpp"
+#include "bslib/object/FileObjectInfoRepository.hpp"
+#include "bslib/sqlitepp/ScopedTransaction.hpp"
+#include "bslib/UnitOfWork.hpp"
 
 #include <boost/core/noncopyable.hpp>
 
 #include <random>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 
 class ForestUnitOfWork : public UnitOfWork
 {

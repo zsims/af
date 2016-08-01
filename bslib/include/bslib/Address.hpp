@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 
 class InvalidAddressException : public std::runtime_error
 {

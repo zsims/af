@@ -5,7 +5,7 @@
 struct sqlite3;
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace sqlitepp {
 
 class ScopedTransaction : private boost::noncopyable

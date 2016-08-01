@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ffs/Address.hpp"
+#include "bslib/Address.hpp"
 
 #include <memory>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace blob {
 
 class BlobInfo

@@ -1,8 +1,8 @@
-#include "ffs/blob/DirectoryBlobStore.hpp"
+#include "bslib/blob/DirectoryBlobStore.hpp"
 
-#include "ffs/blob/BlobInfo.hpp"
-#include "ffs/blob/BlobInfoRepository.hpp"
-#include "ffs/blob/exceptions.hpp"
+#include "bslib/blob/BlobInfo.hpp"
+#include "bslib/blob/BlobInfoRepository.hpp"
+#include "bslib/blob/exceptions.hpp"
 
 #include <boost/filesystem/path.hpp>
 
@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace blob {
 
 DirectoryBlobStore::DirectoryBlobStore(const boost::filesystem::path& rootPath)

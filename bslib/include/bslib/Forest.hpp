@@ -1,14 +1,14 @@
 #pragma once
 
-#include "ffs/Address.hpp"
-#include "ffs/object/FileObjectInfo.hpp"
-#include "ffs/UnitOfWork.hpp"
+#include "bslib/Address.hpp"
+#include "bslib/object/FileObjectInfo.hpp"
+#include "bslib/UnitOfWork.hpp"
 
 #include <memory>
 #include <string>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 
 namespace blob {
 class BlobInfoRepository;

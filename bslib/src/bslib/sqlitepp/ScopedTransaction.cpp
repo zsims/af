@@ -1,13 +1,13 @@
-#include "ffs/sqlitepp/ScopedTransaction.hpp"
+#include "bslib/sqlitepp/ScopedTransaction.hpp"
 
-#include "ffs/sqlitepp/exceptions.hpp"
-#include "ffs/sqlitepp/handles.hpp"
+#include "bslib/sqlitepp/exceptions.hpp"
+#include "bslib/sqlitepp/handles.hpp"
 
 #include <boost/format.hpp>
 #include <sqlite3.h>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace sqlitepp {
 
 ScopedTransaction::ScopedTransaction(sqlite3* db)

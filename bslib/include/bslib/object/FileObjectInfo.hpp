@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ffs/Address.hpp"
+#include "bslib/Address.hpp"
 
 #include <string>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace object {
 
 /**

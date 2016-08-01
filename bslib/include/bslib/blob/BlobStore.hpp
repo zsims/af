@@ -1,12 +1,12 @@
 #pragma once
 
-#include "ffs/Address.hpp"
+#include "bslib/Address.hpp"
 
 #include <memory>
 #include <vector>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace blob {
 
 class BlobStore

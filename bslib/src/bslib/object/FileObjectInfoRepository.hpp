@@ -1,16 +1,16 @@
 #pragma once
 
-#include "ffs/Address.hpp"
-#include "ffs/object/FileObjectInfo.hpp"
+#include "bslib/Address.hpp"
+#include "bslib/object/FileObjectInfo.hpp"
 
 #include <cstdint>
 #include <memory>
 #include <vector>
 
-#include "ffs/sqlitepp/handles.hpp"
+#include "bslib/sqlitepp/handles.hpp"
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace object {
 
 /**

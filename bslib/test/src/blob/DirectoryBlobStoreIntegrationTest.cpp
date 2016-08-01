@@ -1,5 +1,5 @@
-#include "ffs/blob/DirectoryBlobStore.hpp"
-#include "ffs/blob/exceptions.hpp"
+#include "bslib/blob/DirectoryBlobStore.hpp"
+#include "bslib/blob/exceptions.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -8,7 +8,7 @@
 #include <memory>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace blob {
 namespace test {
 

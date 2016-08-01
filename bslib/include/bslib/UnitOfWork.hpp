@@ -1,14 +1,14 @@
 #pragma once
 
-#include "ffs/Address.hpp"
-#include "ffs/object/FileObjectInfo.hpp"
+#include "bslib/Address.hpp"
+#include "bslib/object/FileObjectInfo.hpp"
 
 #include <boost/core/noncopyable.hpp>
 
 #include <string>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 
 class UnitOfWork : private boost::noncopyable
 {

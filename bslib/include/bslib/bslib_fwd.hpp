@@ -1,7 +1,7 @@
 #pragma once
 
 namespace af {
-namespace ffs {
+namespace bslib {
 
 class Address;
 class BlobAddress;

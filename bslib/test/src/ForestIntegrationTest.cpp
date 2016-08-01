@@ -1,8 +1,8 @@
-#include "ffs/exceptions.hpp"
-#include "ffs/Forest.hpp"
-#include "ffs/blob/DirectoryBlobStore.hpp"
-#include "ffs/blob/exceptions.hpp"
-#include "ffs/object/exceptions.hpp"
+#include "bslib/exceptions.hpp"
+#include "bslib/Forest.hpp"
+#include "bslib/blob/DirectoryBlobStore.hpp"
+#include "bslib/blob/exceptions.hpp"
+#include "bslib/object/exceptions.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -11,7 +11,7 @@
 #include <memory>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace test {
 
 class ForestIntegrationTest : public testing::Test

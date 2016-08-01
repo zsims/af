@@ -1,15 +1,15 @@
 #pragma once
 
-#include "ffs/address.hpp"
-#include "ffs/blob/BlobInfo.hpp"
-#include "ffs/sqlitepp/handles.hpp"
+#include "bslib/address.hpp"
+#include "bslib/blob/BlobInfo.hpp"
+#include "bslib/sqlitepp/handles.hpp"
 
 #include <cstdint>
 #include <memory>
 #include <vector>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace blob {
 
 /**

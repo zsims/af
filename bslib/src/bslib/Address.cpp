@@ -1,4 +1,4 @@
-#include "ffs/Address.hpp"
+#include "bslib/Address.hpp"
 
 #include <boost/uuid/sha1.hpp>
 
@@ -7,7 +7,7 @@
 #include <algorithm>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 
 Address::Address(const void* rawBuffer, int bufferLength)
 {

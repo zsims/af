@@ -1,8 +1,8 @@
-#include "ffs/blob/BlobInfoRepository.hpp"
-#include "ffs/blob/exceptions.hpp"
-#include "ffs/blob/NullBlobStore.hpp"
-#include "ffs/forest.hpp"
-#include "ffs/sqlitepp/sqlitepp.hpp"
+#include "bslib/blob/BlobInfoRepository.hpp"
+#include "bslib/blob/exceptions.hpp"
+#include "bslib/blob/NullBlobStore.hpp"
+#include "bslib/forest.hpp"
+#include "bslib/sqlitepp/sqlitepp.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -11,7 +11,7 @@
 #include <memory>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace blob {
 namespace test {
 

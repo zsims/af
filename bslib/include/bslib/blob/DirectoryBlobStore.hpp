@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ffs/blob/BlobStore.hpp"
+#include "bslib/blob/BlobStore.hpp"
 
 #include <boost/filesystem/path.hpp>
 
 #include <string>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace blob {
 
 /**

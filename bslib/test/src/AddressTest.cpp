@@ -1,4 +1,4 @@
-#include "ffs/Address.hpp"
+#include "bslib/Address.hpp"
 
 #include <array>
 #include <gtest/gtest.h>
@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace test {
 
 TEST(AddressTest, ConstructFromVoidBuffer)

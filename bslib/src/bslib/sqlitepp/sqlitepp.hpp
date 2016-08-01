@@ -1,14 +1,14 @@
 #pragma once
 
-#include "ffs/sqlitepp/exceptions.hpp"
-#include "ffs/sqlitepp/handles.hpp"
-#include "ffs/sqlitepp/ScopedTransaction.hpp"
-#include "ffs/sqlitepp/ScopedStatementReset.hpp"
+#include "bslib/sqlitepp/exceptions.hpp"
+#include "bslib/sqlitepp/handles.hpp"
+#include "bslib/sqlitepp/ScopedTransaction.hpp"
+#include "bslib/sqlitepp/ScopedStatementReset.hpp"
 
 #include <sqlite3.h>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace sqlitepp {
 
 /**

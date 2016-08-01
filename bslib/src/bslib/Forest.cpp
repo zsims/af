@@ -1,17 +1,17 @@
-#include "ffs/Forest.hpp"
+#include "bslib/Forest.hpp"
 
-#include "ffs/exceptions.hpp"
-#include "ffs/blob/BlobInfoRepository.hpp"
-#include "ffs/blob/BlobStore.hpp"
-#include "ffs/object/FileObjectInfoRepository.hpp"
-#include "ffs/sqlitepp/sqlitepp.hpp"
-#include "ffs/ForestUnitOfWork.hpp"
+#include "bslib/exceptions.hpp"
+#include "bslib/blob/BlobInfoRepository.hpp"
+#include "bslib/blob/BlobStore.hpp"
+#include "bslib/object/FileObjectInfoRepository.hpp"
+#include "bslib/sqlitepp/sqlitepp.hpp"
+#include "bslib/ForestUnitOfWork.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 
 Forest::Forest(const std::string& utf8DbPath, std::unique_ptr<blob::BlobStore> blobStore)
 	: _utf8DbPath(utf8DbPath)

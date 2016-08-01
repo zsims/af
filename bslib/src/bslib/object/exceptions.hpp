@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ffs/Address.hpp"
+#include "bslib/Address.hpp"
 
 #include <stdexcept>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace object {
 
 class DuplicateObjectException : public std::runtime_error

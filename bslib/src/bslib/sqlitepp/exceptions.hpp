@@ -4,7 +4,7 @@
 #include <string>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 
 /**
  * A transaction couldn't be started.

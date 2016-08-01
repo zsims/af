@@ -1,8 +1,8 @@
 
-#include "ffs/sqlitepp/sqlitepp.hpp"
+#include "bslib/sqlitepp/sqlitepp.hpp"
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace sqlitepp {
 	
 void open_database_or_throw(const char* filename, sqlite3** ppDb, int flags)

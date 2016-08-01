@@ -1,8 +1,8 @@
-#include "ffs/object/FileObjectInfoRepository.hpp"
+#include "bslib/object/FileObjectInfoRepository.hpp"
 
-#include "ffs/object/FileObjectInfo.hpp"
-#include "ffs/object/exceptions.hpp"
-#include "ffs/sqlitepp/sqlitepp.hpp"
+#include "bslib/object/FileObjectInfo.hpp"
+#include "bslib/object/exceptions.hpp"
+#include "bslib/sqlitepp/sqlitepp.hpp"
 
 #include <boost/format.hpp>
 #include <sqlite3.h>
@@ -11,7 +11,7 @@
 #include <utility>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace object {
 
 namespace {

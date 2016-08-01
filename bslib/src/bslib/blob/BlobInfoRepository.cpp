@@ -1,9 +1,9 @@
 
-#include "ffs/blob/BlobInfoRepository.hpp"
+#include "bslib/blob/BlobInfoRepository.hpp"
 
-#include "ffs/blob/BlobInfo.hpp"
-#include "ffs/blob/exceptions.hpp"
-#include "ffs/sqlitepp/sqlitepp.hpp"
+#include "bslib/blob/BlobInfo.hpp"
+#include "bslib/blob/exceptions.hpp"
+#include "bslib/sqlitepp/sqlitepp.hpp"
 
 #include <boost/format.hpp>
 #include <sqlite3.h>
@@ -11,7 +11,7 @@
 #include <memory>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace blob {
 
 namespace {

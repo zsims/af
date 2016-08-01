@@ -1,9 +1,9 @@
-#include "ffs/ForestUnitOfWork.hpp"
+#include "bslib/ForestUnitOfWork.hpp"
 
 #include <ctime>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 
 ForestUnitOfWork::ForestUnitOfWork(
 	sqlite3* connection,

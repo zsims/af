@@ -6,7 +6,7 @@
 #include <string>
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace sqlitepp {
 
 template <typename T>

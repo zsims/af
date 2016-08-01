@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ffs/blob/BlobStore.hpp"
+#include "bslib/blob/BlobStore.hpp"
 
 namespace af {
-namespace ffs {
+namespace bslib {
 namespace blob {
 
 /**
