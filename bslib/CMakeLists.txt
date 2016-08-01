@@ -1,16 +1,16 @@
 source_group("src\\bslib" REGULAR_EXPRESSION "src/bslib/.*")
 source_group("src\\bslib\\blob" REGULAR_EXPRESSION "src/bslib/blob/.*")
-source_group("src\\bslib\\object" REGULAR_EXPRESSION "src/bslib/object/.*")
+source_group("src\\bslib\\file" REGULAR_EXPRESSION "src/bslib/file/.*")
 source_group("src\\bslib\\sqlitepp" REGULAR_EXPRESSION "src/bslib/sqlitepp/.*")
 source_group("include\\bslib" REGULAR_EXPRESSION "include/bslib/.*")
-source_group("include\\object" REGULAR_EXPRESSION "include/bslib/object/.*")
+source_group("include\\file" REGULAR_EXPRESSION "include/bslib/file/.*")
 
 add_library(
     bslib
     include/bslib/Address.hpp
     include/bslib/exceptions.hpp
     include/bslib/Forest.hpp
-    include/bslib/object/FileObjectInfo.hpp
+    include/bslib/file/FileObjectInfo.hpp
     include/bslib/UnitOfWork.hpp
     src/bslib/Address.cpp
     src/bslib/blob/BlobInfo.hpp
@@ -24,9 +24,9 @@ add_library(
     src/bslib/Forest.cpp
     src/bslib/ForestUnitOfWork.cpp
     src/bslib/ForestUnitOfWork.hpp
-    src/bslib/object/exceptions.hpp
-    src/bslib/object/FileObjectInfoRepository.cpp
-    src/bslib/object/FileObjectInfoRepository.hpp
+    src/bslib/file/exceptions.hpp
+    src/bslib/file/FileObjectInfoRepository.cpp
+    src/bslib/file/FileObjectInfoRepository.hpp
     src/bslib/sqlitepp/exceptions.hpp
     src/bslib/sqlitepp/handles.hpp
     src/bslib/sqlitepp/ScopedStatementReset.hpp

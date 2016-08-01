@@ -2,7 +2,7 @@
 #include "bslib/Forest.hpp"
 #include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/blob/exceptions.hpp"
-#include "bslib/object/exceptions.hpp"
+#include "bslib/file/exceptions.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -126,7 +126,7 @@ TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
 	// Assert
 	{
 		auto uow = _forest->CreateUnitOfWork();
-		EXPECT_THROW(uow->GetFileObject(objectAddress), object::ObjectNotFoundException);
+		EXPECT_THROW(uow->GetFileObject(objectAddress), file::ObjectNotFoundException);
 	}
 }
 

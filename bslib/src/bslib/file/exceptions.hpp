@@ -6,7 +6,7 @@
 
 namespace af {
 namespace bslib {
-namespace object {
+namespace file {
 
 class DuplicateObjectException : public std::runtime_error
 {

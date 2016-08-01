@@ -1,8 +1,8 @@
 #include "bslib/forest.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/blob/NullBlobStore.hpp"
-#include "bslib/object/FileObjectInfoRepository.hpp"
-#include "bslib/object/exceptions.hpp"
+#include "bslib/file/FileObjectInfoRepository.hpp"
+#include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 
 #include <boost/filesystem.hpp>
@@ -13,7 +13,7 @@
 
 namespace af {
 namespace bslib {
-namespace object {
+namespace file {
 namespace test {
 
 class FileObjectInfoRepositoryIntegrationTest : public testing::Test

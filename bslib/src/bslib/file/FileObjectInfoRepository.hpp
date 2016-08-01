@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bslib/Address.hpp"
-#include "bslib/object/FileObjectInfo.hpp"
+#include "bslib/file/FileObjectInfo.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -11,7 +11,7 @@
 
 namespace af {
 namespace bslib {
-namespace object {
+namespace file {
 
 /**
  * Maintains file object information
