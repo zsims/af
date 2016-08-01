@@ -3,7 +3,7 @@
 #include "ffs/exceptions.hpp"
 #include "ffs/blob/BlobInfoRepository.hpp"
 #include "ffs/blob/BlobStore.hpp"
-#include "ffs/object/ObjectInfoRepository.hpp"
+#include "ffs/object/FileObjectInfoRepository.hpp"
 #include "ffs/sqlitepp/sqlitepp.hpp"
 #include "ffs/ForestUnitOfWork.hpp"
 
@@ -35,7 +35,7 @@ void Forest::Open()
 	_connection.reset(new sqlitepp::ScopedSqlite3Object());
 	sqlitepp::open_database_or_throw(_utf8DbPath.c_str(), *_connection, SQLITE_OPEN_READWRITE);
 	_blobInfoRepository.reset(new blob::BlobInfoRepository(*_connection));
-	_objectInfoRepository.reset(new object::ObjectInfoRepository(*_connection));
+	_fileObjectInfoRepository.reset(new object::FileObjectInfoRepository(*_connection));
 }
 
 void Forest::Create()
@@ -56,15 +56,12 @@ void Forest::Create()
 		// Create tables
 		// Note that SQLite supports blobs as primary keys fine, see https://www.sqlite.org/cvstrac/wiki?p=KeyValueDatabase
 		const auto sql = R"(
-			CREATE TABLE Object (Address BLOB (20) PRIMARY KEY, Type TEXT NOT NULL);
-			CREATE TABLE Blob (Address BLOB (20) PRIMARY KEY, SizeBytes INTEGER (8) NOT NULL);
-			CREATE TABLE ObjectBlob (
-				Id INTEGER PRIMARY KEY,
-				ObjectAddress BLOB (20) REFERENCES Object (Address) ON DELETE CASCADE,
-				Key TEXT NOT NULL,
-				Position INTEGER NOT NULL,
-				BlobAddress BLOB (20) REFERENCES Blob (Address)
+			CREATE TABLE FileObject (
+				Address BLOB (20) PRIMARY KEY,
+				ContentBlobAddress BLOB(20) REFERENCES Blob (Address),
+				FullPath TEXT NOT NULL
 			);
+			CREATE TABLE Blob (Address BLOB (20) PRIMARY KEY, SizeBytes INTEGER (8) NOT NULL);
 		)";
 
 		sqlitepp::ScopedErrorMessage errorMessage;
@@ -81,7 +78,7 @@ void Forest::Create()
 
 std::unique_ptr<UnitOfWork> Forest::CreateUnitOfWork()
 {
-	return std::make_unique<ForestUnitOfWork>(*_connection, *_blobStore, *_blobInfoRepository, *_objectInfoRepository);
+	return std::make_unique<ForestUnitOfWork>(*_connection, *_blobStore, *_blobInfoRepository, *_fileObjectInfoRepository);
 }
 
 

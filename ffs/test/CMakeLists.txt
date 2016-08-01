@@ -9,7 +9,7 @@ add_executable(
     src/ForestIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
-    src/object/ObjectInfoRepositoryIntegrationTest.cpp
+    src/object/FileObjectInfoRepositoryIntegrationTest.cpp
 )
 
 set_property(TARGET ffs_test PROPERTY FOLDER "ffs")

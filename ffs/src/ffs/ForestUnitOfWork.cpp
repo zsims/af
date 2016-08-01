@@ -9,12 +9,12 @@ ForestUnitOfWork::ForestUnitOfWork(
 	sqlite3* connection,
 	blob::BlobStore& blobStore,
 	blob::BlobInfoRepository& blobInfoRepository,
-	object::ObjectInfoRepository& objectInfoRepository)
+	object::FileObjectInfoRepository& fileObjectInfoRepository)
 	: _random(static_cast<unsigned>(time(0)))
 	, _transaction(connection)
 	, _blobStore(blobStore)
 	, _blobInfoRepository(blobInfoRepository)
-	, _objectInfoRepository(objectInfoRepository)
+	, _fileObjectInfoRepository(fileObjectInfoRepository)
 {
 }
 
@@ -23,27 +23,28 @@ void ForestUnitOfWork::Commit()
 	_transaction.Commit();
 }
 
-ObjectAddress ForestUnitOfWork::CreateObject(const std::string& type, const object::ObjectBlobList& objectBlobs)
+ObjectAddress ForestUnitOfWork::CreateFileObject(const std::string& fullPath, const BlobAddress& contentBlobAddress)
 {
 	auto r = [this]() {
 		return static_cast<uint8_t>(_random());
 	};
 	// generate a new random address
+	// TODO: should this come from a combination of the properties + blob address?
 	ObjectAddress address(binary_address{
 		r(), r(), r(), r(), r(),
 		r(), r(), r(), r(), r(),
 		r(), r(), r(), r(), r(),
 		r(), r(), r(), r(), r()
 	});
-	object::ObjectInfo info(address, type, objectBlobs);
-	_objectInfoRepository.AddObject(info);
+	object::FileObjectInfo info(address, fullPath, contentBlobAddress);
+	_fileObjectInfoRepository.AddObject(info);
 
 	return address;
 }
 
-object::ObjectInfo ForestUnitOfWork::GetObject(const ObjectAddress& address) const
+object::FileObjectInfo ForestUnitOfWork::GetFileObject(const ObjectAddress& address) const
 {
-	return _objectInfoRepository.GetObject(address);
+	return _fileObjectInfoRepository.GetObject(address);
 }
 
 BlobAddress ForestUnitOfWork::CreateBlob(const std::vector<uint8_t>& content)

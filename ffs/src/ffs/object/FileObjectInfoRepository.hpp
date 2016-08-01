@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ffs/Address.hpp"
-#include "ffs/object/ObjectInfo.hpp"
+#include "ffs/object/FileObjectInfo.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -14,22 +14,22 @@ namespace ffs {
 namespace object {
 
 /**
- * Maintains object information
+ * Maintains file object information
  */
-class ObjectInfoRepository
+class FileObjectInfoRepository
 {
 public:
 	/**
 	 * Creates a new object info repository given an existing connection.
 	 */
-	explicit ObjectInfoRepository(const sqlitepp::ScopedSqlite3Object& connection);
+	explicit FileObjectInfoRepository(const sqlitepp::ScopedSqlite3Object& connection);
 
-	std::vector<std::shared_ptr<ObjectInfo>> GetAllObjects() const;
+	std::vector<std::shared_ptr<FileObjectInfo>> GetAllObjects() const;
 
-	void AddObject(const ObjectInfo& info);
-	ObjectInfo GetObject(const ObjectAddress& address) const;
+	void AddObject(const FileObjectInfo& info);
+	FileObjectInfo GetObject(const ObjectAddress& address) const;
 private:
-	void InsertObjectBlobs(const binary_address& objectAddress, const ObjectBlobList& objectBlobs);
+	std::shared_ptr<FileObjectInfo> MapRowToObject(const sqlitepp::ScopedStatement& statement) const;
 
 	const sqlitepp::ScopedSqlite3Object& _db;
 	sqlitepp::ScopedStatement _insertObjectStatement;

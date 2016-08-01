@@ -17,7 +17,7 @@ add_library(
     include/ffs/blob/BlobStore.hpp
     include/ffs/blob/DirectoryBlobStore.hpp
     include/ffs/blob/NullBlobStore.hpp
-    include/ffs/object/ObjectInfo.hpp
+    include/ffs/object/FileObjectInfo.hpp
     src/ffs/Address.cpp
     src/ffs/Forest.cpp
     src/ffs/ForestUnitOfWork.cpp
@@ -26,8 +26,8 @@ add_library(
     src/ffs/blob/BlobInfoRepository.hpp
     src/ffs/blob/DirectoryBlobStore.cpp
     src/ffs/blob/exceptions.hpp
-    src/ffs/object/ObjectInfoRepository.cpp
-    src/ffs/object/ObjectInfoRepository.hpp
+    src/ffs/object/FileObjectInfoRepository.cpp
+    src/ffs/object/FileObjectInfoRepository.hpp
     src/ffs/object/exceptions.hpp
     src/ffs/sqlitepp/exceptions.hpp
     src/ffs/sqlitepp/handles.hpp

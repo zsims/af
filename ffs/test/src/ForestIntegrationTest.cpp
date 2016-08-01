@@ -84,10 +84,7 @@ TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
 		auto uow = _forest->CreateUnitOfWork();
 		const std::vector<uint8_t> content = { 1, 2, 3, 4 };
 		const auto blobAddress = uow->CreateBlob(content);
-		const object::ObjectBlobList objectBlobs = {
-			{"content", blobAddress}
-		};
-		objectAddress = uow->CreateObject("file", objectBlobs);
+		objectAddress = uow->CreateFileObject("/here/it/is", blobAddress);
 		// Act
 		uow->Commit();
 	}
@@ -95,7 +92,7 @@ TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
 	// Assert
 	{
 		auto uow = _forest->CreateUnitOfWork();
-		EXPECT_EQ(objectAddress, uow->GetObject(objectAddress).GetAddress());
+		EXPECT_EQ(objectAddress, uow->GetFileObject(objectAddress).address);
 	}
 }
 
@@ -123,16 +120,13 @@ TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
 
 		const std::vector<uint8_t> content = { 1, 2, 3, 4 };
 		const auto blobAddress = uow->CreateBlob(content);
-		const object::ObjectBlobList objectBlobs = {
-			{"content", blobAddress}
-		};
-		objectAddress = uow->CreateObject("file", objectBlobs);
+		objectAddress = uow->CreateFileObject("/somewhere", blobAddress);
 	}
 
 	// Assert
 	{
 		auto uow = _forest->CreateUnitOfWork();
-		EXPECT_THROW(uow->GetObject(objectAddress), object::ObjectNotFoundException);
+		EXPECT_THROW(uow->GetFileObject(objectAddress), object::ObjectNotFoundException);
 	}
 }
 
@@ -158,17 +152,13 @@ TEST_F(ForestIntegrationTest, Stuff)
 	auto uow = _forest->CreateUnitOfWork();
 	const std::vector<uint8_t> content = {1, 2, 3, 4};
 	const auto blobAddress = uow->CreateBlob(content);
-
-	const object::ObjectBlobList objectBlobs = {
-		{"content", blobAddress}
-	};
-	const auto objectAddress = uow->CreateObject("file", objectBlobs);
+	const auto objectAddress = uow->CreateFileObject("/xyz", blobAddress);
 
 	// WOW!
-	const auto storedObject = uow->GetObject(objectAddress);
-	EXPECT_EQ(objectAddress, storedObject.GetAddress());
-	EXPECT_EQ("file", storedObject.GetType());
-	EXPECT_EQ(objectBlobs, storedObject.GetBlobs());
+	const auto storedObject = uow->GetFileObject(objectAddress);
+	EXPECT_EQ(objectAddress, storedObject.address);
+	EXPECT_EQ("/xyz", storedObject.fullPath);
+	EXPECT_EQ(blobAddress, storedObject.contentBlobAddress);
 
 	uow->Commit();
 }
