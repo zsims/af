@@ -3,7 +3,7 @@
 #include "bslib/exceptions.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/blob/BlobStore.hpp"
-#include "bslib/object/FileObjectInfoRepository.hpp"
+#include "bslib/file/FileObjectInfoRepository.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "bslib/ForestUnitOfWork.hpp"
 
@@ -35,7 +35,7 @@ void Forest::Open()
 	_connection.reset(new sqlitepp::ScopedSqlite3Object());
 	sqlitepp::open_database_or_throw(_utf8DbPath.c_str(), *_connection, SQLITE_OPEN_READWRITE);
 	_blobInfoRepository.reset(new blob::BlobInfoRepository(*_connection));
-	_fileObjectInfoRepository.reset(new object::FileObjectInfoRepository(*_connection));
+	_fileObjectInfoRepository.reset(new file::FileObjectInfoRepository(*_connection));
 }
 
 void Forest::Create()

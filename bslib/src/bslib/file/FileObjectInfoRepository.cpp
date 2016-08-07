@@ -1,7 +1,7 @@
-#include "bslib/object/FileObjectInfoRepository.hpp"
+#include "bslib/file/FileObjectInfoRepository.hpp"
 
-#include "bslib/object/FileObjectInfo.hpp"
-#include "bslib/object/exceptions.hpp"
+#include "bslib/file/FileObjectInfo.hpp"
+#include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 
 #include <boost/format.hpp>
@@ -12,7 +12,7 @@
 
 namespace af {
 namespace bslib {
-namespace object {
+namespace file {
 
 namespace {
 enum GetObjectColumnIndex

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bslib/Address.hpp"
-#include "bslib/object/FileObjectInfo.hpp"
+#include "bslib/file/FileObjectInfo.hpp"
 
 #include <boost/core/noncopyable.hpp>
 
@@ -30,7 +30,7 @@ public:
 	 * Gets a file object by address.
 	 * \throws ObjectNotFoundException No object with the given address could be found.
 	 */
-	virtual object::FileObjectInfo GetFileObject(const ObjectAddress& address) const = 0;
+	virtual file::FileObjectInfo GetFileObject(const ObjectAddress& address) const = 0;
 
 	/**
 	 * Creates a new blob. If a blob with the same content already exists, then its address is returned.

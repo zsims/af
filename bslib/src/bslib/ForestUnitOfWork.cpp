@@ -9,7 +9,7 @@ ForestUnitOfWork::ForestUnitOfWork(
 	sqlite3* connection,
 	blob::BlobStore& blobStore,
 	blob::BlobInfoRepository& blobInfoRepository,
-	object::FileObjectInfoRepository& fileObjectInfoRepository)
+	file::FileObjectInfoRepository& fileObjectInfoRepository)
 	: _random(static_cast<unsigned>(time(0)))
 	, _transaction(connection)
 	, _blobStore(blobStore)
@@ -36,13 +36,13 @@ ObjectAddress ForestUnitOfWork::CreateFileObject(const std::string& fullPath, co
 		r(), r(), r(), r(), r(),
 		r(), r(), r(), r(), r()
 	});
-	object::FileObjectInfo info(address, fullPath, contentBlobAddress);
+	file::FileObjectInfo info(address, fullPath, contentBlobAddress);
 	_fileObjectInfoRepository.AddObject(info);
 
 	return address;
 }
 
-object::FileObjectInfo ForestUnitOfWork::GetFileObject(const ObjectAddress& address) const
+file::FileObjectInfo ForestUnitOfWork::GetFileObject(const ObjectAddress& address) const
 {
 	return _fileObjectInfoRepository.GetObject(address);
 }

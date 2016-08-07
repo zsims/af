@@ -6,7 +6,7 @@
 
 namespace af {
 namespace bslib {
-namespace object {
+namespace file {
 
 /**
  * Represents information about a "file"
