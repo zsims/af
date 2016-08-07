@@ -54,10 +54,12 @@ TEST_F(FileObjectInfoRepositoryIntegrationTest, GetAllObjects)
 	const FileObjectInfo objectInfo1(ObjectAddress("5323df2207d99a74fbe169e3eba035e635779792"), "/foo", blobInfo1.GetAddress());
 	const FileObjectInfo objectInfo2(ObjectAddress("f5979d9f79727592759272503253405739475393"), "/foo", blobInfo2.GetAddress());
 	const FileObjectInfo objectInfo3(ObjectAddress("5793273948759387987921653297557398753498"), "/bar/here", blobInfo1.GetAddress());
+	const FileObjectInfo objectInfo4(ObjectAddress("6793273948759387987921653297557398753498"), "/bar/here/xx", boost::none);
 
 	repo.AddObject(objectInfo1);
 	repo.AddObject(objectInfo2);
 	repo.AddObject(objectInfo3);
+	repo.AddObject(objectInfo4);
 
 	// Act
 	const auto result = repo.GetAllObjects();
@@ -66,6 +68,7 @@ TEST_F(FileObjectInfoRepositoryIntegrationTest, GetAllObjects)
 	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo1)));
 	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo2)));
 	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo3)));
+	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo4)));
 }
 
 TEST_F(FileObjectInfoRepositoryIntegrationTest, GetObject)
@@ -77,6 +80,19 @@ TEST_F(FileObjectInfoRepositoryIntegrationTest, GetObject)
 	blobRepo.AddBlob(blobInfo1);
 
 	const FileObjectInfo objectInfo(ObjectAddress("5793273948759387987921653297557398753498"), "/hi/phil", blobInfo1.GetAddress());
+	repo.AddObject(objectInfo);
+
+	// Act
+	// Assert
+	EXPECT_EQ(repo.GetObject(objectInfo.address), objectInfo);
+}
+
+TEST_F(FileObjectInfoRepositoryIntegrationTest, AddObjectNoBlob)
+{
+	// Arrange
+	FileObjectInfoRepository repo(*_connection);
+
+	const FileObjectInfo objectInfo(ObjectAddress("8793273948759387987921653297557398753498"), "/look/phil/no/hands", boost::none);
 	repo.AddObject(objectInfo);
 
 	// Act

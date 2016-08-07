@@ -56,7 +56,6 @@ void FileObjectInfoRepository::AddObject(const FileObjectInfo& info)
 {
 	// binary address, note this has to be kept in scope until SQLite has finished as we've opted not to make a copy
 	const auto binaryAddress = info.address.ToBinary();
-	const auto binaryContentAddress = info.contentBlobAddress.ToBinary();
 	const auto fullPath = info.fullPath;
 	sqlitepp::ScopedStatementReset reset(_insertObjectStatement);
 	
@@ -71,10 +70,22 @@ void FileObjectInfoRepository::AddObject(const FileObjectInfo& info)
 
 	{
 		const auto index = sqlite3_bind_parameter_index(_insertObjectStatement, ":ContentBlobAddress");
-		const auto bindResult = sqlite3_bind_blob(_insertObjectStatement, index, &binaryContentAddress[0], static_cast<int>(binaryContentAddress.size()), 0);
-		if (bindResult != SQLITE_OK)
+		if (info.contentBlobAddress)
 		{
-			throw AddObjectFailedException((boost::format("Failed to bind object parameter content blob address %1%. SQLite error %2%") % info.contentBlobAddress.ToString() % bindResult).str());
+			const auto binaryContentAddress = info.contentBlobAddress.value().ToBinary();
+			const auto bindResult = sqlite3_bind_blob(_insertObjectStatement, index, &binaryContentAddress[0], static_cast<int>(binaryContentAddress.size()), 0);
+			if (bindResult != SQLITE_OK)
+			{
+				throw AddObjectFailedException((boost::format("Failed to bind object parameter content blob address %1%. SQLite error %2%") % info.contentBlobAddress.value().ToString() % bindResult).str());
+			}
+		}
+		else
+		{
+			const auto bindResult = sqlite3_bind_null(_insertObjectStatement, index);
+			if (bindResult != SQLITE_OK)
+			{
+				throw AddObjectFailedException((boost::format("Failed to bind object parameter content blob address null. SQLite error %1%") % bindResult).str());
+			}
 		}
 	}
 
@@ -131,9 +142,13 @@ std::shared_ptr<FileObjectInfo> FileObjectInfoRepository::MapRowToObject(const s
 	const auto rawFullPath = sqlite3_column_text(statement, GetObject_ColumnIndex_FullPath);
 	const auto fullPath = std::string(reinterpret_cast<const char*>(rawFullPath));
 	
-	const auto contentBlobAddressBytes = sqlite3_column_blob(statement, GetObject_ColumnIndex_ContentBlobAddress);
 	const auto contentBlobAddressBytesCount = sqlite3_column_bytes(statement, GetObject_ColumnIndex_ContentBlobAddress);
-	const BlobAddress contentBlobAddress(contentBlobAddressBytes, contentBlobAddressBytesCount);
+	boost::optional<BlobAddress> contentBlobAddress = boost::none;
+	if (contentBlobAddressBytesCount > 0)
+	{
+		const auto contentBlobAddressBytes = sqlite3_column_blob(statement, GetObject_ColumnIndex_ContentBlobAddress);
+		contentBlobAddress = BlobAddress(contentBlobAddressBytes, contentBlobAddressBytesCount);
+	}
 
 	return std::make_shared<FileObjectInfo>(objectAddress, fullPath, contentBlobAddress);
 }
