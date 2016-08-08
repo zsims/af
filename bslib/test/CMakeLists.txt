@@ -1,6 +1,6 @@
 source_group("src" REGULAR_EXPRESSION "src/.*")
 source_group("src\\blob" REGULAR_EXPRESSION "src/blob/.*")
-source_group("src\\object" REGULAR_EXPRESSION "src/object/.*")
+source_group("src\\file" REGULAR_EXPRESSION "src/file/.*")
 
 add_executable(
     bslib_test
@@ -9,7 +9,7 @@ add_executable(
     src/ForestIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
-    src/object/FileObjectInfoRepositoryIntegrationTest.cpp
+    src/file/FileObjectInfoRepositoryIntegrationTest.cpp
 )
 
 set_property(TARGET bslib_test PROPERTY FOLDER "bslib")
