@@ -53,8 +53,6 @@ private:
 	const std::string _utf8DbPath;
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
 	std::unique_ptr<blob::BlobStore> _blobStore;
-	std::unique_ptr<blob::BlobInfoRepository> _blobInfoRepository;
-	std::unique_ptr<file::FileObjectInfoRepository> _fileObjectInfoRepository;
 };
 
 }

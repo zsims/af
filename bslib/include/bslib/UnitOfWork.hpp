@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bslib/Address.hpp"
-#include "bslib/file/FileObjectInfo.hpp"
+#include "bslib/file/FileAdder.hpp"
 
 #include <boost/core/noncopyable.hpp>
 
@@ -22,20 +22,15 @@ public:
 	virtual void Commit() = 0;
 
 	/**
-	 * Creates a new object.
+	 * Creates a file adder for backing up files and directories.
 	 */
-	virtual ObjectAddress CreateFileObject(const std::string& fullPath, const BlobAddress& contentBlobAddress) = 0;
+	virtual std::unique_ptr<file::FileAdder> CreateFileAdder() = 0;
 
 	/**
 	 * Gets a file object by address.
 	 * \throws ObjectNotFoundException No object with the given address could be found.
 	 */
 	virtual file::FileObjectInfo GetFileObject(const ObjectAddress& address) const = 0;
-
-	/**
-	 * Creates a new blob. If a blob with the same content already exists, then its address is returned.
-	 */
-	virtual BlobAddress CreateBlob(const std::vector<uint8_t>& content) = 0;
 
 	/**
 	 * Gets a blob by address.

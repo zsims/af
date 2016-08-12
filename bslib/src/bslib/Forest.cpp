@@ -1,9 +1,7 @@
 #include "bslib/Forest.hpp"
 
 #include "bslib/exceptions.hpp"
-#include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/blob/BlobStore.hpp"
-#include "bslib/file/FileObjectInfoRepository.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "bslib/ForestUnitOfWork.hpp"
 
@@ -34,8 +32,6 @@ void Forest::Open()
 	// Share the connection between the repos, note that the repos should be destroyed before this connection is
 	_connection.reset(new sqlitepp::ScopedSqlite3Object());
 	sqlitepp::open_database_or_throw(_utf8DbPath.c_str(), *_connection, SQLITE_OPEN_READWRITE);
-	_blobInfoRepository.reset(new blob::BlobInfoRepository(*_connection));
-	_fileObjectInfoRepository.reset(new file::FileObjectInfoRepository(*_connection));
 }
 
 void Forest::Create()
@@ -78,7 +74,7 @@ void Forest::Create()
 
 std::unique_ptr<UnitOfWork> Forest::CreateUnitOfWork()
 {
-	return std::make_unique<ForestUnitOfWork>(*_connection, *_blobStore, *_blobInfoRepository, *_fileObjectInfoRepository);
+	return std::make_unique<ForestUnitOfWork>(*_connection, *_blobStore);
 }
 
 

@@ -3,6 +3,7 @@
 #include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/blob/exceptions.hpp"
 #include "bslib/file/exceptions.hpp"
+#include "bslib/file/FileAdder.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -82,9 +83,9 @@ TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
 	ObjectAddress objectAddress;
 	{
 		auto uow = _forest->CreateUnitOfWork();
+		auto adder = uow->CreateFileAdder();
 		const std::vector<uint8_t> content = { 1, 2, 3, 4 };
-		const auto blobAddress = uow->CreateBlob(content);
-		objectAddress = uow->CreateFileObject("/here/it/is", blobAddress);
+		objectAddress = adder->Add("/here/it/is", content);
 		// Act
 		uow->Commit();
 	}
@@ -117,10 +118,9 @@ TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
 	ObjectAddress objectAddress;
 	{
 		auto uow = _forest->CreateUnitOfWork();
-
+		auto adder = uow->CreateFileAdder();
 		const std::vector<uint8_t> content = { 1, 2, 3, 4 };
-		const auto blobAddress = uow->CreateBlob(content);
-		objectAddress = uow->CreateFileObject("/somewhere", blobAddress);
+		objectAddress = adder->Add("/somewhere", content);
 	}
 
 	// Assert
@@ -138,29 +138,14 @@ TEST_F(ForestIntegrationTest, CreateBlobDuplicateSuccess)
 	const std::vector<uint8_t> content = {1, 2, 3, 4};
 
 	// Act
-	const auto blobAddress = uow->CreateBlob(content);
-	const auto blobAddress2 = uow->CreateBlob(content);
+	auto adder = uow->CreateFileAdder();
+	const auto object1 = adder->Add("/somewhere", content);
+	const auto object2 = adder->Add("/otherwhere", content);
+	const auto blobAddress = uow->GetFileObject(object1).contentBlobAddress;
+	const auto blobAddress2 = uow->GetFileObject(object2).contentBlobAddress;
 
 	// Assert
 	EXPECT_EQ(blobAddress, blobAddress2);
-}
-
-TEST_F(ForestIntegrationTest, Stuff)
-{
-	_forest->Create();
-
-	auto uow = _forest->CreateUnitOfWork();
-	const std::vector<uint8_t> content = {1, 2, 3, 4};
-	const auto blobAddress = uow->CreateBlob(content);
-	const auto objectAddress = uow->CreateFileObject("/xyz", blobAddress);
-
-	// WOW!
-	const auto storedObject = uow->GetFileObject(objectAddress);
-	EXPECT_EQ(objectAddress, storedObject.address);
-	EXPECT_EQ("/xyz", storedObject.fullPath);
-	EXPECT_EQ(blobAddress, storedObject.contentBlobAddress);
-
-	uow->Commit();
 }
 
 }
