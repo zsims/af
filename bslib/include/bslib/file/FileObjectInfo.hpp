@@ -23,6 +23,7 @@ struct FileObjectInfo
 		: address(address)
 		, fullPath(fullPath)
 		, contentBlobAddress(contentBlobAddress)
+		, parentAddress(parentAddress)
 	{
 	}
 
