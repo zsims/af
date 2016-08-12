@@ -55,6 +55,7 @@ void Forest::Create()
 			CREATE TABLE FileObject (
 				Address BLOB (20) PRIMARY KEY,
 				ContentBlobAddress BLOB(20) REFERENCES Blob (Address),
+				ParentAddress BLOB(20) REFERENCES FileObject (Address),
 				FullPath TEXT NOT NULL
 			);
 			CREATE TABLE Blob (Address BLOB (20) PRIMARY KEY, SizeBytes INTEGER (8) NOT NULL);
