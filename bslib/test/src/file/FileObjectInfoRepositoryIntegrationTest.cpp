@@ -104,6 +104,19 @@ TEST_F(FileObjectInfoRepositoryIntegrationTest, AddObjectNoBlob)
 	EXPECT_EQ(repo.GetObject(objectInfo.address), objectInfo);
 }
 
+TEST_F(FileObjectInfoRepositoryIntegrationTest, AddObjectMissingBlobThrows)
+{
+	// Arrange
+	FileObjectInfoRepository repo(*_connection);
+
+	const BlobAddress madeUpBlobAddress("2259225215937593725395732753973973593571");
+	const FileObjectInfo objectInfo(ObjectAddress("8793273948759387987921653297557398753498"), "/look/phil/no/hands", madeUpBlobAddress);
+
+	// Act
+	// Assert
+	ASSERT_THROW(repo.AddObject(objectInfo), AddObjectFailedException);
+}
+
 TEST_F(FileObjectInfoRepositoryIntegrationTest, AddObjectMissingParentThrows)
 {
 	// Arrange
@@ -147,7 +160,7 @@ TEST_F(FileObjectInfoRepositoryIntegrationTest, AddObjectThrowsOnDuplicate)
 
 	// Act
 	// Assert
-	ASSERT_THROW(repo.AddObject(objectInfo2), DuplicateObjectException);
+	ASSERT_THROW(repo.AddObject(objectInfo2), AddObjectFailedException);
 }
 
 TEST_F(FileObjectInfoRepositoryIntegrationTest, GetObjectThrowsOnNotFound)

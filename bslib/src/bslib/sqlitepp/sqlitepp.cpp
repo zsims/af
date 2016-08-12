@@ -1,5 +1,6 @@
-
 #include "bslib/sqlitepp/sqlitepp.hpp"
+
+#include <boost/format.hpp>
 
 namespace af {
 namespace bslib {

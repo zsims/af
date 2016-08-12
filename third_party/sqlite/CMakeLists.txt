@@ -10,6 +10,9 @@ set(SOURCES
 add_library(sqlite STATIC ${SOURCES})
 set_property(TARGET sqlite PROPERTY FOLDER "third_party")
 
+# Enable SQLite foreign key constraints by default per https://www.sqlite.org/compile.html
+add_definitions(-DSQLITE_DEFAULT_FOREIGN_KEYS=1)
+
 target_include_directories(
     sqlite
     PUBLIC src

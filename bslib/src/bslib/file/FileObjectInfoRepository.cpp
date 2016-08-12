@@ -123,10 +123,6 @@ void FileObjectInfoRepository::AddObject(const FileObjectInfo& info)
 	const auto stepResult = sqlite3_step(_insertObjectStatement);
 	if (stepResult != SQLITE_DONE)
 	{
-		if (stepResult == SQLITE_CONSTRAINT)
-		{
-			throw DuplicateObjectException(info.address);
-		}
 		throw AddObjectFailedException((boost::format("Failed to execute statement for insert object %1%. SQLite error %2%") % info.address.ToString() % stepResult).str());
 	}
 }

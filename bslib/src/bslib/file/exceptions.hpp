@@ -8,15 +8,6 @@ namespace af {
 namespace bslib {
 namespace file {
 
-class DuplicateObjectException : public std::runtime_error
-{
-public:
-	explicit DuplicateObjectException(const ObjectAddress& address)
-		: std::runtime_error("Duplicate object with address " + address.ToString())
-	{
-	}
-};
-
 class ObjectNotFoundException : public std::runtime_error
 {
 public:
