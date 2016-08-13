@@ -20,6 +20,7 @@ enum GetObjectColumnIndex
 	GetObject_ColumnIndex_Address = 0,
 	GetObject_ColumnIndex_FullPath,
 	GetObject_ColumnIndex_ContentBlobAddress,
+	GetObject_ColumnIndex_ParentAddress
 };
 }
 
@@ -27,13 +28,13 @@ FileObjectInfoRepository::FileObjectInfoRepository(const sqlitepp::ScopedSqlite3
 	: _db(connection)
 {
 	// Prepare statements so they're good to go
-	sqlitepp::prepare_or_throw(_db, "INSERT INTO FileObject (Address, FullPath, ContentBlobAddress) VALUES (:Address, :FullPath, :ContentBlobAddress)", _insertObjectStatement);
+	sqlitepp::prepare_or_throw(_db, "INSERT INTO FileObject (Address, FullPath, ContentBlobAddress, ParentAddress) VALUES (:Address, :FullPath, :ContentBlobAddress, :ParentAddress)", _insertObjectStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Address, FullPath, ContentBlobAddress FROM FileObject
+		SELECT Address, FullPath, ContentBlobAddress, ParentAddress FROM FileObject
 		WHERE Address = :Address
 	)", _getObjectStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Address, FullPath, ContentBlobAddress FROM FileObject
+		SELECT Address, FullPath, ContentBlobAddress, ParentAddress FROM FileObject
 	)", _getAllObjectsStatement);
 }
 
@@ -90,6 +91,27 @@ void FileObjectInfoRepository::AddObject(const FileObjectInfo& info)
 	}
 
 	{
+		const auto index = sqlite3_bind_parameter_index(_insertObjectStatement, ":ParentAddress");
+		if (info.parentAddress)
+		{
+			const auto binaryParentAddress = info.parentAddress.value().ToBinary();
+			const auto bindResult = sqlite3_bind_blob(_insertObjectStatement, index, &binaryParentAddress[0], static_cast<int>(binaryParentAddress.size()), 0);
+			if (bindResult != SQLITE_OK)
+			{
+				throw AddObjectFailedException((boost::format("Failed to bind object parameter parent address %1%. SQLite error %2%") % info.parentAddress.value().ToString() % bindResult).str());
+			}
+		}
+		else
+		{
+			const auto bindResult = sqlite3_bind_null(_insertObjectStatement, index);
+			if (bindResult != SQLITE_OK)
+			{
+				throw AddObjectFailedException((boost::format("Failed to bind object parameter parent address null. SQLite error %1%") % bindResult).str());
+			}
+		}
+	}
+
+	{
 		const auto index = sqlite3_bind_parameter_index(_insertObjectStatement, ":FullPath");
 		const auto bindResult = sqlite3_bind_text(_insertObjectStatement, index, fullPath.c_str(), -1, 0);
 		if (bindResult != SQLITE_OK)
@@ -101,10 +123,6 @@ void FileObjectInfoRepository::AddObject(const FileObjectInfo& info)
 	const auto stepResult = sqlite3_step(_insertObjectStatement);
 	if (stepResult != SQLITE_DONE)
 	{
-		if (stepResult == SQLITE_CONSTRAINT)
-		{
-			throw DuplicateObjectException(info.address);
-		}
 		throw AddObjectFailedException((boost::format("Failed to execute statement for insert object %1%. SQLite error %2%") % info.address.ToString() % stepResult).str());
 	}
 }
@@ -150,7 +168,15 @@ std::shared_ptr<FileObjectInfo> FileObjectInfoRepository::MapRowToObject(const s
 		contentBlobAddress = BlobAddress(contentBlobAddressBytes, contentBlobAddressBytesCount);
 	}
 
-	return std::make_shared<FileObjectInfo>(objectAddress, fullPath, contentBlobAddress);
+	const auto parentAddressBytesCount = sqlite3_column_bytes(statement, GetObject_ColumnIndex_ParentAddress);
+	boost::optional<ObjectAddress> parentAddress = boost::none;
+	if (parentAddressBytesCount > 0)
+	{
+		const auto parentAddressBytes = sqlite3_column_blob(statement, GetObject_ColumnIndex_ParentAddress);
+		parentAddress = ObjectAddress(parentAddressBytes, parentAddressBytesCount);
+	}
+
+	return std::make_shared<FileObjectInfo>(objectAddress, fullPath, contentBlobAddress, parentAddress);
 }
 
 }

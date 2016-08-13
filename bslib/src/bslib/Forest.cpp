@@ -52,12 +52,16 @@ void Forest::Create()
 		// Create tables
 		// Note that SQLite supports blobs as primary keys fine, see https://www.sqlite.org/cvstrac/wiki?p=KeyValueDatabase
 		const auto sql = R"(
+			CREATE TABLE Blob (
+				Address BLOB (20) PRIMARY KEY,
+				SizeBytes INTEGER (8) NOT NULL
+			);
 			CREATE TABLE FileObject (
 				Address BLOB (20) PRIMARY KEY,
 				ContentBlobAddress BLOB(20) REFERENCES Blob (Address),
+				ParentAddress BLOB(20) REFERENCES FileObject (Address),
 				FullPath TEXT NOT NULL
 			);
-			CREATE TABLE Blob (Address BLOB (20) PRIMARY KEY, SizeBytes INTEGER (8) NOT NULL);
 		)";
 
 		sqlitepp::ScopedErrorMessage errorMessage;
@@ -70,7 +74,6 @@ void Forest::Create()
 
 	Open();
 }
-
 
 std::unique_ptr<UnitOfWork> Forest::CreateUnitOfWork()
 {
