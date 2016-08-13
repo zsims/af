@@ -62,6 +62,10 @@ void Forest::Create()
 				ParentAddress BLOB(20) REFERENCES FileObject (Address),
 				FullPath TEXT NOT NULL
 			);
+			CREATE TABLE FileRef (
+				FullPath TEXT NOT NULL PRIMARY KEY,
+				FileObjectAddress BLOB(20) NOT NULL REFERENCES FileObject (Address)
+			);
 		)";
 
 		sqlitepp::ScopedErrorMessage errorMessage;
