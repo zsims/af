@@ -60,64 +60,27 @@ void FileObjectInfoRepository::AddObject(const FileObjectInfo& info)
 	const auto fullPath = info.fullPath;
 	sqlitepp::ScopedStatementReset reset(_insertObjectStatement);
 	
+	sqlitepp::BindByParameterNameBlob(_insertObjectStatement, ":Address", &binaryAddress[0], binaryAddress.size());
+	sqlitepp::BindByParameterNameText(_insertObjectStatement, ":FullPath", fullPath);
+
+	if (info.contentBlobAddress)
 	{
-		const auto index = sqlite3_bind_parameter_index(_insertObjectStatement, ":Address");
-		const auto bindResult = sqlite3_bind_blob(_insertObjectStatement, index, &binaryAddress[0], static_cast<int>(binaryAddress.size()), 0);
-		if (bindResult != SQLITE_OK)
-		{
-			throw AddObjectFailedException((boost::format("Failed to bind object parameter address %1%. SQLite error %2%") % info.address.ToString() % bindResult).str());
-		}
+		const auto binaryContentAddress = info.contentBlobAddress.value().ToBinary();
+		sqlitepp::BindByParameterNameBlob(_insertObjectStatement, ":ContentBlobAddress", &binaryContentAddress[0], binaryContentAddress.size());
+	}
+	else
+	{
+		sqlitepp::BindByParameterNameNull(_insertObjectStatement, ":ContentBlobAddress");
 	}
 
+	if (info.parentAddress)
 	{
-		const auto index = sqlite3_bind_parameter_index(_insertObjectStatement, ":ContentBlobAddress");
-		if (info.contentBlobAddress)
-		{
-			const auto binaryContentAddress = info.contentBlobAddress.value().ToBinary();
-			const auto bindResult = sqlite3_bind_blob(_insertObjectStatement, index, &binaryContentAddress[0], static_cast<int>(binaryContentAddress.size()), 0);
-			if (bindResult != SQLITE_OK)
-			{
-				throw AddObjectFailedException((boost::format("Failed to bind object parameter content blob address %1%. SQLite error %2%") % info.contentBlobAddress.value().ToString() % bindResult).str());
-			}
-		}
-		else
-		{
-			const auto bindResult = sqlite3_bind_null(_insertObjectStatement, index);
-			if (bindResult != SQLITE_OK)
-			{
-				throw AddObjectFailedException((boost::format("Failed to bind object parameter content blob address null. SQLite error %1%") % bindResult).str());
-			}
-		}
+		const auto binaryParentAddress = info.parentAddress.value().ToBinary();
+		sqlitepp::BindByParameterNameBlob(_insertObjectStatement, ":ParentAddress", &binaryParentAddress[0], binaryParentAddress.size());
 	}
-
+	else
 	{
-		const auto index = sqlite3_bind_parameter_index(_insertObjectStatement, ":ParentAddress");
-		if (info.parentAddress)
-		{
-			const auto binaryParentAddress = info.parentAddress.value().ToBinary();
-			const auto bindResult = sqlite3_bind_blob(_insertObjectStatement, index, &binaryParentAddress[0], static_cast<int>(binaryParentAddress.size()), 0);
-			if (bindResult != SQLITE_OK)
-			{
-				throw AddObjectFailedException((boost::format("Failed to bind object parameter parent address %1%. SQLite error %2%") % info.parentAddress.value().ToString() % bindResult).str());
-			}
-		}
-		else
-		{
-			const auto bindResult = sqlite3_bind_null(_insertObjectStatement, index);
-			if (bindResult != SQLITE_OK)
-			{
-				throw AddObjectFailedException((boost::format("Failed to bind object parameter parent address null. SQLite error %1%") % bindResult).str());
-			}
-		}
-	}
-
-	{
-		const auto index = sqlite3_bind_parameter_index(_insertObjectStatement, ":FullPath");
-		const auto bindResult = sqlite3_bind_text(_insertObjectStatement, index, fullPath.c_str(), -1, 0);
-		if (bindResult != SQLITE_OK)
-		{
-			throw AddObjectFailedException((boost::format("Failed to bind object parameter full path %1%. SQLite error %2%") % fullPath % bindResult).str());
-		}
+		sqlitepp::BindByParameterNameNull(_insertObjectStatement, ":ParentAddress");
 	}
 
 	const auto stepResult = sqlite3_step(_insertObjectStatement);
@@ -131,16 +94,7 @@ FileObjectInfo FileObjectInfoRepository::GetObject(const ObjectAddress& address)
 {
 	const auto binaryAddress = address.ToBinary();
 	sqlitepp::ScopedStatementReset reset(_getObjectStatement);
-
-	const auto index = sqlite3_bind_parameter_index(_getObjectStatement, ":Address");
-	const auto bindResult = sqlite3_bind_blob(_getObjectStatement, index, &binaryAddress[0], static_cast<int>(binaryAddress.size()), 0);
-	if (bindResult != SQLITE_OK)
-	{
-		throw ObjectNotFoundException((boost::format("Failed to bind object parameter address %1%. SQLite error %2%") % address.ToString() % bindResult).str());
-	}
-
-	std::string type;
-	bool found = false;
+	sqlitepp::BindByParameterNameBlob(_getObjectStatement, ":Address", &binaryAddress[0], binaryAddress.size());
 
 	auto stepResult = sqlite3_step(_getObjectStatement);
 	if (stepResult != SQLITE_ROW)

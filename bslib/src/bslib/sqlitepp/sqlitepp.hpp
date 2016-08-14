@@ -48,6 +48,14 @@ void BindByParameterNameText(sqlite3_stmt* statement, const std::string& name, c
  */
 void BindByParameterNameBlob(sqlite3_stmt* statement, const std::string& name, const uint8_t* start, size_t size);
 
+/**
+ * Binds a null parameter by name (e.g. :Foo)
+ * \param statement The statement to bind the parameter to
+ * \param name The name of the parameter
+ * \throws BindParameterFailedException The parameter couldn't be bound
+ */
+void BindByParameterNameNull(sqlite3_stmt* statement, const std::string& name);
+
 }
 }
 }
