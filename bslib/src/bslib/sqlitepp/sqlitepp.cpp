@@ -26,10 +26,20 @@ void prepare_or_throw(sqlite3* db, const char* sql, sqlite3_stmt** statement)
 	}
 }
 
-void BindByParameterNameText(sqlite3_stmt* statement, const std::string& name, const std::string& text)
+void BindByParameterNameText(sqlite3_stmt* statement, const std::string& name, const std::string& value)
 {
 	const auto index = sqlite3_bind_parameter_index(statement, name.c_str());
-	const auto bindResult = sqlite3_bind_text(statement, index, text.c_str(), -1, 0);
+	const auto bindResult = sqlite3_bind_text(statement, index, value.c_str(), -1, 0);
+	if (bindResult != SQLITE_OK)
+	{
+		throw BindParameterFailedException(name, bindResult);
+	}
+}
+
+void BindByParameterNameInt64(sqlite3_stmt* statement, const std::string& name, int64_t value)
+{
+	const auto index = sqlite3_bind_parameter_index(statement, name.c_str());
+	const auto bindResult = sqlite3_bind_int64(statement, index, value);
 	if (bindResult != SQLITE_OK)
 	{
 		throw BindParameterFailedException(name, bindResult);

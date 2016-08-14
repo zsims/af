@@ -33,10 +33,19 @@ void prepare_or_throw(sqlite3* db, const char* sql, sqlite3_stmt** statement);
  * Binds a text parameter by name (e.g. :Foo)
  * \param statement The statement to bind the parameter to
  * \param name The name of the parameter
- * \param text The value of thh parameter
+ * \param text The value of the parameter
  * \throws BindParameterFailedException The parameter couldn't be bound
  */
 void BindByParameterNameText(sqlite3_stmt* statement, const std::string& name, const std::string& text);
+
+/**
+ * Binds an int64 parameter by name (e.g. :Foo)
+ * \param statement The statement to bind the parameter to
+ * \param name The name of the parameter
+ * \param value The value of the parameter
+ * \throws BindParameterFailedException The parameter couldn't be bound
+ */
+void BindByParameterNameInt64(sqlite3_stmt* statement, const std::string& name, int64_t value);
 
 /**
  * Binds a blob parameter by name (e.g. :Foo)
