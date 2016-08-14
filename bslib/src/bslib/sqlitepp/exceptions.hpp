@@ -63,5 +63,14 @@ public:
 	}
 };
 
+class BindParameterFailedException : public std::runtime_error
+{
+public:
+	BindParameterFailedException(const std::string& name, int sqliteError)
+		: std::runtime_error("Failed to bind paramter " + name + ". SQLite returned " + std::to_string(sqliteError))
+	{
+	}
+};
+
 }
 }

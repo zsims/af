@@ -37,23 +37,8 @@ void FileRefRepository::SetReference(const FileRef& reference)
 	const auto& fullPath = reference.fullPath;
 	sqlitepp::ScopedStatementReset reset(_insertRefStatement);
 	
-	{
-		const auto index = sqlite3_bind_parameter_index(_insertRefStatement, ":FullPath");
-		const auto bindResult = sqlite3_bind_text(_insertRefStatement, index, fullPath.c_str(), -1, 0);
-		if (bindResult != SQLITE_OK)
-		{
-			throw AddRefFailedException(fullPath, bindResult);
-		}
-	}
-
-	{
-		const auto index = sqlite3_bind_parameter_index(_insertRefStatement, ":FileObjectAddress");
-		const auto bindResult = sqlite3_bind_blob(_insertRefStatement, index, &objectBinaryAddress[0], static_cast<int>(objectBinaryAddress.size()), 0);
-		if (bindResult != SQLITE_OK)
-		{
-			throw AddRefFailedException(reference.fileObjectAddress.ToString(), bindResult);
-		}
-	}
+	sqlitepp::BindByParameterNameText(_insertRefStatement, ":FullPath", fullPath);
+	sqlitepp::BindByParameterNameBlob(_insertRefStatement, ":FileObjectAddress", &objectBinaryAddress[0], objectBinaryAddress.size());
 
 	const auto stepResult = sqlite3_step(_insertRefStatement);
 	if (stepResult != SQLITE_DONE)
@@ -65,13 +50,7 @@ void FileRefRepository::SetReference(const FileRef& reference)
 FileRef FileRefRepository::GetReference(const std::string& fullPath) const
 {
 	sqlitepp::ScopedStatementReset reset(_getRefStatement);
-
-	const auto index = sqlite3_bind_parameter_index(_getRefStatement, ":FullPath");
-	const auto bindResult = sqlite3_bind_text(_getRefStatement, index, fullPath.c_str(), -1, 0);
-	if (bindResult != SQLITE_OK)
-	{
-		throw RefNotFoundException(fullPath, bindResult);
-	}
+	sqlitepp::BindByParameterNameText(_getRefStatement, ":FullPath", fullPath);
 
 	auto stepResult = sqlite3_step(_getRefStatement);
 	if (stepResult != SQLITE_ROW)

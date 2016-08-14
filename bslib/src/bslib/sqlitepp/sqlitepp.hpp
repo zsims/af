@@ -29,6 +29,25 @@ void open_database_or_throw(const char* filename, sqlite3** ppDb, int flags);
  */
 void prepare_or_throw(sqlite3* db, const char* sql, sqlite3_stmt** statement);
 
+/**
+ * Binds a text parameter by name (e.g. :Foo)
+ * \param statement The statement to bind the parameter to
+ * \param name The name of the parameter
+ * \param text The value of thh parameter
+ * \throws BindParameterFailedException The parameter couldn't be bound
+ */
+void BindByParameterNameText(sqlite3_stmt* statement, const std::string& name, const std::string& text);
+
+/**
+ * Binds a blob parameter by name (e.g. :Foo)
+ * \param statement The statement to bind the parameter to
+ * \param name The name of the parameter
+ * \param blob Pointer to blob contents
+ * \param size Size of the blob
+ * \throws BindParameterFailedException The parameter couldn't be bound
+ */
+void BindByParameterNameBlob(sqlite3_stmt* statement, const std::string& name, const uint8_t* start, size_t size);
+
 }
 }
 }
