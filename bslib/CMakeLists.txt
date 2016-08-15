@@ -11,6 +11,7 @@ add_library(
     include/bslib/exceptions.hpp
     include/bslib/Forest.hpp
     include/bslib/file/FileAdder.hpp
+    include/bslib/file/FileRef.hpp
     include/bslib/file/FileObjectInfo.hpp
     include/bslib/UnitOfWork.hpp
     src/bslib/Address.cpp
@@ -27,6 +28,8 @@ add_library(
     src/bslib/ForestUnitOfWork.hpp
     src/bslib/file/exceptions.hpp
     src/bslib/file/FileAdder.cpp
+    src/bslib/file/FileRefRepository.cpp
+    src/bslib/file/FileRefRepository.hpp
     src/bslib/file/FileObjectInfoRepository.cpp
     src/bslib/file/FileObjectInfoRepository.hpp
     src/bslib/sqlitepp/exceptions.hpp

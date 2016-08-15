@@ -2,6 +2,8 @@
 
 #include <boost/format.hpp>
 
+#include <string>
+
 namespace af {
 namespace bslib {
 namespace sqlitepp {
@@ -21,6 +23,26 @@ void prepare_or_throw(sqlite3* db, const char* sql, sqlite3_stmt** statement)
 	if (prepareResult != SQLITE_OK)
 	{
 		throw PrepareStatementFailedException(prepareResult);
+	}
+}
+
+void BindByParameterNameText(sqlite3_stmt* statement, const std::string& name, const std::string& text)
+{
+	const auto index = sqlite3_bind_parameter_index(statement, name.c_str());
+	const auto bindResult = sqlite3_bind_text(statement, index, text.c_str(), -1, 0);
+	if (bindResult != SQLITE_OK)
+	{
+		throw BindParameterFailedException(name, bindResult);
+	}
+}
+
+void BindByParameterNameBlob(sqlite3_stmt* statement, const std::string& name, const uint8_t* start, size_t size)
+{
+	const auto index = sqlite3_bind_parameter_index(statement, name.c_str());
+	const auto bindResult = sqlite3_bind_blob(statement, index, start, static_cast<int>(size), 0);
+	if (bindResult != SQLITE_OK)
+	{
+		throw BindParameterFailedException(name, bindResult);
 	}
 }
 
