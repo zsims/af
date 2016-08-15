@@ -33,7 +33,6 @@ private:
 
 	const sqlitepp::ScopedSqlite3Object& _db;
 	sqlitepp::ScopedStatement _insertObjectStatement;
-	sqlitepp::ScopedStatement _insertObjectBlobStatement;
 	sqlitepp::ScopedStatement _getObjectStatement;
 	sqlitepp::ScopedStatement _getAllObjectsStatement;
 };

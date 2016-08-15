@@ -56,25 +56,9 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 {
 	// binary address, note this has to be kept in scope until SQLite has finished as we've opted not to make a copy
 	const auto binaryAddress = info.GetAddress().ToBinary();
-
-	const auto addressIndex = sqlite3_bind_parameter_index(_insertBlobStatement, ":Address");
-	const auto sizeBytesIndex = sqlite3_bind_parameter_index(_insertBlobStatement, ":SizeBytes");
-
 	sqlitepp::ScopedStatementReset reset(_insertBlobStatement);
-	{
-		const auto bindResult = sqlite3_bind_blob(_insertBlobStatement, addressIndex, &binaryAddress[0], static_cast<int>(binaryAddress.size()), 0);
-		if (bindResult != SQLITE_OK)
-		{
-			throw AddBlobFailedException((boost::format("Failed to bind blob parameter address %1%. SQLite error %2%") % info.GetAddress().ToString() % bindResult).str());
-		}
-	}
-	{
-		const auto bindResult = sqlite3_bind_int64(_insertBlobStatement, sizeBytesIndex, static_cast<int64_t>(info.GetSizeBytes()));
-		if (bindResult != SQLITE_OK)
-		{
-			throw AddBlobFailedException((boost::format("Failed to bind blob parameter size %1%. SQLite error %2%") % info.GetAddress().ToString() % bindResult).str());
-		}
-	}
+	sqlitepp::BindByParameterNameBlob(_insertBlobStatement, ":Address", &binaryAddress[0], binaryAddress.size());
+	sqlitepp::BindByParameterNameInt64(_insertBlobStatement, ":SizeBytes", static_cast<int64_t>(info.GetSizeBytes()));
 
 	// execute
 	const auto stepResult = sqlite3_step(_insertBlobStatement);
@@ -92,12 +76,7 @@ std::unique_ptr<BlobInfo> BlobInfoRepository::FindBlob(const BlobAddress& addres
 {
 	const auto binaryAddress = address.ToBinary();
 	sqlitepp::ScopedStatementReset reset(_findBlobStatement);
-	const auto index = sqlite3_bind_parameter_index(_findBlobStatement, ":Address");
-	const auto bindResult = sqlite3_bind_blob(_findBlobStatement, index, &binaryAddress[0], static_cast<int>(binaryAddress.size()), 0);
-	if (bindResult != SQLITE_OK)
-	{
-		throw BlobNotFoundException((boost::format("Failed to bind object parameter address %1%. SQLite error %2%") % address.ToString() % bindResult).str());
-	}
+	sqlitepp::BindByParameterNameBlob(_findBlobStatement, ":Address", &binaryAddress[0], binaryAddress.size());
 
 	const auto stepResult = sqlite3_step(_findBlobStatement);
 	if (stepResult != SQLITE_ROW)
