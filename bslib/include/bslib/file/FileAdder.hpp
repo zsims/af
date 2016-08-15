@@ -4,7 +4,6 @@
 
 #include <boost/filesystem/path.hpp>
 
-#include <random>
 #include <vector>
 
 namespace af {
@@ -26,7 +25,6 @@ public:
 	FileAdder(blob::BlobStore& blobStore, blob::BlobInfoRepository& blobInfoRepository, FileObjectInfoRepository& fileObjectInfoRepository);
 	ObjectAddress Add(const boost::filesystem::path& sourcePath, const std::vector<uint8_t>& content);
 private:
-	std::mt19937 _random;
 	blob::BlobStore& _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;
 	FileObjectInfoRepository& _fileObjectInfoRepository;
