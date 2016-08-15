@@ -35,6 +35,59 @@ ObjectAddress FileAdder::Add(const boost::filesystem::path& sourcePath, const st
 	return info.address;
 }
 
+boost::optional<BlobAddress> FileAdder::SaveFileContents(const boost::filesystem::path& sourcePath)
+{
+	// TODO: ffs should really support files so they don't have to be read into memory. Or at least streaming...
+	std::ifstream file(sourcePath.string(), std::ios::binary | std::ios::in);
+
+	if (!file)
+	{
+		return boost::none;
+	}
+
+	const auto content = std::vector<uint8_t>(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+	const auto blobAddress = BlobAddress::CalculateFromContent(content);
+	const auto existingBlob = _blobInfoRepository.FindBlob(blobAddress);
+	if (!existingBlob)
+	{
+		_blobStore.CreateBlob(blobAddress, content);
+		_blobInfoRepository.AddBlob(blob::BlobInfo(blobAddress, content.size()));
+	}
+	return blobAddress;
+}
+
+void FileAdder::Add(const boost::filesystem::path& sourcePath)
+{
+	if (!boost::filesystem::exists(sourcePath))
+	{
+		throw PathNotFoundException(sourcePath.string());
+	}
+
+	if (boost::filesystem::is_regular_file(sourcePath))
+	{
+		AddFile(sourcePath);
+	}
+	else
+	{
+		throw SourcePathNotSupportedException(sourcePath.string());
+	}
+}
+
+void FileAdder::AddFile(const boost::filesystem::path& sourcePath)
+{
+	const auto blobAddress = SaveFileContents(sourcePath);
+
+	if (!blobAddress)
+	{
+		// Expected some contents as this is a file
+		_skippedPaths.push_back(sourcePath);
+		return;
+	}
+
+	const auto info = FileObjectInfo::CreateFromProperties(sourcePath.string(), blobAddress, boost::none);
+	_fileObjectInfoRepository.AddObject(info);
+	_addedPaths.push_back(sourcePath);
+}
 
 }
 }
