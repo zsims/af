@@ -30,6 +30,7 @@ protected:
 
 		_uow = _forest->CreateUnitOfWork();
 		_adder = _uow->CreateFileAdder();
+		_finder = _uow->CreateFileFinder();
 	}
 
 	~FileAdderIntegrationTest()
@@ -54,12 +55,12 @@ protected:
 	std::unique_ptr<Forest> _forest;
 	std::unique_ptr<UnitOfWork> _uow;
 	std::unique_ptr<FileAdder> _adder;
+	std::unique_ptr<FileFinder> _finder;
 };
 
 TEST_F(FileAdderIntegrationTest, AddFile)
 {
 	// Arrange
-
 	// Act
 	const auto address = _adder->Add("/here", { 1, 2, 3 });
 	_uow->Commit();
@@ -67,7 +68,9 @@ TEST_F(FileAdderIntegrationTest, AddFile)
 	// Assert
 	{
 		auto uow2 = _forest->CreateUnitOfWork();
-		EXPECT_NO_THROW(uow2->GetFileObject(address));
+		auto finder = uow2->CreateFileFinder();
+		EXPECT_TRUE(finder->FindObjectByAddress(address));
+		EXPECT_TRUE(finder->FindReference("/here"));
 	}
 }
 
@@ -84,6 +87,7 @@ TEST_F(FileAdderIntegrationTest, Add_SuccessWithFile)
 	// Assert
 	const auto& added = _adder->GetAddedPaths();
 	EXPECT_THAT(added, ::testing::Contains(filePath));
+	EXPECT_TRUE(_finder->FindReference(filePath.string()));
 }
 
 TEST_F(FileAdderIntegrationTest, Add_SkipsLockedFile)

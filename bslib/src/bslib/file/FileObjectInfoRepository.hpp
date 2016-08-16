@@ -28,6 +28,7 @@ public:
 
 	void AddObject(const FileObjectInfo& info);
 	FileObjectInfo GetObject(const ObjectAddress& address) const;
+	boost::optional<FileObjectInfo> FindObject(const ObjectAddress& address) const;
 private:
 	std::shared_ptr<FileObjectInfo> MapRowToObject(const sqlitepp::ScopedStatement& statement) const;
 

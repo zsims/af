@@ -49,13 +49,23 @@ void FileRefRepository::SetReference(const FileRef& reference)
 
 FileRef FileRefRepository::GetReference(const std::string& fullPath) const
 {
+	const auto ref = FindReference(fullPath);
+	if(!ref)
+	{
+		throw RefNotFoundException(fullPath);
+	}
+	return ref.value();
+}
+
+boost::optional<FileRef> FileRefRepository::FindReference(const std::string& fullPath) const
+{
 	sqlitepp::ScopedStatementReset reset(_getRefStatement);
 	sqlitepp::BindByParameterNameText(_getRefStatement, ":FullPath", fullPath);
 
 	auto stepResult = sqlite3_step(_getRefStatement);
 	if (stepResult != SQLITE_ROW)
 	{
-		throw RefNotFoundException(fullPath);
+		return boost::none;
 	}
 
 	const auto objectAddressBytes = sqlite3_column_blob(_getRefStatement, GetRef_ColumnIndex_FileObjectAddress);

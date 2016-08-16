@@ -93,7 +93,8 @@ TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
 	// Assert
 	{
 		auto uow = _forest->CreateUnitOfWork();
-		EXPECT_EQ(objectAddress, uow->GetFileObject(objectAddress).address);
+		auto finder = uow->CreateFileFinder();
+		EXPECT_EQ(objectAddress, finder->FindObjectByAddress(objectAddress)->address);
 	}
 }
 
@@ -126,7 +127,8 @@ TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
 	// Assert
 	{
 		auto uow = _forest->CreateUnitOfWork();
-		EXPECT_THROW(uow->GetFileObject(objectAddress), file::ObjectNotFoundException);
+		auto finder = uow->CreateFileFinder();
+		EXPECT_THROW(finder->GetObjectByAddress(objectAddress), file::ObjectNotFoundException);
 	}
 }
 
@@ -141,8 +143,9 @@ TEST_F(ForestIntegrationTest, CreateBlobDuplicateSuccess)
 	auto adder = uow->CreateFileAdder();
 	const auto object1 = adder->Add("/somewhere", content);
 	const auto object2 = adder->Add("/otherwhere", content);
-	const auto blobAddress = uow->GetFileObject(object1).contentBlobAddress;
-	const auto blobAddress2 = uow->GetFileObject(object2).contentBlobAddress;
+	auto finder = uow->CreateFileFinder();
+	const auto blobAddress = finder->GetObjectByAddress(object1).contentBlobAddress;
+	const auto blobAddress2 = finder->GetObjectByAddress(object2).contentBlobAddress;
 
 	// Assert
 	EXPECT_EQ(blobAddress, blobAddress2);

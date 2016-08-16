@@ -2,6 +2,7 @@
 
 #include "bslib/Address.hpp"
 #include "bslib/file/FileAdder.hpp"
+#include "bslib/file/FileFinder.hpp"
 
 #include <boost/core/noncopyable.hpp>
 
@@ -27,10 +28,9 @@ public:
 	virtual std::unique_ptr<file::FileAdder> CreateFileAdder() = 0;
 
 	/**
-	 * Gets a file object by address.
-	 * \throws ObjectNotFoundException No object with the given address could be found.
+	 * Creates a file finder for finding files/directories in the backup
 	 */
-	virtual file::FileObjectInfo GetFileObject(const ObjectAddress& address) const = 0;
+	virtual std::unique_ptr<file::FileFinder> CreateFileFinder() = 0;
 
 	/**
 	 * Gets a blob by address.
