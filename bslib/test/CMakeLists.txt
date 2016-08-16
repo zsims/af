@@ -1,6 +1,7 @@
 source_group("src" REGULAR_EXPRESSION "src/.*")
 source_group("src\\blob" REGULAR_EXPRESSION "src/blob/.*")
 source_group("src\\file" REGULAR_EXPRESSION "src/file/.*")
+source_group("src\\utility" REGULAR_EXPRESSION "src/utility/.*")
 
 add_executable(
     bslib_test
@@ -12,6 +13,10 @@ add_executable(
     src/file/FileAdderIntegrationTest.cpp
     src/file/FileRefRepositoryIntegrationTest.cpp
     src/file/FileObjectInfoRepositoryIntegrationTest.cpp
+    src/utility/gtest_boost_filesystem_fix.cpp
+    src/utility/gtest_boost_filesystem_fix.hpp
+    src/utility/ScopedExclusiveFileAccess.cpp
+    src/utility/ScopedExclusiveFileAccess.hpp
 )
 
 set_property(TARGET bslib_test PROPERTY FOLDER "bslib")
@@ -20,6 +25,7 @@ target_include_directories(
     bslib_test
     PRIVATE $<TARGET_PROPERTY:bslib,INTERFACE_INCLUDE_DIRECTORIES>
     PRIVATE ../src
+    PRIVATE src
     PRIVATE $<TARGET_PROPERTY:sqlite,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
