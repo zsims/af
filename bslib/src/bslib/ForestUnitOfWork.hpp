@@ -4,6 +4,7 @@
 #include "bslib/blob/BlobInfo.hpp"
 #include "bslib/blob/BlobStore.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
+#include "bslib/file/FileRefRepository.hpp"
 #include "bslib/file/FileObjectInfo.hpp"
 #include "bslib/file/FileObjectInfoRepository.hpp"
 #include "bslib/sqlitepp/ScopedTransaction.hpp"
@@ -22,13 +23,14 @@ public:
 	void Commit() override;
 
 	std::unique_ptr<file::FileAdder> CreateFileAdder() override;
-	file::FileObjectInfo GetFileObject(const ObjectAddress& address) const override;
+	std::unique_ptr<file::FileFinder> CreateFileFinder() override;
 	std::vector<uint8_t> GetBlob(const BlobAddress& address) const override;
 private:
 	sqlitepp::ScopedTransaction _transaction;
 	blob::BlobStore& _blobStore;
 	blob::BlobInfoRepository _blobInfoRepository;
 	file::FileObjectInfoRepository _fileObjectInfoRepository;
+	file::FileRefRepository _fileRefRepository;
 };
 
 

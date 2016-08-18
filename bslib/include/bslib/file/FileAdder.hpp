@@ -15,6 +15,7 @@ class BlobStore;
 }
 namespace file {
 
+class FileRefRepository;
 class FileObjectInfoRepository;
 
 /**
@@ -23,7 +24,11 @@ class FileObjectInfoRepository;
 class FileAdder
 {
 public:
-	FileAdder(blob::BlobStore& blobStore, blob::BlobInfoRepository& blobInfoRepository, FileObjectInfoRepository& fileObjectInfoRepository);
+	FileAdder(
+		blob::BlobStore& blobStore,
+		blob::BlobInfoRepository& blobInfoRepository,
+		FileObjectInfoRepository& fileObjectInfoRepository,
+		FileRefRepository& fileRefRepository);
 	ObjectAddress Add(const boost::filesystem::path& sourcePath, const std::vector<uint8_t>& content);
 
 	/**
@@ -45,6 +50,7 @@ private:
 	blob::BlobStore& _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;
 	FileObjectInfoRepository& _fileObjectInfoRepository;
+	FileRefRepository & _fileRefRepository;
 };
 
 }

@@ -10,6 +10,7 @@ ForestUnitOfWork::ForestUnitOfWork(const sqlitepp::ScopedSqlite3Object& connecti
 	, _blobStore(blobStore)
 	, _blobInfoRepository(connection)
 	, _fileObjectInfoRepository(connection)
+	, _fileRefRepository(connection)
 {
 }
 
@@ -20,12 +21,12 @@ void ForestUnitOfWork::Commit()
 
 std::unique_ptr<file::FileAdder> ForestUnitOfWork::CreateFileAdder()
 {
-	return std::make_unique<file::FileAdder>(_blobStore, _blobInfoRepository, _fileObjectInfoRepository);
+	return std::make_unique<file::FileAdder>(_blobStore, _blobInfoRepository, _fileObjectInfoRepository, _fileRefRepository);
 }
 
-file::FileObjectInfo ForestUnitOfWork::GetFileObject(const ObjectAddress& address) const
+std::unique_ptr<file::FileFinder> ForestUnitOfWork::CreateFileFinder()
 {
-	return _fileObjectInfoRepository.GetObject(address);
+	return std::make_unique<file::FileFinder>(_fileObjectInfoRepository, _fileRefRepository);
 }
 
 std::vector<uint8_t> ForestUnitOfWork::GetBlob(const BlobAddress& address) const

@@ -3,6 +3,7 @@
 #include "bslib/blob/BlobStore.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/file/exceptions.hpp"
+#include "bslib/file/FileRefRepository.hpp"
 #include "bslib/file/FileObjectInfoRepository.hpp"
 
 #include <boost/filesystem.hpp>
@@ -13,10 +14,15 @@ namespace af {
 namespace bslib {
 namespace file {
 
-FileAdder::FileAdder(blob::BlobStore& blobStore, blob::BlobInfoRepository& blobInfoRepository, FileObjectInfoRepository& fileObjectInfoRepository)
+FileAdder::FileAdder(
+	blob::BlobStore& blobStore,
+	blob::BlobInfoRepository& blobInfoRepository,
+	FileObjectInfoRepository& fileObjectInfoRepository,
+	FileRefRepository& fileRefRepository)
 	: _blobStore(blobStore)
 	, _blobInfoRepository(blobInfoRepository)
 	, _fileObjectInfoRepository(fileObjectInfoRepository)
+	, _fileRefRepository(fileRefRepository)
 {
 }
 
@@ -32,6 +38,7 @@ ObjectAddress FileAdder::Add(const boost::filesystem::path& sourcePath, const st
 
 	const auto info = FileObjectInfo::CreateFromProperties(sourcePath.string(), blobAddress, boost::none);
 	_fileObjectInfoRepository.AddObject(info);
+	_fileRefRepository.SetReference(FileRef(sourcePath.string(), info.address));
 	return info.address;
 }
 
@@ -86,6 +93,7 @@ void FileAdder::AddFile(const boost::filesystem::path& sourcePath)
 
 	const auto info = FileObjectInfo::CreateFromProperties(sourcePath.string(), blobAddress, boost::none);
 	_fileObjectInfoRepository.AddObject(info);
+	_fileRefRepository.SetReference(FileRef(sourcePath.string(), info.address));
 	_addedPaths.push_back(sourcePath);
 }
 

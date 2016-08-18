@@ -2,12 +2,14 @@
 
 #include "bslib/Address.hpp"
 #include "bslib/file/FileRef.hpp"
+#include "bslib/sqlitepp/handles.hpp"
+
+#include <boost/optional.hpp>
 
 #include <cstdint>
 #include <memory>
 #include <vector>
 
-#include "bslib/sqlitepp/handles.hpp"
 
 namespace af {
 namespace bslib {
@@ -23,6 +25,7 @@ public:
 
 	void SetReference(const FileRef& reference);
 	FileRef GetReference(const std::string& fullPath) const;
+	boost::optional<FileRef> FindReference(const std::string& fullPath) const;
 private:
 	const sqlitepp::ScopedSqlite3Object& _db;
 	sqlitepp::ScopedStatement _insertRefStatement;

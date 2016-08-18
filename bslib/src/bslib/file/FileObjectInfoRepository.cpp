@@ -92,6 +92,17 @@ void FileObjectInfoRepository::AddObject(const FileObjectInfo& info)
 
 FileObjectInfo FileObjectInfoRepository::GetObject(const ObjectAddress& address) const
 {
+	const auto& info = FindObject(address);
+	if(!info)
+	{
+		throw ObjectNotFoundException((boost::format("Object with address %1% not found.") % address.ToString()).str());
+	}
+
+	return info.value();
+}
+
+boost::optional<FileObjectInfo> FileObjectInfoRepository::FindObject(const ObjectAddress& address) const
+{
 	const auto binaryAddress = address.ToBinary();
 	sqlitepp::ScopedStatementReset reset(_getObjectStatement);
 	sqlitepp::BindByParameterNameBlob(_getObjectStatement, ":Address", &binaryAddress[0], binaryAddress.size());
@@ -99,7 +110,7 @@ FileObjectInfo FileObjectInfoRepository::GetObject(const ObjectAddress& address)
 	auto stepResult = sqlite3_step(_getObjectStatement);
 	if (stepResult != SQLITE_ROW)
 	{
-		throw ObjectNotFoundException((boost::format("Object with address %1% not found.") % address.ToString()).str());
+		return boost::none;
 	}
 
 	return *MapRowToObject(_getObjectStatement);
