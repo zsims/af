@@ -37,12 +37,13 @@ public:
 	* \exception SourcePathNotSupportedException The given source isn't a file or directory
 	*/
 	void Add(const boost::filesystem::path& sourcePath);
-
 	const std::vector<boost::filesystem::path>& GetAddedPaths() const { return _addedPaths; }
 	const std::vector<boost::filesystem::path>& GetSkippedPaths() const { return _skippedPaths; }
 private:
+	void AddChild(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress);
 	boost::optional<BlobAddress> SaveFileContents(const boost::filesystem::path& sourcePath);
-	void AddFile(const boost::filesystem::path& sourcePath);
+	void AddFile(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress);
+	ObjectAddress AddDirectory(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress);
 
 	std::vector<boost::filesystem::path> _addedPaths;
 	std::vector<boost::filesystem::path> _skippedPaths;
@@ -50,7 +51,7 @@ private:
 	blob::BlobStore& _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;
 	FileObjectInfoRepository& _fileObjectInfoRepository;
-	FileRefRepository & _fileRefRepository;
+	FileRefRepository& _fileRefRepository;
 };
 
 }

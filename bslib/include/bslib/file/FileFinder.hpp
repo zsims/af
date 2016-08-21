@@ -47,7 +47,7 @@ public:
 	FileObjectInfo GetObjectByAddress(const ObjectAddress& address) const;
 private:
 	FileObjectInfoRepository& _fileObjectInfoRepository;
-	FileRefRepository & _fileRefRepository;
+	FileRefRepository& _fileRefRepository;
 };
 
 }

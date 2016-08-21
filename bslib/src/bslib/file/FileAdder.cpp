@@ -70,17 +70,37 @@ void FileAdder::Add(const boost::filesystem::path& sourcePath)
 		throw PathNotFoundException(sourcePath.string());
 	}
 
-	if (boost::filesystem::is_regular_file(sourcePath))
-	{
-		AddFile(sourcePath);
-	}
-	else
+	// Check this is a supported path type
+	if (!boost::filesystem::is_regular_file(sourcePath) && !boost::filesystem::is_directory(sourcePath))
 	{
 		throw SourcePathNotSupportedException(sourcePath.string());
 	}
+
+	AddChild(sourcePath, boost::none);
 }
 
-void FileAdder::AddFile(const boost::filesystem::path& sourcePath)
+void FileAdder::AddChild(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress)
+{
+	if (boost::filesystem::is_regular_file(sourcePath))
+	{
+		AddFile(sourcePath, parentAddress);
+	}
+	else if (boost::filesystem::is_directory(sourcePath))
+	{
+		auto nextAddress = AddDirectory(sourcePath, parentAddress);
+		boost::filesystem::recursive_directory_iterator itr(sourcePath);
+		for (const auto& path : itr)
+		{
+			AddChild(path, nextAddress);
+		}
+	}
+	else
+	{
+		_skippedPaths.push_back(sourcePath);
+	}
+}
+
+void FileAdder::AddFile(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress)
 {
 	const auto blobAddress = SaveFileContents(sourcePath);
 
@@ -91,10 +111,19 @@ void FileAdder::AddFile(const boost::filesystem::path& sourcePath)
 		return;
 	}
 
-	const auto info = FileObjectInfo::CreateFromProperties(sourcePath.string(), blobAddress, boost::none);
+	const auto info = FileObjectInfo::CreateFromProperties(sourcePath.string(), blobAddress, parentAddress);
 	_fileObjectInfoRepository.AddObject(info);
 	_fileRefRepository.SetReference(FileRef(sourcePath.string(), info.address));
 	_addedPaths.push_back(sourcePath);
+}
+
+ObjectAddress FileAdder::AddDirectory(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress)
+{
+	const auto info = FileObjectInfo::CreateFromProperties(sourcePath.string(), boost::none, parentAddress);
+	_fileObjectInfoRepository.AddObject(info);
+	_fileRefRepository.SetReference(FileRef(sourcePath.string(), info.address));
+	_addedPaths.push_back(sourcePath);
+	return info.address;
 }
 
 }
