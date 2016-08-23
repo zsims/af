@@ -24,6 +24,7 @@ protected:
 		: _forestDbPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb"))
 		, _targetPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path())
 	{
+		boost::filesystem::create_directories(_targetPath);
 		auto blobStore = std::make_unique<blob::DirectoryBlobStore>(_targetPath);
 		_forest.reset(new Forest(_forestDbPath.string(), std::move(blobStore)));
 		_forest->Create();
@@ -46,7 +47,7 @@ protected:
 
 	void CreateFile(const boost::filesystem::path& path, const std::string& content)
 	{
-		std::ofstream f(path.string(), std::ofstream::out | std::ofstream::app);
+		std::ofstream f(path.string(), std::ofstream::out);
 		f << content;
 	}
 
@@ -118,6 +119,113 @@ TEST_F(FileAdderIntegrationTest, Add_FailIfNotExist)
 	// Assert
 	ASSERT_THROW(_adder->Add(path), PathNotFoundException);
 }
+
+TEST_F(FileAdderIntegrationTest, Add_EmptyDirectory)
+{
+	// Arrange
+	auto path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+	boost::filesystem::create_directories(path);
+
+	// Act
+	_adder->Add(path);
+
+	// Assert
+	const auto& added = _adder->GetAddedPaths();
+	EXPECT_THAT(added, ::testing::Contains(path));
+	const auto& skipped = _adder->GetSkippedPaths();
+	EXPECT_THAT(skipped, ::testing::Not(::testing::Contains(path)));
+}
+
+TEST_F(FileAdderIntegrationTest, Add_SuccessWithDirectory)
+{
+	// Arrange
+	const auto path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+	boost::filesystem::create_directories(path);
+	auto deepDirectory = path / boost::filesystem::unique_path();
+	boost::filesystem::create_directories(deepDirectory);
+	const auto filePath = path / "file.dat";
+	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
+	CreateFile(filePath, "hello");
+
+	// Act
+	_adder->Add(path);
+	_uow->Commit();
+
+	// Assert
+	const auto& added = _adder->GetAddedPaths();
+	EXPECT_THAT(added, ::testing::Contains(path));
+	EXPECT_THAT(added, ::testing::Contains(deepDirectory));
+	EXPECT_THAT(added, ::testing::Contains(filePath));
+
+	{
+		auto uow2 = _forest->CreateUnitOfWork();
+		auto finder = uow2->CreateFileFinder();
+		EXPECT_TRUE(finder->FindReference(path));
+		EXPECT_TRUE(finder->FindReference(deepDirectory));
+
+		const auto fileRef = finder->FindReference(filePath);
+		EXPECT_TRUE(fileRef);
+		const auto fileObject = finder->GetObjectByAddress(fileRef->fileObjectAddress);
+		EXPECT_EQ(helloBytes, uow2->GetBlob(fileObject.contentBlobAddress.value()));
+	}
+}
+
+TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
+{
+	// Arrange
+	const auto path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+	boost::filesystem::create_directories(path);
+	auto deepDirectory = path / boost::filesystem::unique_path();
+	boost::filesystem::create_directories(deepDirectory);
+	const auto filePath = path / "file.dat";
+	const auto deepFilePath = deepDirectory / "foo.dat";
+	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
+	const std::vector<uint8_t> hellBytes = { 104, 101, 108, 108 };
+	CreateFile(filePath, "hello");
+	_adder->Add(path);
+	_uow->Commit();
+
+	// Act
+	auto uow2 = _forest->CreateUnitOfWork();
+	auto adder2 = uow2->CreateFileAdder();
+	CreateFile(filePath, "hell");
+	CreateFile(deepFilePath, "hello");
+	adder2->Add(path);
+	uow2->Commit();
+
+	// Assert
+	const auto& added = adder2->GetAddedPaths();
+	EXPECT_THAT(added, ::testing::Contains(path));
+	EXPECT_THAT(added, ::testing::Contains(deepDirectory));
+	EXPECT_THAT(added, ::testing::Contains(deepFilePath));
+	EXPECT_THAT(added, ::testing::Contains(filePath));
+
+	{
+		auto uow3 = _forest->CreateUnitOfWork();
+		auto finder3 = uow3->CreateFileFinder();
+		EXPECT_TRUE(finder3->FindReference(path));
+		EXPECT_TRUE(finder3->FindReference(deepDirectory));
+		EXPECT_TRUE(finder3->FindReference(deepFilePath));
+		EXPECT_TRUE(finder3->FindReference(filePath));
+
+		// Deep file
+		{
+			const auto fileRef = finder3->FindReference(deepFilePath);
+			EXPECT_TRUE(fileRef);
+			const auto fileObject = finder3->GetObjectByAddress(fileRef->fileObjectAddress);
+			EXPECT_EQ(helloBytes, uow3->GetBlob(fileObject.contentBlobAddress.value()));
+		}
+
+		// Updated file
+		{
+			const auto fileRef = finder3->FindReference(filePath);
+			EXPECT_TRUE(fileRef);
+			const auto fileObject = finder3->GetObjectByAddress(fileRef->fileObjectAddress);
+			EXPECT_EQ(hellBytes, uow3->GetBlob(fileObject.contentBlobAddress.value()));
+		}
+	}
+}
+
 
 }
 }
