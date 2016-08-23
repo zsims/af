@@ -24,6 +24,11 @@ std::unique_ptr<file::FileAdder> ForestUnitOfWork::CreateFileAdder()
 	return std::make_unique<file::FileAdder>(_blobStore, _blobInfoRepository, _fileObjectInfoRepository, _fileRefRepository);
 }
 
+std::unique_ptr<file::FileRestorer> ForestUnitOfWork::CreateFileRestorer()
+{
+	return std::make_unique<file::FileRestorer>(_blobStore, _blobInfoRepository, _fileObjectInfoRepository, _fileRefRepository);
+}
+
 std::unique_ptr<file::FileFinder> ForestUnitOfWork::CreateFileFinder()
 {
 	return std::make_unique<file::FileFinder>(_fileObjectInfoRepository, _fileRefRepository);
