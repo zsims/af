@@ -113,6 +113,18 @@ TEST(AddressTest, CalculateFromContent)
 	EXPECT_EQ("aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d", result.ToString());
 }
 
+TEST(AddressTest, CalculateFromEmptyContent)
+{
+	// Arrange
+	const std::vector<uint8_t> content;
+
+	// Act
+	const auto result = Address::CalculateFromContent(content);
+
+	// Assert
+	EXPECT_EQ("da39a3ee5e6b4b0d3255bfef95601890afd80709", result.ToString());
+}
+
 }
 }
 }

@@ -74,6 +74,12 @@ std::string Address::ToString() const
 
 Address Address::CalculateFromContent(const std::vector<uint8_t>& content)
 {
+	if (content.size() == 0)
+	{
+		// Null value hash for SHA1
+		return Address("da39a3ee5e6b4b0d3255bfef95601890afd80709");
+	}
+
 	boost::uuids::detail::sha1 sha;
 	sha.process_bytes(&content[0], content.size());
 	unsigned int digest[5];

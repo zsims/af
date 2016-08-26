@@ -2,6 +2,7 @@
 #include "bslib/Forest.hpp"
 #include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/blob/exceptions.hpp"
+#include "bslib/blob/NullBlobStore.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileAdder.hpp"
 
@@ -149,6 +150,26 @@ TEST_F(ForestIntegrationTest, CreateBlobDuplicateSuccess)
 
 	// Assert
 	EXPECT_EQ(blobAddress, blobAddress2);
+}
+
+TEST_F(ForestIntegrationTest, OpenOrCreateExisting)
+{
+	// Arrange
+	_forest->Create();
+	_forest.reset();
+	Forest secondForest(_forestDbPath, std::make_unique<blob::NullBlobStore>());
+
+	// Act
+	// Assert
+	ASSERT_NO_THROW(secondForest.OpenOrCreate());
+}
+
+TEST_F(ForestIntegrationTest, OpenOrCreateNew)
+{
+	// Arrange
+	// Act
+	// Assert
+	ASSERT_NO_THROW(_forest->OpenOrCreate());
 }
 
 }
