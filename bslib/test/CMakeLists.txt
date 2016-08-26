@@ -12,6 +12,7 @@ add_executable(
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
     src/file/FileAdderIntegrationTest.cpp
     src/file/FileRefRepositoryIntegrationTest.cpp
+    src/file/FileRestorerIntegrationTest.cpp
     src/file/FileObjectInfoRepositoryIntegrationTest.cpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp

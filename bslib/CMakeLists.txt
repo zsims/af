@@ -13,6 +13,7 @@ add_library(
     include/bslib/file/FileAdder.hpp
     include/bslib/file/FileFinder.hpp
     include/bslib/file/FileRef.hpp
+    include/bslib/file/FileRestorer.hpp
     include/bslib/file/FileObjectInfo.hpp
     include/bslib/UnitOfWork.hpp
     src/bslib/Address.cpp
@@ -32,6 +33,7 @@ add_library(
     src/bslib/file/FileFinder.cpp
     src/bslib/file/FileRefRepository.cpp
     src/bslib/file/FileRefRepository.hpp
+    src/bslib/file/FileRestorer.cpp
     src/bslib/file/FileObjectInfoRepository.cpp
     src/bslib/file/FileObjectInfoRepository.hpp
     src/bslib/sqlitepp/exceptions.hpp
