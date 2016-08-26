@@ -4,6 +4,7 @@
 #include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "utility/gtest_boost_filesystem_fix.hpp"
+#include "utility/matchers.hpp"
 #include "utility/ScopedExclusiveFileAccess.hpp"
 
 #include <boost/filesystem.hpp>
@@ -136,8 +137,6 @@ TEST_F(FileRestorerIntegrationTest, RestoreTree_DirectoryToExistingDirectory)
 	boost::filesystem::create_directories(deepDirectory);
 	const auto filePath = path / "file.dat";
 	const auto deepFilePath = deepDirectory / "deep.dat";
-	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
-	const std::vector<uint8_t> hellBytes = { 104, 101, 108, 108 };
 	CreateFile(filePath, "hello");
 	CreateFile(deepFilePath, "hell");
 	_adder->Add(path);
@@ -158,6 +157,8 @@ TEST_F(FileRestorerIntegrationTest, RestoreTree_DirectoryToExistingDirectory)
 	EXPECT_THAT(restored, ::testing::Contains(expectedFilePath));
 	EXPECT_THAT(restored, ::testing::Contains(expectedDeepFilePath));
 	EXPECT_THAT(restored, ::testing::Contains(expectedDeepDirectoryPath));
+	EXPECT_THAT(expectedDeepFilePath, HasSameFileContents(deepFilePath));
+	EXPECT_THAT(expectedFilePath, HasSameFileContents(filePath));
 }
 
 TEST_F(FileRestorerIntegrationTest, RestoreTree_DirectoryToNonExistingDirectory)
@@ -169,8 +170,6 @@ TEST_F(FileRestorerIntegrationTest, RestoreTree_DirectoryToNonExistingDirectory)
 	boost::filesystem::create_directories(deepDirectory);
 	const auto filePath = path / "file.dat";
 	const auto deepFilePath = deepDirectory / "deep.dat";
-	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
-	const std::vector<uint8_t> hellBytes = { 104, 101, 108, 108 };
 	CreateFile(filePath, "hello");
 	CreateFile(deepFilePath, "hell");
 	_adder->Add(path);
@@ -190,6 +189,8 @@ TEST_F(FileRestorerIntegrationTest, RestoreTree_DirectoryToNonExistingDirectory)
 	EXPECT_THAT(restored, ::testing::Contains(expectedFilePath));
 	EXPECT_THAT(restored, ::testing::Contains(expectedDeepFilePath));
 	EXPECT_THAT(restored, ::testing::Contains(expectedDeepDirectoryPath));
+	EXPECT_THAT(expectedDeepFilePath, HasSameFileContents(deepFilePath));
+	EXPECT_THAT(expectedFilePath, HasSameFileContents(filePath));
 }
 
 }
