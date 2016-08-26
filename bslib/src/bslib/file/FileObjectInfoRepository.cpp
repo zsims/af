@@ -36,6 +36,9 @@ FileObjectInfoRepository::FileObjectInfoRepository(const sqlitepp::ScopedSqlite3
 	sqlitepp::prepare_or_throw(_db, R"(
 		SELECT Address, FullPath, ContentBlobAddress, ParentAddress FROM FileObject
 	)", _getAllObjectsStatement);
+	sqlitepp::prepare_or_throw(_db, R"(
+		SELECT Address, FullPath, ContentBlobAddress, ParentAddress FROM FileObject WHERE ParentAddress = :ParentAddress
+	)", _getAllObjectsByParentStatement);
 }
 
 std::vector<std::shared_ptr<FileObjectInfo>> FileObjectInfoRepository::GetAllObjects() const
@@ -52,6 +55,21 @@ std::vector<std::shared_ptr<FileObjectInfo>> FileObjectInfoRepository::GetAllObj
 	return result;
 }
 
+std::vector<std::shared_ptr<FileObjectInfo>> FileObjectInfoRepository::GetAllObjectsByParentAddress(const ObjectAddress& parentAddress) const
+{
+	std::vector<std::shared_ptr<FileObjectInfo>> result;
+	sqlitepp::ScopedStatementReset reset(_getAllObjectsByParentStatement);
+	const auto& binaryAddress = parentAddress.ToBinary();
+	sqlitepp::BindByParameterNameBlob(_getAllObjectsByParentStatement, ":ParentAddress", &binaryAddress[0], binaryAddress.size());
+
+	auto stepResult = 0;
+	while ((stepResult = sqlite3_step(_getAllObjectsByParentStatement)) == SQLITE_ROW)
+	{
+		result.push_back(MapRowToObject(_getAllObjectsByParentStatement));
+	}
+
+	return result;
+}
 
 void FileObjectInfoRepository::AddObject(const FileObjectInfo& info)
 {

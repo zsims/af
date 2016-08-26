@@ -28,6 +28,16 @@ FileRestorer::FileRestorer(
 
 void FileRestorer::RestoreSingle(const ObjectAddress& objectAddress, const boost::filesystem::path& targetPath)
 {
+	Restore(objectAddress, targetPath, false);
+}
+
+void FileRestorer::RestoreTree(const ObjectAddress& objectAddress, const boost::filesystem::path& targetPath)
+{
+	Restore(objectAddress, targetPath, true);
+}
+
+void FileRestorer::Restore(const ObjectAddress& objectAddress, const boost::filesystem::path& targetPath, bool recursive)
+{
 	if (boost::filesystem::exists(targetPath) && !boost::filesystem::is_directory(targetPath))
 	{
 		throw TargetPathNotSupportedException(targetPath.string());
@@ -50,10 +60,11 @@ void FileRestorer::RestoreSingle(const ObjectAddress& objectAddress, const boost
 			return;
 		}
 	}
-	RestoreFileObject(object, resolvedTargetPath);
+
+	RestoreFileObject(object, resolvedTargetPath, recursive);
 }
 
-void FileRestorer::RestoreFileObject(const FileObjectInfo& info, const boost::filesystem::path& targetPath)
+void FileRestorer::RestoreFileObject(const FileObjectInfo& info, const boost::filesystem::path& targetPath, bool followDirectories)
 {
 	// File
 	if (info.contentBlobAddress)
@@ -63,6 +74,7 @@ void FileRestorer::RestoreFileObject(const FileObjectInfo& info, const boost::fi
 			_skippedPaths.push_back(targetPath);
 			return;
 		}
+		_restoredPaths.push_back(targetPath);
 	}
 	else
 	{
@@ -74,8 +86,18 @@ void FileRestorer::RestoreFileObject(const FileObjectInfo& info, const boost::fi
 			_skippedPaths.push_back(targetPath);
 			return;
 		}
+		
+		// Yes, it hasn't actually been restored full yet, but I want ma tail call optimization
+		_restoredPaths.push_back(targetPath);
+
+		const auto& children = _fileObjectInfoRepository.GetAllObjectsByParentAddress(info.address);
+		for (const auto& child : children)
+		{
+			const auto& name = boost::filesystem::path(child->fullPath).filename();
+			// *Hope* for some sweet tail call optimization :-D
+			RestoreFileObject(*child, targetPath / name, followDirectories);
+		}
 	}
-	_restoredPaths.push_back(targetPath);
 }
 
 bool FileRestorer::RestoreBlobToFile(const BlobAddress& blobAddress, const boost::filesystem::path& targetPath) const
