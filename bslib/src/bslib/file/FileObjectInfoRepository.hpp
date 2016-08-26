@@ -25,6 +25,7 @@ public:
 	explicit FileObjectInfoRepository(const sqlitepp::ScopedSqlite3Object& connection);
 
 	std::vector<std::shared_ptr<FileObjectInfo>> GetAllObjects() const;
+	std::vector<std::shared_ptr<FileObjectInfo>> GetAllObjectsByParentAddress(const ObjectAddress& parentAddress) const;
 
 	void AddObject(const FileObjectInfo& info);
 	FileObjectInfo GetObject(const ObjectAddress& address) const;
@@ -36,6 +37,7 @@ private:
 	sqlitepp::ScopedStatement _insertObjectStatement;
 	sqlitepp::ScopedStatement _getObjectStatement;
 	sqlitepp::ScopedStatement _getAllObjectsStatement;
+	sqlitepp::ScopedStatement _getAllObjectsByParentStatement;
 };
 
 }
