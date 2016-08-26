@@ -74,6 +74,7 @@ void FileRestorer::RestoreFileObject(const FileObjectInfo& info, const boost::fi
 			_skippedPaths.push_back(targetPath);
 			return;
 		}
+		_restoredPaths.push_back(targetPath);
 	}
 	else
 	{
@@ -85,15 +86,18 @@ void FileRestorer::RestoreFileObject(const FileObjectInfo& info, const boost::fi
 			_skippedPaths.push_back(targetPath);
 			return;
 		}
+		
+		// Yes, it hasn't actually been restored full yet, but I want ma tail call optimization
+		_restoredPaths.push_back(targetPath);
 
 		const auto& children = _fileObjectInfoRepository.GetAllObjectsByParentAddress(info.address);
 		for (const auto& child : children)
 		{
 			const auto& name = boost::filesystem::path(child->fullPath).filename();
+			// *Hope* for some sweet tail call optimization :-D
 			RestoreFileObject(*child, targetPath / name, followDirectories);
 		}
 	}
-	_restoredPaths.push_back(targetPath);
 }
 
 bool FileRestorer::RestoreBlobToFile(const BlobAddress& blobAddress, const boost::filesystem::path& targetPath) const
