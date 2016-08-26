@@ -78,6 +78,21 @@ TEST_F(FileRestorerIntegrationTest, RestoreSingle_FileToFilePath)
 	EXPECT_THAT(skipped, ::testing::Not(::testing::Contains(_restorePath)));
 }
 
+TEST_F(FileRestorerIntegrationTest, RestoreTree_FileToFilePath)
+{
+	// Arrange
+	const auto address = _adder->Add("/here", { 1, 2, 3 });
+
+	// Act
+	_restorer->RestoreTree(address, _restorePath);
+
+	// Assert
+	const auto& restored = _restorer->GetRestoredPaths();
+	const auto& skipped = _restorer->GetSkippedPaths();
+	EXPECT_THAT(restored, ::testing::Contains(_restorePath));
+	EXPECT_THAT(skipped, ::testing::Not(::testing::Contains(_restorePath)));
+}
+
 TEST_F(FileRestorerIntegrationTest, RestoreSingle_FileToExistingDirectory)
 {
 	// Arrange
@@ -93,6 +108,88 @@ TEST_F(FileRestorerIntegrationTest, RestoreSingle_FileToExistingDirectory)
 	const auto& skipped = _restorer->GetSkippedPaths();
 	EXPECT_THAT(restored, ::testing::Contains(expectedPath));
 	EXPECT_THAT(skipped, ::testing::Not(::testing::Contains(expectedPath)));
+}
+
+TEST_F(FileRestorerIntegrationTest, RestoreTree_FileToExistingDirectory)
+{
+	// Arrange
+	boost::filesystem::create_directories(_restorePath);
+	const auto address = _adder->Add("/here", { 1, 2, 3 });
+	const auto expectedPath = _restorePath / "here";
+
+	// Act
+	_restorer->RestoreTree(address, _restorePath);
+
+	// Assert
+	const auto& restored = _restorer->GetRestoredPaths();
+	const auto& skipped = _restorer->GetSkippedPaths();
+	EXPECT_THAT(restored, ::testing::Contains(expectedPath));
+	EXPECT_THAT(skipped, ::testing::Not(::testing::Contains(expectedPath)));
+}
+
+TEST_F(FileRestorerIntegrationTest, RestoreTree_DirectoryToExistingDirectory)
+{
+	// Arrange
+	const auto path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+	boost::filesystem::create_directories(path);
+	auto deepDirectory = path / boost::filesystem::unique_path();
+	boost::filesystem::create_directories(deepDirectory);
+	const auto filePath = path / "file.dat";
+	const auto deepFilePath = deepDirectory / "deep.dat";
+	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
+	const std::vector<uint8_t> hellBytes = { 104, 101, 108, 108 };
+	CreateFile(filePath, "hello");
+	CreateFile(deepFilePath, "hell");
+	_adder->Add(path);
+
+	boost::filesystem::create_directories(_restorePath);
+	const auto expectedDeepDirectoryPath = _restorePath / path.filename() / deepDirectory.filename();
+	const auto expectedDeepFilePath = _restorePath / path.filename() / deepDirectory.filename() / "deep.dat";
+	const auto expectedFilePath = _restorePath / path.filename() / "file.dat";
+
+	// Act
+	const auto& rootAddress = _finder->FindReference(path);
+	ASSERT_TRUE(rootAddress);
+	_restorer->RestoreTree(rootAddress.value().fileObjectAddress, _restorePath);
+
+	// Assert
+	const auto& restored = _restorer->GetRestoredPaths();
+	const auto& skipped = _restorer->GetSkippedPaths();
+	EXPECT_THAT(restored, ::testing::Contains(expectedFilePath));
+	EXPECT_THAT(restored, ::testing::Contains(expectedDeepFilePath));
+	EXPECT_THAT(restored, ::testing::Contains(expectedDeepDirectoryPath));
+}
+
+TEST_F(FileRestorerIntegrationTest, RestoreTree_DirectoryToNonExistingDirectory)
+{
+	// Arrange
+	const auto path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+	boost::filesystem::create_directories(path);
+	auto deepDirectory = path / boost::filesystem::unique_path();
+	boost::filesystem::create_directories(deepDirectory);
+	const auto filePath = path / "file.dat";
+	const auto deepFilePath = deepDirectory / "deep.dat";
+	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
+	const std::vector<uint8_t> hellBytes = { 104, 101, 108, 108 };
+	CreateFile(filePath, "hello");
+	CreateFile(deepFilePath, "hell");
+	_adder->Add(path);
+
+	const auto expectedDeepDirectoryPath = _restorePath / deepDirectory.filename();
+	const auto expectedDeepFilePath = _restorePath / deepDirectory.filename() / "deep.dat";
+	const auto expectedFilePath = _restorePath / "file.dat";
+
+	// Act
+	const auto& rootAddress = _finder->FindReference(path);
+	ASSERT_TRUE(rootAddress);
+	_restorer->RestoreTree(rootAddress.value().fileObjectAddress, _restorePath);
+
+	// Assert
+	const auto& restored = _restorer->GetRestoredPaths();
+	const auto& skipped = _restorer->GetSkippedPaths();
+	EXPECT_THAT(restored, ::testing::Contains(expectedFilePath));
+	EXPECT_THAT(restored, ::testing::Contains(expectedDeepFilePath));
+	EXPECT_THAT(restored, ::testing::Contains(expectedDeepDirectoryPath));
 }
 
 }
