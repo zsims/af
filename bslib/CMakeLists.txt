@@ -10,6 +10,9 @@ add_library(
     include/bslib/Address.hpp
     include/bslib/exceptions.hpp
     include/bslib/Forest.hpp
+    include/bslib/blob/BlobStore.hpp
+    include/bslib/blob/DirectoryBlobStore.hpp
+    include/bslib/blob/NullBlobStore.hpp
     include/bslib/file/FileAdder.hpp
     include/bslib/file/FileFinder.hpp
     include/bslib/file/FileRef.hpp
@@ -20,11 +23,8 @@ add_library(
     src/bslib/blob/BlobInfo.hpp
     src/bslib/blob/BlobInfoRepository.cpp
     src/bslib/blob/BlobInfoRepository.hpp
-    src/bslib/blob/BlobStore.hpp
     src/bslib/blob/DirectoryBlobStore.cpp
-    src/bslib/blob/DirectoryBlobStore.hpp
     src/bslib/blob/exceptions.hpp
-    src/bslib/blob/NullBlobStore.hpp
     src/bslib/Forest.cpp
     src/bslib/ForestUnitOfWork.cpp
     src/bslib/ForestUnitOfWork.hpp
