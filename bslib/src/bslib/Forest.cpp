@@ -84,6 +84,7 @@ void Forest::OpenOrCreate()
 	if (boost::filesystem::exists(_forestPath))
 	{
 		Open();
+		return;
 	}
 	Create();
 }
