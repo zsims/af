@@ -11,8 +11,8 @@
 namespace af {
 namespace bslib {
 
-Forest::Forest(const std::string& utf8DbPath, std::unique_ptr<blob::BlobStore> blobStore)
-	: _utf8DbPath(utf8DbPath)
+Forest::Forest(const boost::filesystem::path& forestPath, std::unique_ptr<blob::BlobStore> blobStore)
+	: _forestPath(forestPath)
 	, _blobStore(std::move(blobStore))
 {
 }
@@ -24,29 +24,29 @@ Forest::~Forest()
 
 void Forest::Open()
 {
-	if (!boost::filesystem::exists(_utf8DbPath))
+	if (!boost::filesystem::exists(_forestPath))
 	{
-		throw DatabaseNotFoundException(_utf8DbPath);
+		throw DatabaseNotFoundException(_forestPath.string());
 	}
 
 	// Share the connection between the repos, note that the repos should be destroyed before this connection is
 	_connection.reset(new sqlitepp::ScopedSqlite3Object());
-	sqlitepp::open_database_or_throw(_utf8DbPath.c_str(), *_connection, SQLITE_OPEN_READWRITE);
+	sqlitepp::open_database_or_throw(_forestPath.string().c_str(), *_connection, SQLITE_OPEN_READWRITE);
 }
 
 void Forest::Create()
 {
 	{
-		if (boost::filesystem::exists(_utf8DbPath))
+		if (boost::filesystem::exists(_forestPath))
 		{
-			throw DatabaseAlreadyExistsException(_utf8DbPath);
+			throw DatabaseAlreadyExistsException(_forestPath.string());
 		}
 
 		sqlitepp::ScopedSqlite3Object db;
-		const auto result = sqlite3_open_v2(_utf8DbPath.c_str(), db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
+		const auto result = sqlite3_open_v2(_forestPath.string().c_str(), db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
 		if (result != SQLITE_OK)
 		{
-			throw CreateDatabaseFailedException(_utf8DbPath, result);
+			throw CreateDatabaseFailedException(_forestPath.string(), result);
 		}
 
 		// Create tables
@@ -72,11 +72,20 @@ void Forest::Create()
 		const auto execResult = sqlite3_exec(db, sql, 0, 0, errorMessage);
 		if (execResult != SQLITE_OK)
 		{
-			throw CreateDatabaseFailedException(_utf8DbPath, execResult, errorMessage);
+			throw CreateDatabaseFailedException(_forestPath.string(), execResult, errorMessage);
 		}
 	}
 
 	Open();
+}
+
+void Forest::OpenOrCreate()
+{
+	if (boost::filesystem::exists(_forestPath))
+	{
+		Open();
+	}
+	Create();
 }
 
 std::unique_ptr<UnitOfWork> Forest::CreateUnitOfWork()
