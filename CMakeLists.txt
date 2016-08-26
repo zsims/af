@@ -34,3 +34,4 @@ add_dependencies(ALL_VERIFY ALL_BUILD)
 
 add_subdirectory(third_party)
 add_subdirectory(bslib)
+add_subdirectory(bs_cli)
