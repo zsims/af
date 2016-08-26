@@ -1,8 +1,8 @@
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
 
 BuildCache_Get(
-    # -1 for our build config, add extra things here to control cache sharing
-    KEY "boost-1.60.0-${PLATFORM_NAME}-1"
+    # -3 for our build config, add extra things here to control cache sharing
+    KEY "boost-1.60.0-${PLATFORM_NAME}-3"
     CACHE_DIR_VAR CACHE_DIR
 )
 
@@ -30,6 +30,7 @@ ExternalBuild_Add_Step(
         --layout=tagged
         --with-system
         --with-filesystem
+        --with-program_options
         --build-dir=${BUILD_DIR}
         --prefix=${CACHE_DIR}
         link=static
@@ -77,3 +78,15 @@ set_target_properties(
 )
 target_link_libraries(boost_filesystem LINK_INTERFACE_LIBRARIES boost_system)
 add_dependencies(boost_filesystem build_boost)
+
+# boost_program_options
+add_library(boost_program_options STATIC IMPORTED GLOBAL)
+set_target_properties(
+    boost_program_options
+    PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${INCLUDE_DIR}"
+    IMPORTED_LOCATION_DEBUG "${LIBRARY_DIR}/libboost_program_options-mt-gd${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    IMPORTED_LOCATION_RELEASE "${LIBRARY_DIR}/libboost_program_options-mt${CMAKE_STATIC_LIBRARY_SUFFIX}"
+)
+target_link_libraries(boost_program_options LINK_INTERFACE_LIBRARIES boost_system)
+add_dependencies(boost_program_options build_boost)
