@@ -13,6 +13,7 @@ add_library(
     include/bslib/blob/BlobStore.hpp
     include/bslib/blob/DirectoryBlobStore.hpp
     include/bslib/blob/NullBlobStore.hpp
+    include/bslib/file/exceptions.hpp
     include/bslib/file/FileAdder.hpp
     include/bslib/file/FileFinder.hpp
     include/bslib/file/FileRef.hpp
@@ -28,7 +29,6 @@ add_library(
     src/bslib/Forest.cpp
     src/bslib/ForestUnitOfWork.cpp
     src/bslib/ForestUnitOfWork.hpp
-    src/bslib/file/exceptions.hpp
     src/bslib/file/FileAdder.cpp
     src/bslib/file/FileFinder.cpp
     src/bslib/file/FileRefRepository.cpp
