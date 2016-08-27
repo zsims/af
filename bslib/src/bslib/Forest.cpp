@@ -57,14 +57,14 @@ void Forest::Create()
 				SizeBytes INTEGER (8) NOT NULL
 			);
 			CREATE TABLE FileObject (
-				Address BLOB (20) PRIMARY KEY,
+				Id INTEGER PRIMARY KEY,
 				ContentBlobAddress BLOB(20) REFERENCES Blob (Address),
-				ParentAddress BLOB(20) REFERENCES FileObject (Address),
+				ParentId INTEGER REFERENCES FileObject (Id),
 				FullPath TEXT NOT NULL
 			);
 			CREATE TABLE FileRef (
 				FullPath TEXT NOT NULL PRIMARY KEY,
-				FileObjectAddress BLOB(20) NOT NULL REFERENCES FileObject (Address)
+				FileObjectId INTEGER NOT NULL REFERENCES FileObject (Id)
 			);
 		)";
 

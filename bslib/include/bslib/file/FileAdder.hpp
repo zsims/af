@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bslib/Address.hpp"
+#include "bslib/file/FileObject.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/optional.hpp>
@@ -29,7 +30,7 @@ public:
 		blob::BlobInfoRepository& blobInfoRepository,
 		FileObjectRepository& fileObjectRepository,
 		FileRefRepository& fileRefRepository);
-	ObjectAddress Add(const boost::filesystem::path& sourcePath, const std::vector<uint8_t>& content);
+	foid Add(const boost::filesystem::path& sourcePath, const std::vector<uint8_t>& content);
 
 	/**
 	* Adds the contents of the given file or directory to the attached backup
@@ -40,10 +41,10 @@ public:
 	const std::vector<boost::filesystem::path>& GetAddedPaths() const { return _addedPaths; }
 	const std::vector<boost::filesystem::path>& GetSkippedPaths() const { return _skippedPaths; }
 private:
-	void AddChild(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress);
+	void AddChild(const boost::filesystem::path& sourcePath, const boost::optional<foid>& parentId);
 	boost::optional<BlobAddress> SaveFileContents(const boost::filesystem::path& sourcePath);
-	void AddFile(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress);
-	ObjectAddress AddDirectory(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress);
+	void AddFile(const boost::filesystem::path& sourcePath, const boost::optional<foid>& parentId);
+	foid AddDirectory(const boost::filesystem::path& sourcePath, const boost::optional<foid>& parentId);
 
 	std::vector<boost::filesystem::path> _addedPaths;
 	std::vector<boost::filesystem::path> _skippedPaths;

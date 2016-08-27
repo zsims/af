@@ -50,10 +50,10 @@ TEST_F(FileRefRepositoryIntegrationTest, GetReference)
 	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
 	blobRepo.AddBlob(blobInfo1);
 
-	const FileObject objectInfo(ObjectAddress("5793273948759387987921653297557398753498"), "/hi/phil", blobInfo1.GetAddress());
+	const FileObject objectInfo(1, "/hi/phil", blobInfo1.GetAddress());
 	fileRepo.AddObject(objectInfo);
 
-	const FileRef reference(objectInfo.fullPath, objectInfo.address);
+	const FileRef reference(objectInfo.fullPath, objectInfo.id);
 	repo.SetReference(reference);
 
 	// Act
@@ -66,8 +66,7 @@ TEST_F(FileRefRepositoryIntegrationTest, AddReferenceMissingObjectThrows)
 	// Arrange
 	FileRefRepository repo(*_connection);
 
-	const ObjectAddress fileAddress("8793273948759387987921653297557398753498");
-	const FileRef reference("/look/phil", fileAddress);
+	const FileRef reference("/look/phil", 69);
 
 	// Act
 	// Assert
@@ -84,17 +83,17 @@ TEST_F(FileRefRepositoryIntegrationTest, AddReferenceOverwritesOnDuplicate)
 	blobRepo.AddBlob(blobInfo1);
 
 	const std::string path("/same");
-	const FileObject objectInfo(ObjectAddress("5793273948759387987921653297557398753498"), path, boost::none);
-	const FileObject objectInfo2(ObjectAddress("6793273948759387987921653297557398753498"), path, blobInfo1.GetAddress());
+	const FileObject objectInfo(1, path, boost::none);
+	const FileObject objectInfo2(2, path, blobInfo1.GetAddress());
 	fileRepo.AddObject(objectInfo);
 	fileRepo.AddObject(objectInfo2);
 
-	const FileRef reference(path, objectInfo.address);
+	const FileRef reference(path, objectInfo.id);
 	repo.SetReference(reference);
 	EXPECT_EQ(repo.GetReference(path), reference);
 
 	// Act
-	const FileRef updatedReference(path, objectInfo.address);
+	const FileRef updatedReference(path, objectInfo.id);
 	repo.SetReference(reference);
 
 	// Assert

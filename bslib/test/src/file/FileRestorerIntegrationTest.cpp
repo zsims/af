@@ -149,7 +149,7 @@ TEST_F(FileRestorerIntegrationTest, RestoreTree_DirectoryToExistingDirectory)
 	// Act
 	const auto& rootAddress = _finder->FindReference(path);
 	ASSERT_TRUE(rootAddress);
-	_restorer->RestoreTree(rootAddress.value().fileObjectAddress, _restorePath);
+	_restorer->RestoreTree(rootAddress.value().fileObjectId, _restorePath);
 
 	// Assert
 	const auto& restored = _restorer->GetRestoredPaths();
@@ -181,7 +181,7 @@ TEST_F(FileRestorerIntegrationTest, RestoreTree_DirectoryToNonExistingDirectory)
 	// Act
 	const auto& rootAddress = _finder->FindReference(path);
 	ASSERT_TRUE(rootAddress);
-	_restorer->RestoreTree(rootAddress.value().fileObjectAddress, _restorePath);
+	_restorer->RestoreTree(rootAddress.value().fileObjectId, _restorePath);
 
 	// Assert
 	const auto& restored = _restorer->GetRestoredPaths();

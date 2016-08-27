@@ -51,12 +51,12 @@ TEST_F(FileObjectRepositoryIntegrationTest, GetAllObjects)
 	blobRepo.AddBlob(blobInfo1);
 	blobRepo.AddBlob(blobInfo2);
 
-	const FileObject parentObject1(ObjectAddress("9323df2207d99a74fbe169e3eba035e635779792"), "/foo", boost::none);
-	const FileObject parentObject2(ObjectAddress("1323df2207d99a74fbe169e3eba035e635779792"), "/foo", boost::none, parentObject1.address);
-	const FileObject objectInfo1(ObjectAddress("5323df2207d99a74fbe169e3eba035e635779792"), "/foo", blobInfo1.GetAddress());
-	const FileObject objectInfo2(ObjectAddress("f5979d9f79727592759272503253405739475393"), "/foo", blobInfo2.GetAddress(), parentObject1.address);
-	const FileObject objectInfo3(ObjectAddress("5793273948759387987921653297557398753498"), "/bar/here", blobInfo1.GetAddress(), parentObject2.address);
-	const FileObject objectInfo4(ObjectAddress("6793273948759387987921653297557398753498"), "/bar/here/xx", boost::none);
+	const FileObject parentObject1(1, "/foo", boost::none);
+	const FileObject parentObject2(2, "/foo", boost::none, parentObject1.id);
+	const FileObject objectInfo1(3, "/foo", blobInfo1.GetAddress());
+	const FileObject objectInfo2(4, "/foo", blobInfo2.GetAddress(), parentObject1.id);
+	const FileObject objectInfo3(5, "/bar/here", blobInfo1.GetAddress(), parentObject2.id);
+	const FileObject objectInfo4(6, "/bar/here/xx", boost::none);
 
 	repo.AddObject(parentObject1);
 	repo.AddObject(parentObject2);
@@ -86,12 +86,12 @@ TEST_F(FileObjectRepositoryIntegrationTest, GetAllObjectsByParentAddress)
 	blobRepo.AddBlob(blobInfo1);
 	blobRepo.AddBlob(blobInfo2);
 
-	const FileObject parentObject1(ObjectAddress("9323df2207d99a74fbe169e3eba035e635779792"), "/foo", boost::none);
-	const FileObject parentObject2(ObjectAddress("1323df2207d99a74fbe169e3eba035e635779792"), "/foo", boost::none, parentObject1.address);
-	const FileObject objectInfo1(ObjectAddress("5323df2207d99a74fbe169e3eba035e635779792"), "/foo", blobInfo1.GetAddress());
-	const FileObject objectInfo2(ObjectAddress("f5979d9f79727592759272503253405739475393"), "/foo", blobInfo2.GetAddress(), parentObject1.address);
-	const FileObject objectInfo3(ObjectAddress("5793273948759387987921653297557398753498"), "/bar/here", blobInfo1.GetAddress(), parentObject2.address);
-	const FileObject objectInfo4(ObjectAddress("6793273948759387987921653297557398753498"), "/bar/here/xx", boost::none);
+	const FileObject parentObject1(1, "/foo", boost::none);
+	const FileObject parentObject2(2, "/foo", boost::none, parentObject1.id);
+	const FileObject objectInfo1(3, "/foo", blobInfo1.GetAddress());
+	const FileObject objectInfo2(4, "/foo", blobInfo2.GetAddress(), parentObject1.id);
+	const FileObject objectInfo3(5, "/bar/here", blobInfo1.GetAddress(), parentObject2.id);
+	const FileObject objectInfo4(6, "/bar/here/xx", boost::none);
 
 	repo.AddObject(parentObject1);
 	repo.AddObject(parentObject2);
@@ -101,7 +101,7 @@ TEST_F(FileObjectRepositoryIntegrationTest, GetAllObjectsByParentAddress)
 	repo.AddObject(objectInfo4);
 
 	// Act
-	const auto& result = repo.GetAllObjectsByParentAddress(parentObject1.address);
+	const auto& result = repo.GetAllObjectsByParentId(parentObject1.id);
 
 	// Assert
 	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo2)));
@@ -118,12 +118,12 @@ TEST_F(FileObjectRepositoryIntegrationTest, GetObject)
 	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
 	blobRepo.AddBlob(blobInfo1);
 
-	const FileObject objectInfo(ObjectAddress("5793273948759387987921653297557398753498"), "/hi/phil", blobInfo1.GetAddress());
+	const FileObject objectInfo(1, "/hi/phil", blobInfo1.GetAddress());
 	repo.AddObject(objectInfo);
 
 	// Act
 	// Assert
-	EXPECT_EQ(repo.GetObject(objectInfo.address), objectInfo);
+	EXPECT_EQ(repo.GetObject(objectInfo.id), objectInfo);
 }
 
 TEST_F(FileObjectRepositoryIntegrationTest, AddObjectNoBlob)
@@ -131,12 +131,12 @@ TEST_F(FileObjectRepositoryIntegrationTest, AddObjectNoBlob)
 	// Arrange
 	FileObjectRepository repo(*_connection);
 
-	const FileObject objectInfo(ObjectAddress("8793273948759387987921653297557398753498"), "/look/phil/no/hands", boost::none);
+	const FileObject objectInfo(2, "/look/phil/no/hands", boost::none);
 	repo.AddObject(objectInfo);
 
 	// Act
 	// Assert
-	EXPECT_EQ(repo.GetObject(objectInfo.address), objectInfo);
+	EXPECT_EQ(repo.GetObject(objectInfo.id), objectInfo);
 }
 
 TEST_F(FileObjectRepositoryIntegrationTest, AddObjectMissingBlobThrows)
@@ -145,7 +145,7 @@ TEST_F(FileObjectRepositoryIntegrationTest, AddObjectMissingBlobThrows)
 	FileObjectRepository repo(*_connection);
 
 	const BlobAddress madeUpBlobAddress("2259225215937593725395732753973973593571");
-	const FileObject objectInfo(ObjectAddress("8793273948759387987921653297557398753498"), "/look/phil/no/hands", madeUpBlobAddress);
+	const FileObject objectInfo(3, "/look/phil/no/hands", madeUpBlobAddress);
 
 	// Act
 	// Assert
@@ -156,9 +156,7 @@ TEST_F(FileObjectRepositoryIntegrationTest, AddObjectMissingParentThrows)
 {
 	// Arrange
 	FileObjectRepository repo(*_connection);
-
-	const ObjectAddress madeUpParentAddress("1259225215937593795395739753973973593571");
-	const FileObject objectInfo(ObjectAddress("8793273948759387987921653297557398753498"), "/look/phil/no/hands", boost::none, madeUpParentAddress);
+	const FileObject objectInfo(4, "/look/phil/no/hands", boost::none, 69);
 
 	// Act
 	// Assert
@@ -170,14 +168,14 @@ TEST_F(FileObjectRepositoryIntegrationTest, AddObjectParent)
 	// Arrange
 	FileObjectRepository repo(*_connection);
 
-	const FileObject parentObject(ObjectAddress("9793273948759387987921653297557398753498"), "/look/phil/no/hands", boost::none);
-	const FileObject objectInfo(ObjectAddress("8793273948759387987921653297557398753498"), "/look/phil/no/hands", boost::none, parentObject.address);
+	const FileObject parentObject(5, "/look/phil/no/hands", boost::none);
+	const FileObject objectInfo(6, "/look/phil/no/hands", boost::none, parentObject.id);
 	repo.AddObject(parentObject);
 	repo.AddObject(objectInfo);
 
 	// Act
 	// Assert
-	EXPECT_EQ(repo.GetObject(objectInfo.address), objectInfo);
+	EXPECT_EQ(repo.GetObject(objectInfo.id), objectInfo);
 }
 
 TEST_F(FileObjectRepositoryIntegrationTest, AddObjectThrowsOnDuplicate)
@@ -188,9 +186,8 @@ TEST_F(FileObjectRepositoryIntegrationTest, AddObjectThrowsOnDuplicate)
 	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
 	blobRepo.AddBlob(blobInfo1);
 
-	const ObjectAddress key("7323df2207d99a74fbe169e3eba035e635779721");
-	const FileObject objectInfo1(key, "type", blobInfo1.GetAddress());
-	const FileObject objectInfo2(key, "type", blobInfo1.GetAddress());
+	const FileObject objectInfo1(1, "type", blobInfo1.GetAddress());
+	const FileObject objectInfo2(1, "type", blobInfo1.GetAddress());
 	repo.AddObject(objectInfo1);
 
 	// Act
@@ -203,11 +200,9 @@ TEST_F(FileObjectRepositoryIntegrationTest, GetObjectThrowsOnNotFound)
 	// Arrange
 	FileObjectRepository repo(*_connection);
 
-	const ObjectAddress key("7323df2207d99a74fbe169e3eba035e635779721");
-
 	// Act
 	// Assert
-	ASSERT_THROW(repo.GetObject(key), ObjectNotFoundException);
+	ASSERT_THROW(repo.GetObject(69), ObjectNotFoundException);
 }
 
 }

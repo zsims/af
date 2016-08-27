@@ -21,14 +21,14 @@ boost::optional<FileRef> FileFinder::FindReference(const boost::filesystem::path
 	return _fileRefRepository.FindReference(sourcePath.string());
 }
 
-boost::optional<FileObject> FileFinder::FindObjectByAddress(const ObjectAddress& address) const
+boost::optional<FileObject> FileFinder::FindObjectById(foid id) const
 {
-	return _fileObjectRepository.FindObject(address);
+	return _fileObjectRepository.FindObject(id);
 }
 
-FileObject FileFinder::GetObjectByAddress(const ObjectAddress& address) const
+FileObject FileFinder::GetObjectById(foid id) const
 {
-	return _fileObjectRepository.GetObject(address);
+	return _fileObjectRepository.GetObject(id);
 }
 
 }
