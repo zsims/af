@@ -14,9 +14,9 @@ class BlobStore;
 }
 namespace file {
 
-struct FileObjectInfo;
+struct FileObject;
 class FileRefRepository;
-class FileObjectInfoRepository;
+class FileObjectRepository;
 
 /**
  * Restores files and directories from the backup
@@ -27,7 +27,7 @@ public:
 	FileRestorer(
 		blob::BlobStore& blobStore,
 		blob::BlobInfoRepository& blobInfoRepository,
-		FileObjectInfoRepository& fileObjectInfoRepository,
+		FileObjectRepository& fileObjectRepository,
 		FileRefRepository& fileRefRepository);
 
 	/**
@@ -48,14 +48,14 @@ public:
 	const std::vector<boost::filesystem::path>& GetSkippedPaths() const { return _skippedPaths; }
 private:
 	void Restore(const ObjectAddress& objectAddress, const boost::filesystem::path& targetPath, bool recursive);
-	void RestoreFileObject(const FileObjectInfo& info, const boost::filesystem::path& targetPath, bool followDirectories);
+	void RestoreFileObject(const FileObject& info, const boost::filesystem::path& targetPath, bool followDirectories);
 	bool RestoreBlobToFile(const BlobAddress& blobAddress, const boost::filesystem::path& targetPath) const;
 	std::vector<boost::filesystem::path> _restoredPaths;
 	std::vector<boost::filesystem::path> _skippedPaths;
 
 	blob::BlobStore& _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;
-	FileObjectInfoRepository& _fileObjectInfoRepository;
+	FileObjectRepository& _fileObjectRepository;
 	FileRefRepository& _fileRefRepository;
 };
 

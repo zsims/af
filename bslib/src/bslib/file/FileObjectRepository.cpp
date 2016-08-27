@@ -1,6 +1,6 @@
-#include "bslib/file/FileObjectInfoRepository.hpp"
+#include "bslib/file/FileObjectRepository.hpp"
 
-#include "bslib/file/FileObjectInfo.hpp"
+#include "bslib/file/FileObject.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 
@@ -24,7 +24,7 @@ enum GetObjectColumnIndex
 };
 }
 
-FileObjectInfoRepository::FileObjectInfoRepository(const sqlitepp::ScopedSqlite3Object& connection)
+FileObjectRepository::FileObjectRepository(const sqlitepp::ScopedSqlite3Object& connection)
 	: _db(connection)
 {
 	// Prepare statements so they're good to go
@@ -41,9 +41,9 @@ FileObjectInfoRepository::FileObjectInfoRepository(const sqlitepp::ScopedSqlite3
 	)", _getAllObjectsByParentStatement);
 }
 
-std::vector<std::shared_ptr<FileObjectInfo>> FileObjectInfoRepository::GetAllObjects() const
+std::vector<std::shared_ptr<FileObject>> FileObjectRepository::GetAllObjects() const
 {
-	std::vector<std::shared_ptr<FileObjectInfo>> result;
+	std::vector<std::shared_ptr<FileObject>> result;
 	sqlitepp::ScopedStatementReset reset(_getAllObjectsStatement);
 
 	auto stepResult = 0;
@@ -55,9 +55,9 @@ std::vector<std::shared_ptr<FileObjectInfo>> FileObjectInfoRepository::GetAllObj
 	return result;
 }
 
-std::vector<std::shared_ptr<FileObjectInfo>> FileObjectInfoRepository::GetAllObjectsByParentAddress(const ObjectAddress& parentAddress) const
+std::vector<std::shared_ptr<FileObject>> FileObjectRepository::GetAllObjectsByParentAddress(const ObjectAddress& parentAddress) const
 {
-	std::vector<std::shared_ptr<FileObjectInfo>> result;
+	std::vector<std::shared_ptr<FileObject>> result;
 	sqlitepp::ScopedStatementReset reset(_getAllObjectsByParentStatement);
 	const auto& binaryAddress = parentAddress.ToBinary();
 	sqlitepp::BindByParameterNameBlob(_getAllObjectsByParentStatement, ":ParentAddress", &binaryAddress[0], binaryAddress.size());
@@ -71,7 +71,7 @@ std::vector<std::shared_ptr<FileObjectInfo>> FileObjectInfoRepository::GetAllObj
 	return result;
 }
 
-void FileObjectInfoRepository::AddObject(const FileObjectInfo& info)
+void FileObjectRepository::AddObject(const FileObject& info)
 {
 	// binary address, note this has to be kept in scope until SQLite has finished as we've opted not to make a copy
 	const auto binaryAddress = info.address.ToBinary();
@@ -108,7 +108,7 @@ void FileObjectInfoRepository::AddObject(const FileObjectInfo& info)
 	}
 }
 
-FileObjectInfo FileObjectInfoRepository::GetObject(const ObjectAddress& address) const
+FileObject FileObjectRepository::GetObject(const ObjectAddress& address) const
 {
 	const auto& info = FindObject(address);
 	if(!info)
@@ -119,7 +119,7 @@ FileObjectInfo FileObjectInfoRepository::GetObject(const ObjectAddress& address)
 	return info.value();
 }
 
-boost::optional<FileObjectInfo> FileObjectInfoRepository::FindObject(const ObjectAddress& address) const
+boost::optional<FileObject> FileObjectRepository::FindObject(const ObjectAddress& address) const
 {
 	const auto binaryAddress = address.ToBinary();
 	sqlitepp::ScopedStatementReset reset(_getObjectStatement);
@@ -134,7 +134,7 @@ boost::optional<FileObjectInfo> FileObjectInfoRepository::FindObject(const Objec
 	return *MapRowToObject(_getObjectStatement);
 }
 
-std::shared_ptr<FileObjectInfo> FileObjectInfoRepository::MapRowToObject(const sqlitepp::ScopedStatement& statement) const
+std::shared_ptr<FileObject> FileObjectRepository::MapRowToObject(const sqlitepp::ScopedStatement& statement) const
 {
 	const auto objectAddressBytes = sqlite3_column_blob(statement, GetObject_ColumnIndex_Address);
 	const auto objectAddressBytesCount = sqlite3_column_bytes(statement, GetObject_ColumnIndex_Address);
@@ -159,7 +159,7 @@ std::shared_ptr<FileObjectInfo> FileObjectInfoRepository::MapRowToObject(const s
 		parentAddress = ObjectAddress(parentAddressBytes, parentAddressBytesCount);
 	}
 
-	return std::make_shared<FileObjectInfo>(objectAddress, fullPath, contentBlobAddress, parentAddress);
+	return std::make_shared<FileObject>(objectAddress, fullPath, contentBlobAddress, parentAddress);
 }
 
 }

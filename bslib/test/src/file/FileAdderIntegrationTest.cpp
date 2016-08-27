@@ -1,6 +1,6 @@
 #include "bslib/forest.hpp"
 #include "bslib/blob/DirectoryBlobStore.hpp"
-#include "bslib/file/FileObjectInfoRepository.hpp"
+#include "bslib/file/FileObjectRepository.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "utility/gtest_boost_filesystem_fix.hpp"
