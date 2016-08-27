@@ -16,7 +16,7 @@ class BlobStore;
 namespace file {
 
 class FileRefRepository;
-class FileObjectInfoRepository;
+class FileObjectRepository;
 
 /**
  * Adds files to the backup
@@ -27,7 +27,7 @@ public:
 	FileAdder(
 		blob::BlobStore& blobStore,
 		blob::BlobInfoRepository& blobInfoRepository,
-		FileObjectInfoRepository& fileObjectInfoRepository,
+		FileObjectRepository& fileObjectRepository,
 		FileRefRepository& fileRefRepository);
 	ObjectAddress Add(const boost::filesystem::path& sourcePath, const std::vector<uint8_t>& content);
 
@@ -50,7 +50,7 @@ private:
 
 	blob::BlobStore& _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;
-	FileObjectInfoRepository& _fileObjectInfoRepository;
+	FileObjectRepository& _fileObjectRepository;
 	FileRefRepository& _fileRefRepository;
 };
 

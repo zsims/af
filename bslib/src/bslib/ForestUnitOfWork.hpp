@@ -5,8 +5,8 @@
 #include "bslib/blob/BlobStore.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/file/FileRefRepository.hpp"
-#include "bslib/file/FileObjectInfo.hpp"
-#include "bslib/file/FileObjectInfoRepository.hpp"
+#include "bslib/file/FileObject.hpp"
+#include "bslib/file/FileObjectRepository.hpp"
 #include "bslib/sqlitepp/ScopedTransaction.hpp"
 #include "bslib/UnitOfWork.hpp"
 
@@ -30,7 +30,7 @@ private:
 	sqlitepp::ScopedTransaction _transaction;
 	blob::BlobStore& _blobStore;
 	blob::BlobInfoRepository _blobInfoRepository;
-	file::FileObjectInfoRepository _fileObjectInfoRepository;
+	file::FileObjectRepository _fileObjectRepository;
 	file::FileRefRepository _fileRefRepository;
 };
 

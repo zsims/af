@@ -2,7 +2,7 @@
 
 #include "bslib/Address.hpp"
 #include "bslib/file/FileRef.hpp"
-#include "bslib/file/FileObjectInfo.hpp"
+#include "bslib/file/FileObject.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/optional.hpp>
@@ -14,7 +14,7 @@ namespace bslib {
 namespace file {
 
 class FileRefRepository;
-class FileObjectInfoRepository;
+class FileObjectRepository;
 
 /**
  * Finds files in a backup
@@ -22,7 +22,7 @@ class FileObjectInfoRepository;
 class FileFinder
 {
 public:
-	FileFinder(FileObjectInfoRepository& fileObjectInfoRepository, FileRefRepository& fileRefRepository);
+	FileFinder(FileObjectRepository& fileObjectRepository, FileRefRepository& fileRefRepository);
 
 	/**
 	 * Finds a reference by source path.
@@ -36,7 +36,7 @@ public:
 	 * \param address The object address
 	 * \return The object info if found, otherwise none
 	 */
-	boost::optional<FileObjectInfo> FindObjectByAddress(const ObjectAddress& address) const;
+	boost::optional<FileObject> FindObjectByAddress(const ObjectAddress& address) const;
 
 	/**
 	 * Gets an object by address
@@ -44,9 +44,9 @@ public:
 	 * \return The object info
 	 * \throws FileObjectNotFoundException if no object exists at that address
 	 */
-	FileObjectInfo GetObjectByAddress(const ObjectAddress& address) const;
+	FileObject GetObjectByAddress(const ObjectAddress& address) const;
 private:
-	FileObjectInfoRepository& _fileObjectInfoRepository;
+	FileObjectRepository& _fileObjectRepository;
 	FileRefRepository& _fileRefRepository;
 };
 

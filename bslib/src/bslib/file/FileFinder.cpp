@@ -2,16 +2,16 @@
 
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileRefRepository.hpp"
-#include "bslib/file/FileObjectInfoRepository.hpp"
+#include "bslib/file/FileObjectRepository.hpp"
 
 namespace af {
 namespace bslib {
 namespace file {
 
 FileFinder::FileFinder(
-	FileObjectInfoRepository& fileObjectInfoRepository,
+	FileObjectRepository& fileObjectRepository,
 	FileRefRepository& fileRefRepository)
-	: _fileObjectInfoRepository(fileObjectInfoRepository)
+	: _fileObjectRepository(fileObjectRepository)
 	, _fileRefRepository(fileRefRepository)
 {
 }
@@ -21,14 +21,14 @@ boost::optional<FileRef> FileFinder::FindReference(const boost::filesystem::path
 	return _fileRefRepository.FindReference(sourcePath.string());
 }
 
-boost::optional<FileObjectInfo> FileFinder::FindObjectByAddress(const ObjectAddress& address) const
+boost::optional<FileObject> FileFinder::FindObjectByAddress(const ObjectAddress& address) const
 {
-	return _fileObjectInfoRepository.FindObject(address);
+	return _fileObjectRepository.FindObject(address);
 }
 
-FileObjectInfo FileFinder::GetObjectByAddress(const ObjectAddress& address) const
+FileObject FileFinder::GetObjectByAddress(const ObjectAddress& address) const
 {
-	return _fileObjectInfoRepository.GetObject(address);
+	return _fileObjectRepository.GetObject(address);
 }
 
 }

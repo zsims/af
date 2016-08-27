@@ -4,7 +4,7 @@
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileRefRepository.hpp"
-#include "bslib/file/FileObjectInfoRepository.hpp"
+#include "bslib/file/FileObjectRepository.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -17,11 +17,11 @@ namespace file {
 FileAdder::FileAdder(
 	blob::BlobStore& blobStore,
 	blob::BlobInfoRepository& blobInfoRepository,
-	FileObjectInfoRepository& fileObjectInfoRepository,
+	FileObjectRepository& fileObjectRepository,
 	FileRefRepository& fileRefRepository)
 	: _blobStore(blobStore)
 	, _blobInfoRepository(blobInfoRepository)
-	, _fileObjectInfoRepository(fileObjectInfoRepository)
+	, _fileObjectRepository(fileObjectRepository)
 	, _fileRefRepository(fileRefRepository)
 {
 }
@@ -36,8 +36,8 @@ ObjectAddress FileAdder::Add(const boost::filesystem::path& sourcePath, const st
 		_blobInfoRepository.AddBlob(blob::BlobInfo(blobAddress, content.size()));
 	}
 
-	const auto info = FileObjectInfo::CreateFromProperties(sourcePath.string(), blobAddress, boost::none);
-	_fileObjectInfoRepository.AddObject(info);
+	const auto info = FileObject::CreateFromProperties(sourcePath.string(), blobAddress, boost::none);
+	_fileObjectRepository.AddObject(info);
 	_fileRefRepository.SetReference(FileRef(sourcePath.string(), info.address));
 	return info.address;
 }
@@ -111,16 +111,16 @@ void FileAdder::AddFile(const boost::filesystem::path& sourcePath, const boost::
 		return;
 	}
 
-	const auto info = FileObjectInfo::CreateFromProperties(sourcePath.string(), blobAddress, parentAddress);
-	_fileObjectInfoRepository.AddObject(info);
+	const auto info = FileObject::CreateFromProperties(sourcePath.string(), blobAddress, parentAddress);
+	_fileObjectRepository.AddObject(info);
 	_fileRefRepository.SetReference(FileRef(sourcePath.string(), info.address));
 	_addedPaths.push_back(sourcePath);
 }
 
 ObjectAddress FileAdder::AddDirectory(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress)
 {
-	const auto info = FileObjectInfo::CreateFromProperties(sourcePath.string(), boost::none, parentAddress);
-	_fileObjectInfoRepository.AddObject(info);
+	const auto info = FileObject::CreateFromProperties(sourcePath.string(), boost::none, parentAddress);
+	_fileObjectRepository.AddObject(info);
 	_fileRefRepository.SetReference(FileRef(sourcePath.string(), info.address));
 	_addedPaths.push_back(sourcePath);
 	return info.address;

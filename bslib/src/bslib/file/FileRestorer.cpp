@@ -4,7 +4,7 @@
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileRefRepository.hpp"
-#include "bslib/file/FileObjectInfoRepository.hpp"
+#include "bslib/file/FileObjectRepository.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -17,11 +17,11 @@ namespace file {
 FileRestorer::FileRestorer(
 	blob::BlobStore& blobStore,
 	blob::BlobInfoRepository& blobInfoRepository,
-	FileObjectInfoRepository& fileObjectInfoRepository,
+	FileObjectRepository& fileObjectRepository,
 	FileRefRepository& fileRefRepository)
 	: _blobStore(blobStore)
 	, _blobInfoRepository(blobInfoRepository)
-	, _fileObjectInfoRepository(fileObjectInfoRepository)
+	, _fileObjectRepository(fileObjectRepository)
 	, _fileRefRepository(fileRefRepository)
 {
 }
@@ -43,7 +43,7 @@ void FileRestorer::Restore(const ObjectAddress& objectAddress, const boost::file
 		throw TargetPathNotSupportedException(targetPath.string());
 	}
 
-	const auto object = _fileObjectInfoRepository.GetObject(objectAddress);
+	const auto object = _fileObjectRepository.GetObject(objectAddress);
 	auto resolvedTargetPath = targetPath;
 	if (boost::filesystem::exists(targetPath))
 	{
@@ -64,7 +64,7 @@ void FileRestorer::Restore(const ObjectAddress& objectAddress, const boost::file
 	RestoreFileObject(object, resolvedTargetPath, recursive);
 }
 
-void FileRestorer::RestoreFileObject(const FileObjectInfo& info, const boost::filesystem::path& targetPath, bool followDirectories)
+void FileRestorer::RestoreFileObject(const FileObject& info, const boost::filesystem::path& targetPath, bool followDirectories)
 {
 	// File
 	if (info.contentBlobAddress)
@@ -90,7 +90,7 @@ void FileRestorer::RestoreFileObject(const FileObjectInfo& info, const boost::fi
 		// Yes, it hasn't actually been restored full yet, but I want ma tail call optimization
 		_restoredPaths.push_back(targetPath);
 
-		const auto& children = _fileObjectInfoRepository.GetAllObjectsByParentAddress(info.address);
+		const auto& children = _fileObjectRepository.GetAllObjectsByParentAddress(info.address);
 		for (const auto& child : children)
 		{
 			const auto& name = boost::filesystem::path(child->fullPath).filename();

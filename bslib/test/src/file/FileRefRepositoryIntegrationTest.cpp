@@ -2,7 +2,7 @@
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/blob/NullBlobStore.hpp"
 #include "bslib/file/FileRefRepository.hpp"
-#include "bslib/file/FileObjectInfoRepository.hpp"
+#include "bslib/file/FileObjectRepository.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 
@@ -45,12 +45,12 @@ TEST_F(FileRefRepositoryIntegrationTest, GetReference)
 {
 	// Arrange
 	FileRefRepository repo(*_connection);
-	FileObjectInfoRepository fileRepo(*_connection);
+	FileObjectRepository fileRepo(*_connection);
 	blob::BlobInfoRepository blobRepo(*_connection);
 	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
 	blobRepo.AddBlob(blobInfo1);
 
-	const FileObjectInfo objectInfo(ObjectAddress("5793273948759387987921653297557398753498"), "/hi/phil", blobInfo1.GetAddress());
+	const FileObject objectInfo(ObjectAddress("5793273948759387987921653297557398753498"), "/hi/phil", blobInfo1.GetAddress());
 	fileRepo.AddObject(objectInfo);
 
 	const FileRef reference(objectInfo.fullPath, objectInfo.address);
@@ -78,14 +78,14 @@ TEST_F(FileRefRepositoryIntegrationTest, AddReferenceOverwritesOnDuplicate)
 {
 	// Arrange
 	FileRefRepository repo(*_connection);
-	FileObjectInfoRepository fileRepo(*_connection);
+	FileObjectRepository fileRepo(*_connection);
 	blob::BlobInfoRepository blobRepo(*_connection);
 	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
 	blobRepo.AddBlob(blobInfo1);
 
 	const std::string path("/same");
-	const FileObjectInfo objectInfo(ObjectAddress("5793273948759387987921653297557398753498"), path, boost::none);
-	const FileObjectInfo objectInfo2(ObjectAddress("6793273948759387987921653297557398753498"), path, blobInfo1.GetAddress());
+	const FileObject objectInfo(ObjectAddress("5793273948759387987921653297557398753498"), path, boost::none);
+	const FileObject objectInfo2(ObjectAddress("6793273948759387987921653297557398753498"), path, blobInfo1.GetAddress());
 	fileRepo.AddObject(objectInfo);
 	fileRepo.AddObject(objectInfo2);
 

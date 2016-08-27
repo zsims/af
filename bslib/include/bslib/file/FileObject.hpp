@@ -18,9 +18,9 @@ std::mt19937 random(static_cast<unsigned>(time(0)));
 /**
  * Represents information about a file or directory
  */
-struct FileObjectInfo
+struct FileObject
 {
-	FileObjectInfo(
+	FileObject(
 		const ObjectAddress& address,
 		const std::string& fullPath,
 		const boost::optional<BlobAddress>& contentBlobAddress,
@@ -35,7 +35,7 @@ struct FileObjectInfo
 	/**
 	 * Creates a new file object from its properties, calculating the address on the fly.
 	 */
-	static FileObjectInfo CreateFromProperties(
+	static FileObject CreateFromProperties(
 		const std::string& fullPath,
 		const boost::optional<BlobAddress>& contentBlobAddress,
 		const boost::optional<ObjectAddress>& parentAddress)
@@ -50,7 +50,7 @@ struct FileObjectInfo
 			r(), r(), r(), r(), r()
 		});
 
-		return FileObjectInfo(address, fullPath, contentBlobAddress, parentAddress);
+		return FileObject(address, fullPath, contentBlobAddress, parentAddress);
 	}
 
 	const ObjectAddress address;
@@ -58,7 +58,7 @@ struct FileObjectInfo
 	const boost::optional<BlobAddress> contentBlobAddress;
 	const boost::optional<ObjectAddress> parentAddress;
 
-	bool operator==(const FileObjectInfo& rhs) const
+	bool operator==(const FileObject& rhs) const
 	{
 		return address == rhs.address &&
 			fullPath == rhs.fullPath &&

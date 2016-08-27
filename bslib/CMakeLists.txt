@@ -18,7 +18,7 @@ add_library(
     include/bslib/file/FileFinder.hpp
     include/bslib/file/FileRef.hpp
     include/bslib/file/FileRestorer.hpp
-    include/bslib/file/FileObjectInfo.hpp
+    include/bslib/file/FileObject.hpp
     include/bslib/UnitOfWork.hpp
     src/bslib/Address.cpp
     src/bslib/blob/BlobInfo.hpp
@@ -34,8 +34,8 @@ add_library(
     src/bslib/file/FileRefRepository.cpp
     src/bslib/file/FileRefRepository.hpp
     src/bslib/file/FileRestorer.cpp
-    src/bslib/file/FileObjectInfoRepository.cpp
-    src/bslib/file/FileObjectInfoRepository.hpp
+    src/bslib/file/FileObjectRepository.cpp
+    src/bslib/file/FileObjectRepository.hpp
     src/bslib/sqlitepp/exceptions.hpp
     src/bslib/sqlitepp/handles.hpp
     src/bslib/sqlitepp/ScopedStatementReset.hpp
