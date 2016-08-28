@@ -50,10 +50,8 @@ TEST_F(FileRefRepositoryIntegrationTest, GetReference)
 	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
 	blobRepo.AddBlob(blobInfo1);
 
-	const FileObject objectInfo(1, "/hi/phil", blobInfo1.GetAddress());
-	fileRepo.AddObject(objectInfo);
-
-	const FileRef reference(objectInfo.fullPath, objectInfo.id);
+	const auto id = fileRepo.AddObject("/hi/phil", blobInfo1.GetAddress());
+	const FileRef reference("/hi/phil", id);
 	repo.SetReference(reference);
 
 	// Act
@@ -83,17 +81,15 @@ TEST_F(FileRefRepositoryIntegrationTest, AddReferenceOverwritesOnDuplicate)
 	blobRepo.AddBlob(blobInfo1);
 
 	const std::string path("/same");
-	const FileObject objectInfo(1, path, boost::none);
-	const FileObject objectInfo2(2, path, blobInfo1.GetAddress());
-	fileRepo.AddObject(objectInfo);
-	fileRepo.AddObject(objectInfo2);
+	const auto id1 = fileRepo.AddObject(path, boost::none);
+	const auto id2 = fileRepo.AddObject(path, blobInfo1.GetAddress());
 
-	const FileRef reference(path, objectInfo.id);
+	const FileRef reference(path, id1);
 	repo.SetReference(reference);
 	EXPECT_EQ(repo.GetReference(path), reference);
 
 	// Act
-	const FileRef updatedReference(path, objectInfo.id);
+	const FileRef updatedReference(path, id1);
 	repo.SetReference(reference);
 
 	// Assert

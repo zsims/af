@@ -51,28 +51,21 @@ TEST_F(FileObjectRepositoryIntegrationTest, GetAllObjects)
 	blobRepo.AddBlob(blobInfo1);
 	blobRepo.AddBlob(blobInfo2);
 
-	const FileObject parentObject1(1, "/foo", boost::none);
-	const FileObject parentObject2(2, "/foo", boost::none, parentObject1.id);
-	const FileObject objectInfo1(3, "/foo", blobInfo1.GetAddress());
-	const FileObject objectInfo2(4, "/foo", blobInfo2.GetAddress(), parentObject1.id);
-	const FileObject objectInfo3(5, "/bar/here", blobInfo1.GetAddress(), parentObject2.id);
-	const FileObject objectInfo4(6, "/bar/here/xx", boost::none);
-
-	repo.AddObject(parentObject1);
-	repo.AddObject(parentObject2);
-	repo.AddObject(objectInfo1);
-	repo.AddObject(objectInfo2);
-	repo.AddObject(objectInfo3);
-	repo.AddObject(objectInfo4);
+	const auto parent1 = repo.AddGetObject("/foo", boost::none);
+	const auto parent2 = repo.AddGetObject("/foo", boost::none, parent1.id);
+	const auto object1 = repo.AddGetObject("/foo", blobInfo1.GetAddress());
+	const auto object2 = repo.AddGetObject("/foo", blobInfo2.GetAddress(), parent1.id);
+	const auto object3 = repo.AddGetObject("/bar/here", blobInfo1.GetAddress(), parent2.id);
+	const auto object4 = repo.AddGetObject("/bar/here/xx", boost::none);
 
 	// Act
 	const auto& result = repo.GetAllObjects();
 
 	// Assert
-	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo1)));
-	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo2)));
-	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo3)));
-	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo4)));
+	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(object1)));
+	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(object2)));
+	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(object3)));
+	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(object4)));
 }
 
 TEST_F(FileObjectRepositoryIntegrationTest, GetAllObjectsByParentAddress)
@@ -86,28 +79,21 @@ TEST_F(FileObjectRepositoryIntegrationTest, GetAllObjectsByParentAddress)
 	blobRepo.AddBlob(blobInfo1);
 	blobRepo.AddBlob(blobInfo2);
 
-	const FileObject parentObject1(1, "/foo", boost::none);
-	const FileObject parentObject2(2, "/foo", boost::none, parentObject1.id);
-	const FileObject objectInfo1(3, "/foo", blobInfo1.GetAddress());
-	const FileObject objectInfo2(4, "/foo", blobInfo2.GetAddress(), parentObject1.id);
-	const FileObject objectInfo3(5, "/bar/here", blobInfo1.GetAddress(), parentObject2.id);
-	const FileObject objectInfo4(6, "/bar/here/xx", boost::none);
-
-	repo.AddObject(parentObject1);
-	repo.AddObject(parentObject2);
-	repo.AddObject(objectInfo1);
-	repo.AddObject(objectInfo2);
-	repo.AddObject(objectInfo3);
-	repo.AddObject(objectInfo4);
+	const auto parent1 = repo.AddGetObject("/foo", boost::none);
+	const auto parent2 = repo.AddGetObject("/foo", boost::none, parent1.id);
+	const auto object1 = repo.AddGetObject("/foo", blobInfo1.GetAddress());
+	const auto object2 = repo.AddGetObject("/foo", blobInfo2.GetAddress(), parent1.id);
+	const auto object3 = repo.AddGetObject("/bar/here", blobInfo1.GetAddress(), parent2.id);
+	const auto object4 = repo.AddGetObject("/bar/here/xx", boost::none);
 
 	// Act
-	const auto& result = repo.GetAllObjectsByParentId(parentObject1.id);
+	const auto& result = repo.GetAllObjectsByParentId(parent1.id);
 
 	// Assert
-	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(objectInfo2)));
-	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(parentObject2)));
-	EXPECT_THAT(result, ::testing::Not(::testing::Contains(::testing::Pointee(objectInfo3))));
-	EXPECT_THAT(result, ::testing::Not(::testing::Contains(::testing::Pointee(objectInfo4))));
+	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(object2)));
+	EXPECT_THAT(result, ::testing::Contains(::testing::Pointee(parent2)));
+	EXPECT_THAT(result, ::testing::Not(::testing::Contains(::testing::Pointee(object3))));
+	EXPECT_THAT(result, ::testing::Not(::testing::Contains(::testing::Pointee(object4))));
 }
 
 TEST_F(FileObjectRepositoryIntegrationTest, GetObject)
@@ -118,8 +104,7 @@ TEST_F(FileObjectRepositoryIntegrationTest, GetObject)
 	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
 	blobRepo.AddBlob(blobInfo1);
 
-	const FileObject objectInfo(1, "/hi/phil", blobInfo1.GetAddress());
-	repo.AddObject(objectInfo);
+	const auto objectInfo = repo.AddGetObject("/hi/phil", blobInfo1.GetAddress());
 
 	// Act
 	// Assert
@@ -131,8 +116,7 @@ TEST_F(FileObjectRepositoryIntegrationTest, AddObjectNoBlob)
 	// Arrange
 	FileObjectRepository repo(*_connection);
 
-	const FileObject objectInfo(2, "/look/phil/no/hands", boost::none);
-	repo.AddObject(objectInfo);
+	const auto objectInfo = repo.AddGetObject("/look/phil/no/hands", boost::none);
 
 	// Act
 	// Assert
@@ -143,56 +127,31 @@ TEST_F(FileObjectRepositoryIntegrationTest, AddObjectMissingBlobThrows)
 {
 	// Arrange
 	FileObjectRepository repo(*_connection);
-
 	const BlobAddress madeUpBlobAddress("2259225215937593725395732753973973593571");
-	const FileObject objectInfo(3, "/look/phil/no/hands", madeUpBlobAddress);
 
 	// Act
 	// Assert
-	ASSERT_THROW(repo.AddObject(objectInfo), AddObjectFailedException);
+	ASSERT_THROW(repo.AddObject("/look/phil/no/hands", madeUpBlobAddress), AddObjectFailedException);
 }
 
 TEST_F(FileObjectRepositoryIntegrationTest, AddObjectMissingParentThrows)
 {
 	// Arrange
 	FileObjectRepository repo(*_connection);
-	const FileObject objectInfo(4, "/look/phil/no/hands", boost::none, 69);
-
 	// Act
 	// Assert
-	ASSERT_THROW(repo.AddObject(objectInfo), AddObjectFailedException);
+	ASSERT_THROW(repo.AddObject("/look/phil/no/hands", boost::none, 69), AddObjectFailedException);
 }
 
 TEST_F(FileObjectRepositoryIntegrationTest, AddObjectParent)
 {
 	// Arrange
 	FileObjectRepository repo(*_connection);
-
-	const FileObject parentObject(5, "/look/phil/no/hands", boost::none);
-	const FileObject objectInfo(6, "/look/phil/no/hands", boost::none, parentObject.id);
-	repo.AddObject(parentObject);
-	repo.AddObject(objectInfo);
-
+	const auto parentId = repo.AddObject("/look/phil/no/hands", boost::none);
+	const auto objectInfo = repo.AddGetObject("/look/phil/no/hands", boost::none, parentId);
 	// Act
 	// Assert
 	EXPECT_EQ(repo.GetObject(objectInfo.id), objectInfo);
-}
-
-TEST_F(FileObjectRepositoryIntegrationTest, AddObjectThrowsOnDuplicate)
-{
-	// Arrange
-	FileObjectRepository repo(*_connection);
-	blob::BlobInfoRepository blobRepo(*_connection);
-	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
-	blobRepo.AddBlob(blobInfo1);
-
-	const FileObject objectInfo1(1, "type", blobInfo1.GetAddress());
-	const FileObject objectInfo2(1, "type", blobInfo1.GetAddress());
-	repo.AddObject(objectInfo1);
-
-	// Act
-	// Assert
-	ASSERT_THROW(repo.AddObject(objectInfo2), AddObjectFailedException);
 }
 
 TEST_F(FileObjectRepositoryIntegrationTest, GetObjectThrowsOnNotFound)

@@ -5,6 +5,7 @@
 #include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 
+#include <boost/filesystem/path.hpp>
 #include <boost/format.hpp>
 #include <sqlite3.h>
 
@@ -29,10 +30,9 @@ FileObjectRepository::FileObjectRepository(const sqlitepp::ScopedSqlite3Object& 
 	: _db(connection)
 {
 	// Prepare statements so they're good to go
-	sqlitepp::prepare_or_throw(_db, "INSERT INTO FileObject (Id, FullPath, ContentBlobAddress, ParentId) VALUES (:Id, :FullPath, :ContentBlobAddress, :ParentId)", _insertObjectStatement);
+	sqlitepp::prepare_or_throw(_db, "INSERT INTO FileObject (FullPath, ContentBlobAddress, ParentId) VALUES (:FullPath, :ContentBlobAddress, :ParentId)", _insertObjectStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Id, FullPath, ContentBlobAddress, ParentId FROM FileObject
-		WHERE Id = :Id
+		SELECT Id, FullPath, ContentBlobAddress, ParentId FROM FileObject WHERE Id = :Id
 	)", _getObjectStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
 		SELECT Id , FullPath, ContentBlobAddress, ParentId FROM FileObject
@@ -70,17 +70,18 @@ std::vector<std::shared_ptr<FileObject>> FileObjectRepository::GetAllObjectsByPa
 	return result;
 }
 
-void FileObjectRepository::AddObject(const FileObject& info)
+foid FileObjectRepository::AddObject(
+	const boost::filesystem::path& fullPath,
+	const boost::optional<BlobAddress>& contentBlobAddress,
+	const boost::optional<foid>& parentId)
 {
-	const auto fullPath = info.fullPath;
 	sqlitepp::ScopedStatementReset reset(_insertObjectStatement);
-	
-	sqlitepp::BindByParameterNameInt64(_insertObjectStatement, ":Id", info.id);
-	sqlitepp::BindByParameterNameText(_insertObjectStatement, ":FullPath", fullPath);
+	const auto& rawPath = fullPath.string();
+	sqlitepp::BindByParameterNameText(_insertObjectStatement, ":FullPath", rawPath);
 
-	if (info.contentBlobAddress)
+	if (contentBlobAddress)
 	{
-		const auto binaryContentAddress = info.contentBlobAddress.value().ToBinary();
+		const auto binaryContentAddress = contentBlobAddress.value().ToBinary();
 		sqlitepp::BindByParameterNameBlob(_insertObjectStatement, ":ContentBlobAddress", &binaryContentAddress[0], binaryContentAddress.size());
 	}
 	else
@@ -88,9 +89,9 @@ void FileObjectRepository::AddObject(const FileObject& info)
 		sqlitepp::BindByParameterNameNull(_insertObjectStatement, ":ContentBlobAddress");
 	}
 
-	if (info.parentId)
+	if (parentId)
 	{
-		sqlitepp::BindByParameterNameInt64(_insertObjectStatement, ":ParentId", info.parentId.value());
+		sqlitepp::BindByParameterNameInt64(_insertObjectStatement, ":ParentId", parentId.value());
 	}
 	else
 	{
@@ -100,8 +101,19 @@ void FileObjectRepository::AddObject(const FileObject& info)
 	const auto stepResult = sqlite3_step(_insertObjectStatement);
 	if (stepResult != SQLITE_DONE)
 	{
-		throw AddObjectFailedException((boost::format("Failed to execute statement for insert object %1%. SQLite error %2%") % info.id % stepResult).str());
+		throw AddObjectFailedException((boost::format("Failed to execute statement for insert object. SQLite error %1%") % stepResult).str());
 	}
+
+	return sqlite3_last_insert_rowid(_db);
+}
+
+FileObject FileObjectRepository::AddGetObject(
+	const boost::filesystem::path& fullPath,
+	const boost::optional<BlobAddress>& contentBlobAddress,
+	const boost::optional<foid>& parentId)
+{
+	const auto id = AddObject(fullPath, contentBlobAddress, parentId);
+	return FileObject(id, fullPath, contentBlobAddress, parentId);
 }
 
 FileObject FileObjectRepository::GetObject(foid id) const

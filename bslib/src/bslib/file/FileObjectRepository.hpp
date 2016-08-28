@@ -26,7 +26,16 @@ public:
 	std::vector<std::shared_ptr<FileObject>> GetAllObjects() const;
 	std::vector<std::shared_ptr<FileObject>> GetAllObjectsByParentId(foid parentId) const;
 
-	void AddObject(const FileObject& info);
+	foid AddObject(
+		const boost::filesystem::path& fullPath,
+		const boost::optional<BlobAddress>& contentBlobAddress,
+		const boost::optional<foid>& parentId = boost::none);
+
+	FileObject AddGetObject(
+		const boost::filesystem::path& fullPath,
+		const boost::optional<BlobAddress>& contentBlobAddress,
+		const boost::optional<foid>& parentId = boost::none);
+
 	FileObject GetObject(foid id) const;
 	boost::optional<FileObject> FindObject(foid id) const;
 private:
