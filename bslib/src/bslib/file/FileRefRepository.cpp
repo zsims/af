@@ -31,35 +31,42 @@ FileRefRepository::FileRefRepository(const sqlitepp::ScopedSqlite3Object& connec
 	)", _getRefStatement);
 }
 
-void FileRefRepository::SetReference(const FileRef& reference)
+void FileRefRepository::SetReference(const boost::filesystem::path& fullPath, foid fileId)
 {
-	const auto& fullPath = reference.fullPath;
+	const auto& rawPath = fullPath.string();
 	sqlitepp::ScopedStatementReset reset(_insertRefStatement);
 	
-	sqlitepp::BindByParameterNameText(_insertRefStatement, ":FullPath", fullPath);
-	sqlitepp::BindByParameterNameInt64(_insertRefStatement, ":FileObjectId", reference.fileObjectId);
+	sqlitepp::BindByParameterNameText(_insertRefStatement, ":FullPath", rawPath);
+	sqlitepp::BindByParameterNameInt64(_insertRefStatement, ":FileObjectId", fileId);
 
 	const auto stepResult = sqlite3_step(_insertRefStatement);
 	if (stepResult != SQLITE_DONE)
 	{
-		throw AddRefFailedException(reference.fullPath, stepResult);
+		throw AddRefFailedException(rawPath, stepResult);
 	}
 }
 
-FileRef FileRefRepository::GetReference(const std::string& fullPath) const
+FileRef FileRefRepository::SetGetReference(const boost::filesystem::path& fullPath, foid fileId)
+{
+	SetReference(fullPath, fileId);
+	return FileRef(fullPath, fileId);
+}
+
+FileRef FileRefRepository::GetReference(const boost::filesystem::path& fullPath) const
 {
 	const auto ref = FindReference(fullPath);
 	if(!ref)
 	{
-		throw RefNotFoundException(fullPath);
+		throw RefNotFoundException(fullPath.string());
 	}
 	return ref.value();
 }
 
-boost::optional<FileRef> FileRefRepository::FindReference(const std::string& fullPath) const
+boost::optional<FileRef> FileRefRepository::FindReference(const boost::filesystem::path& fullPath) const
 {
+	const auto& rawPath = fullPath.string();
 	sqlitepp::ScopedStatementReset reset(_getRefStatement);
-	sqlitepp::BindByParameterNameText(_getRefStatement, ":FullPath", fullPath);
+	sqlitepp::BindByParameterNameText(_getRefStatement, ":FullPath", rawPath);
 
 	auto stepResult = sqlite3_step(_getRefStatement);
 	if (stepResult != SQLITE_ROW)
