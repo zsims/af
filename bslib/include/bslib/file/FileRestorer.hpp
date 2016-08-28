@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bslib/Address.hpp"
+#include "bslib/file/FileObject.hpp"
 
 #include <boost/filesystem/path.hpp>
 
@@ -32,22 +33,22 @@ public:
 
 	/**
 	 * Restores the single object represented by the given address to the given path
-	 * \param objectAddress Address of the file object to restore
+	 * \param fileId Address of the file object to restore
 	 * \param targetPath The path to restore to, if existing files will be created as a subpath otherwise the full path will be restored
 	 */
-	void RestoreSingle(const ObjectAddress& objectAddress, const boost::filesystem::path& targetPath);
+	void RestoreSingle(foid fileId, const boost::filesystem::path& targetPath);
 
 	/**
 	 * Restores the given object, and all child objects (e.g. sub folders/files) to the target path
-	 * \param objectAddress Address of the file object to restore
+	 * \param fileId Address of the file object to restore
 	 * \param targetPath The path to restore to, if existing files will be created as a subpath otherwise the full path will be restored
 	 */
-	void RestoreTree(const ObjectAddress& objectAddress, const boost::filesystem::path& targetPath);
+	void RestoreTree(foid fileId, const boost::filesystem::path& targetPath);
 
 	const std::vector<boost::filesystem::path>& GetRestoredPaths() const { return _restoredPaths; }
 	const std::vector<boost::filesystem::path>& GetSkippedPaths() const { return _skippedPaths; }
 private:
-	void Restore(const ObjectAddress& objectAddress, const boost::filesystem::path& targetPath, bool recursive);
+	void Restore(foid fileId, const boost::filesystem::path& targetPath, bool recursive);
 	void RestoreFileObject(const FileObject& info, const boost::filesystem::path& targetPath, bool followDirectories);
 	bool RestoreBlobToFile(const BlobAddress& blobAddress, const boost::filesystem::path& targetPath) const;
 	std::vector<boost::filesystem::path> _restoredPaths;

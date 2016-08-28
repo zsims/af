@@ -26,7 +26,7 @@ FileAdder::FileAdder(
 {
 }
 
-ObjectAddress FileAdder::Add(const boost::filesystem::path& sourcePath, const std::vector<uint8_t>& content)
+foid FileAdder::Add(const boost::filesystem::path& sourcePath, const std::vector<uint8_t>& content)
 {
 	const auto blobAddress = BlobAddress::CalculateFromContent(content);
 	const auto existingBlob = _blobInfoRepository.FindBlob(blobAddress);
@@ -36,10 +36,9 @@ ObjectAddress FileAdder::Add(const boost::filesystem::path& sourcePath, const st
 		_blobInfoRepository.AddBlob(blob::BlobInfo(blobAddress, content.size()));
 	}
 
-	const auto info = FileObject::CreateFromProperties(sourcePath.string(), blobAddress, boost::none);
-	_fileObjectRepository.AddObject(info);
-	_fileRefRepository.SetReference(FileRef(sourcePath.string(), info.address));
-	return info.address;
+	const auto id = _fileObjectRepository.AddObject(sourcePath, blobAddress, boost::none);
+	_fileRefRepository.SetReference(FileRef(sourcePath.string(), id));
+	return id;
 }
 
 boost::optional<BlobAddress> FileAdder::SaveFileContents(const boost::filesystem::path& sourcePath)
@@ -79,15 +78,15 @@ void FileAdder::Add(const boost::filesystem::path& sourcePath)
 	AddChild(sourcePath, boost::none);
 }
 
-void FileAdder::AddChild(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress)
+void FileAdder::AddChild(const boost::filesystem::path& sourcePath, const boost::optional<foid>& parentId)
 {
 	if (boost::filesystem::is_regular_file(sourcePath))
 	{
-		AddFile(sourcePath, parentAddress);
+		AddFile(sourcePath, parentId);
 	}
 	else if (boost::filesystem::is_directory(sourcePath))
 	{
-		auto nextAddress = AddDirectory(sourcePath, parentAddress);
+		auto nextAddress = AddDirectory(sourcePath, parentId);
 		boost::filesystem::recursive_directory_iterator itr(sourcePath);
 		for (const auto& path : itr)
 		{
@@ -100,7 +99,7 @@ void FileAdder::AddChild(const boost::filesystem::path& sourcePath, const boost:
 	}
 }
 
-void FileAdder::AddFile(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress)
+void FileAdder::AddFile(const boost::filesystem::path& sourcePath, const boost::optional<foid>& parentId)
 {
 	const auto blobAddress = SaveFileContents(sourcePath);
 
@@ -111,19 +110,17 @@ void FileAdder::AddFile(const boost::filesystem::path& sourcePath, const boost::
 		return;
 	}
 
-	const auto info = FileObject::CreateFromProperties(sourcePath.string(), blobAddress, parentAddress);
-	_fileObjectRepository.AddObject(info);
-	_fileRefRepository.SetReference(FileRef(sourcePath.string(), info.address));
+	const auto id = _fileObjectRepository.AddObject(sourcePath, blobAddress, parentId);
+	_fileRefRepository.SetReference(FileRef(sourcePath.string(), id));
 	_addedPaths.push_back(sourcePath);
 }
 
-ObjectAddress FileAdder::AddDirectory(const boost::filesystem::path& sourcePath, const boost::optional<ObjectAddress>& parentAddress)
+foid FileAdder::AddDirectory(const boost::filesystem::path& sourcePath, const boost::optional<foid>& parentId)
 {
-	const auto info = FileObject::CreateFromProperties(sourcePath.string(), boost::none, parentAddress);
-	_fileObjectRepository.AddObject(info);
-	_fileRefRepository.SetReference(FileRef(sourcePath.string(), info.address));
+	const auto id = _fileObjectRepository.AddObject(sourcePath, boost::none, parentId);
+	_fileRefRepository.SetReference(FileRef(sourcePath.string(), id));
 	_addedPaths.push_back(sourcePath);
-	return info.address;
+	return id;
 }
 
 }

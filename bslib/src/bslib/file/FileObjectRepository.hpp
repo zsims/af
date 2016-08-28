@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bslib/Address.hpp"
 #include "bslib/file/FileObject.hpp"
 
 #include <cstdint>
@@ -25,11 +24,20 @@ public:
 	explicit FileObjectRepository(const sqlitepp::ScopedSqlite3Object& connection);
 
 	std::vector<std::shared_ptr<FileObject>> GetAllObjects() const;
-	std::vector<std::shared_ptr<FileObject>> GetAllObjectsByParentAddress(const ObjectAddress& parentAddress) const;
+	std::vector<std::shared_ptr<FileObject>> GetAllObjectsByParentId(foid parentId) const;
 
-	void AddObject(const FileObject& info);
-	FileObject GetObject(const ObjectAddress& address) const;
-	boost::optional<FileObject> FindObject(const ObjectAddress& address) const;
+	foid AddObject(
+		const boost::filesystem::path& fullPath,
+		const boost::optional<BlobAddress>& contentBlobAddress,
+		const boost::optional<foid>& parentId = boost::none);
+
+	FileObject AddGetObject(
+		const boost::filesystem::path& fullPath,
+		const boost::optional<BlobAddress>& contentBlobAddress,
+		const boost::optional<foid>& parentId = boost::none);
+
+	FileObject GetObject(foid id) const;
+	boost::optional<FileObject> FindObject(foid id) const;
 private:
 	std::shared_ptr<FileObject> MapRowToObject(const sqlitepp::ScopedStatement& statement) const;
 

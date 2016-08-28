@@ -17,28 +17,27 @@ namespace {
 enum GetRefColumnIndex
 {
 	GetRef_ColumnIndex_FullPath = 0,
-	GetRef_ColumnIndex_FileObjectAddress
+	GetRef_ColumnIndex_FileObjectId
 };
 }
 
 FileRefRepository::FileRefRepository(const sqlitepp::ScopedSqlite3Object& connection)
 	: _db(connection)
 {
-	sqlitepp::prepare_or_throw(_db, "INSERT OR REPLACE INTO FileRef (FullPath, FileObjectAddress) VALUES (:FullPath, :FileObjectAddress)", _insertRefStatement);
+	sqlitepp::prepare_or_throw(_db, "INSERT OR REPLACE INTO FileRef (FullPath, FileObjectId) VALUES (:FullPath, :FileObjectId)", _insertRefStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT FullPath, FileObjectAddress FROM FileRef
+		SELECT FullPath, FileObjectId FROM FileRef
 		WHERE FullPath = :FullPath
 	)", _getRefStatement);
 }
 
 void FileRefRepository::SetReference(const FileRef& reference)
 {
-	const auto objectBinaryAddress = reference.fileObjectAddress.ToBinary();
 	const auto& fullPath = reference.fullPath;
 	sqlitepp::ScopedStatementReset reset(_insertRefStatement);
 	
 	sqlitepp::BindByParameterNameText(_insertRefStatement, ":FullPath", fullPath);
-	sqlitepp::BindByParameterNameBlob(_insertRefStatement, ":FileObjectAddress", &objectBinaryAddress[0], objectBinaryAddress.size());
+	sqlitepp::BindByParameterNameInt64(_insertRefStatement, ":FileObjectId", reference.fileObjectId);
 
 	const auto stepResult = sqlite3_step(_insertRefStatement);
 	if (stepResult != SQLITE_DONE)
@@ -68,10 +67,8 @@ boost::optional<FileRef> FileRefRepository::FindReference(const std::string& ful
 		return boost::none;
 	}
 
-	const auto objectAddressBytes = sqlite3_column_blob(_getRefStatement, GetRef_ColumnIndex_FileObjectAddress);
-	const auto objectAddressBytesCount = sqlite3_column_bytes(_getRefStatement, GetRef_ColumnIndex_FileObjectAddress);
-	const ObjectAddress objectAddress(objectAddressBytes, objectAddressBytesCount);
-	return FileRef(fullPath, objectAddress);
+	const auto fileId = sqlite3_column_int64(_getRefStatement, GetRef_ColumnIndex_FileObjectId);
+	return FileRef(fullPath, fileId);
 }
 
 }

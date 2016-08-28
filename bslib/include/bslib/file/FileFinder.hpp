@@ -36,7 +36,7 @@ public:
 	 * \param address The object address
 	 * \return The object info if found, otherwise none
 	 */
-	boost::optional<FileObject> FindObjectByAddress(const ObjectAddress& address) const;
+	boost::optional<FileObject> FindObjectById(foid address) const;
 
 	/**
 	 * Gets an object by address
@@ -44,7 +44,7 @@ public:
 	 * \return The object info
 	 * \throws FileObjectNotFoundException if no object exists at that address
 	 */
-	FileObject GetObjectByAddress(const ObjectAddress& address) const;
+	FileObject GetObjectById(foid id) const;
 private:
 	FileObjectRepository& _fileObjectRepository;
 	FileRefRepository& _fileRefRepository;

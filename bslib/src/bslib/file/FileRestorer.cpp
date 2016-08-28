@@ -26,24 +26,24 @@ FileRestorer::FileRestorer(
 {
 }
 
-void FileRestorer::RestoreSingle(const ObjectAddress& objectAddress, const boost::filesystem::path& targetPath)
+void FileRestorer::RestoreSingle(foid fileId, const boost::filesystem::path& targetPath)
 {
-	Restore(objectAddress, targetPath, false);
+	Restore(fileId, targetPath, false);
 }
 
-void FileRestorer::RestoreTree(const ObjectAddress& objectAddress, const boost::filesystem::path& targetPath)
+void FileRestorer::RestoreTree(foid fileId, const boost::filesystem::path& targetPath)
 {
-	Restore(objectAddress, targetPath, true);
+	Restore(fileId, targetPath, true);
 }
 
-void FileRestorer::Restore(const ObjectAddress& objectAddress, const boost::filesystem::path& targetPath, bool recursive)
+void FileRestorer::Restore(foid fileId, const boost::filesystem::path& targetPath, bool recursive)
 {
 	if (boost::filesystem::exists(targetPath) && !boost::filesystem::is_directory(targetPath))
 	{
 		throw TargetPathNotSupportedException(targetPath.string());
 	}
 
-	const auto object = _fileObjectRepository.GetObject(objectAddress);
+	const auto object = _fileObjectRepository.GetObject(fileId);
 	auto resolvedTargetPath = targetPath;
 	if (boost::filesystem::exists(targetPath))
 	{
@@ -90,7 +90,7 @@ void FileRestorer::RestoreFileObject(const FileObject& info, const boost::filesy
 		// Yes, it hasn't actually been restored full yet, but I want ma tail call optimization
 		_restoredPaths.push_back(targetPath);
 
-		const auto& children = _fileObjectRepository.GetAllObjectsByParentAddress(info.address);
+		const auto& children = _fileObjectRepository.GetAllObjectsByParentId(info.id);
 		for (const auto& child : children)
 		{
 			const auto& name = boost::filesystem::path(child->fullPath).filename();

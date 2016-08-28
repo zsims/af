@@ -3,17 +3,17 @@
 #include "bslib/Address.hpp"
 
 #include <boost/optional.hpp>
+#include <boost/filesystem/path.hpp>
 
-#include <ctime>
-#include <random>
+#include <cstdint>
 #include <string>
 
 namespace af {
 namespace bslib {
 namespace file {
-namespace {
-std::mt19937 random(static_cast<unsigned>(time(0)));
-}
+
+// File Object Identifier
+typedef int64_t foid;
 
 /**
  * Represents information about a file or directory
@@ -21,49 +21,28 @@ std::mt19937 random(static_cast<unsigned>(time(0)));
 struct FileObject
 {
 	FileObject(
-		const ObjectAddress& address,
-		const std::string& fullPath,
+		foid id,
+		const boost::filesystem::path& fullPath,
 		const boost::optional<BlobAddress>& contentBlobAddress,
-		const boost::optional<ObjectAddress>& parentAddress = boost::none)
-		: address(address)
+		const boost::optional<foid>& parentId = boost::none)
+		: id(id)
 		, fullPath(fullPath)
 		, contentBlobAddress(contentBlobAddress)
-		, parentAddress(parentAddress)
+		, parentId(parentId)
 	{
 	}
 
-	/**
-	 * Creates a new file object from its properties, calculating the address on the fly.
-	 */
-	static FileObject CreateFromProperties(
-		const std::string& fullPath,
-		const boost::optional<BlobAddress>& contentBlobAddress,
-		const boost::optional<ObjectAddress>& parentAddress)
-	{
-		auto r = [&]() {
-			return static_cast<uint8_t>(random());
-		};
-		const ObjectAddress address(binary_address{
-			r(), r(), r(), r(), r(),
-			r(), r(), r(), r(), r(),
-			r(), r(), r(), r(), r(),
-			r(), r(), r(), r(), r()
-		});
-
-		return FileObject(address, fullPath, contentBlobAddress, parentAddress);
-	}
-
-	const ObjectAddress address;
-	const std::string fullPath;
+	const foid id;
+	const boost::filesystem::path fullPath;
 	const boost::optional<BlobAddress> contentBlobAddress;
-	const boost::optional<ObjectAddress> parentAddress;
+	const boost::optional<foid> parentId;
 
 	bool operator==(const FileObject& rhs) const
 	{
-		return address == rhs.address &&
+		return id == rhs.id &&
 			fullPath == rhs.fullPath &&
 			contentBlobAddress == rhs.contentBlobAddress &&
-			parentAddress == rhs.parentAddress;
+			parentId == rhs.parentId;
 	}
 };
 

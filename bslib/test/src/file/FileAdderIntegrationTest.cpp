@@ -63,14 +63,14 @@ TEST_F(FileAdderIntegrationTest, AddFile)
 {
 	// Arrange
 	// Act
-	const auto address = _adder->Add("/here", { 1, 2, 3 });
+	const auto fileId = _adder->Add("/here", { 1, 2, 3 });
 	_uow->Commit();
 
 	// Assert
 	{
 		auto uow2 = _forest->CreateUnitOfWork();
 		auto finder = uow2->CreateFileFinder();
-		EXPECT_TRUE(finder->FindObjectByAddress(address));
+		EXPECT_TRUE(finder->FindObjectById(fileId));
 		EXPECT_TRUE(finder->FindReference("/here"));
 	}
 }
@@ -165,7 +165,7 @@ TEST_F(FileAdderIntegrationTest, Add_SuccessWithDirectory)
 
 		const auto fileRef = finder->FindReference(filePath);
 		EXPECT_TRUE(fileRef);
-		const auto fileObject = finder->GetObjectByAddress(fileRef->fileObjectAddress);
+		const auto fileObject = finder->GetObjectById(fileRef->fileObjectId);
 		EXPECT_EQ(helloBytes, uow2->GetBlob(fileObject.contentBlobAddress.value()));
 	}
 }
@@ -212,7 +212,7 @@ TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
 		{
 			const auto fileRef = finder3->FindReference(deepFilePath);
 			EXPECT_TRUE(fileRef);
-			const auto fileObject = finder3->GetObjectByAddress(fileRef->fileObjectAddress);
+			const auto fileObject = finder3->GetObjectById(fileRef->fileObjectId);
 			EXPECT_EQ(helloBytes, uow3->GetBlob(fileObject.contentBlobAddress.value()));
 		}
 
@@ -220,7 +220,7 @@ TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
 		{
 			const auto fileRef = finder3->FindReference(filePath);
 			EXPECT_TRUE(fileRef);
-			const auto fileObject = finder3->GetObjectByAddress(fileRef->fileObjectAddress);
+			const auto fileObject = finder3->GetObjectById(fileRef->fileObjectId);
 			EXPECT_EQ(hellBytes, uow3->GetBlob(fileObject.contentBlobAddress.value()));
 		}
 	}

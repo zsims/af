@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bslib/Address.hpp"
+#include "bslib/file/FileObject.hpp"
 
 #include <string>
 
@@ -13,18 +14,18 @@ namespace file {
  */
 struct FileRef
 {
-	FileRef(const std::string& fullPath, const ObjectAddress& fileObjectAddress)
+	FileRef(const std::string& fullPath, foid fileObjectId)
 		: fullPath(fullPath)
-		, fileObjectAddress(fileObjectAddress)
+		, fileObjectId(fileObjectId)
 	{
 	}
 
 	const std::string fullPath;
-	const ObjectAddress fileObjectAddress;
+	const foid fileObjectId;
 
 	bool operator==(const FileRef& rhs) const
 	{
-		return fullPath == rhs.fullPath && fileObjectAddress == rhs.fileObjectAddress;
+		return fullPath == rhs.fullPath && fileObjectId == rhs.fileObjectId;
 	}
 };
 
