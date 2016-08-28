@@ -3,6 +3,8 @@
 #include "bslib/Address.hpp"
 #include "bslib/file/FileObject.hpp"
 
+#include <boost/filesystem/path.hpp>
+
 #include <string>
 
 namespace af {
@@ -14,13 +16,13 @@ namespace file {
  */
 struct FileRef
 {
-	FileRef(const std::string& fullPath, foid fileObjectId)
+	FileRef(const boost::filesystem::path& fullPath, foid fileObjectId)
 		: fullPath(fullPath)
 		, fileObjectId(fileObjectId)
 	{
 	}
 
-	const std::string fullPath;
+	const boost::filesystem::path fullPath;
 	const foid fileObjectId;
 
 	bool operator==(const FileRef& rhs) const

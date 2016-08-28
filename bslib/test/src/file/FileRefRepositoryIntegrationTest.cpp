@@ -51,8 +51,7 @@ TEST_F(FileRefRepositoryIntegrationTest, GetReference)
 	blobRepo.AddBlob(blobInfo1);
 
 	const auto id = fileRepo.AddObject("/hi/phil", blobInfo1.GetAddress());
-	const FileRef reference("/hi/phil", id);
-	repo.SetReference(reference);
+	const auto reference = repo.SetGetReference("/hi/phil", id);
 
 	// Act
 	// Assert
@@ -63,12 +62,9 @@ TEST_F(FileRefRepositoryIntegrationTest, AddReferenceMissingObjectThrows)
 {
 	// Arrange
 	FileRefRepository repo(*_connection);
-
-	const FileRef reference("/look/phil", 69);
-
 	// Act
 	// Assert
-	ASSERT_THROW(repo.SetReference(reference), AddRefFailedException);
+	ASSERT_THROW(repo.SetReference("/look/phil", 69), AddRefFailedException);
 }
 
 TEST_F(FileRefRepositoryIntegrationTest, AddReferenceOverwritesOnDuplicate)
@@ -84,13 +80,11 @@ TEST_F(FileRefRepositoryIntegrationTest, AddReferenceOverwritesOnDuplicate)
 	const auto id1 = fileRepo.AddObject(path, boost::none);
 	const auto id2 = fileRepo.AddObject(path, blobInfo1.GetAddress());
 
-	const FileRef reference(path, id1);
-	repo.SetReference(reference);
+	const auto reference = repo.SetGetReference(path, id1);
 	EXPECT_EQ(repo.GetReference(path), reference);
 
 	// Act
-	const FileRef updatedReference(path, id1);
-	repo.SetReference(reference);
+	const auto updatedReference = repo.SetGetReference(path, id1);
 
 	// Assert
 	ASSERT_EQ(repo.GetReference(path), updatedReference);
