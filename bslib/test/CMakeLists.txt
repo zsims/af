@@ -10,6 +10,7 @@ add_executable(
     src/ForestIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
+    src/file/FileAdderEsIntegrationTest.cpp
     src/file/FileAdderIntegrationTest.cpp
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRefRepositoryIntegrationTest.cpp

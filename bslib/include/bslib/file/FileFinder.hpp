@@ -1,12 +1,14 @@
 #pragma once
 
 #include "bslib/Address.hpp"
+#include "bslib/file/FileEvent.hpp"
 #include "bslib/file/FileRef.hpp"
 #include "bslib/file/FileObject.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/optional.hpp>
 
+#include <map>
 #include <vector>
 
 namespace af {
@@ -15,6 +17,7 @@ namespace file {
 
 class FileRefRepository;
 class FileObjectRepository;
+class FileEventStreamRepository;
 
 /**
  * Finds files in a backup
@@ -22,7 +25,7 @@ class FileObjectRepository;
 class FileFinder
 {
 public:
-	FileFinder(FileObjectRepository& fileObjectRepository, FileRefRepository& fileRefRepository);
+	FileFinder(FileObjectRepository& fileObjectRepository, FileRefRepository& fileRefRepository, FileEventStreamRepository& fileEventStreamRepository);
 
 	/**
 	 * Finds a reference by source path.
@@ -45,9 +48,17 @@ public:
 	 * \throws FileObjectNotFoundException if no object exists at that address
 	 */
 	FileObject GetObjectById(foid id) const;
+
+	/**
+	 * Gets the last recorded event for the file at the given path
+	 */
+	FileEvent GetLastEventByPath(const boost::filesystem::path& fullPath) const;
+	boost::optional<FileEvent> FindLastEventByPath(const boost::filesystem::path& fullPath) const;
+	std::map<boost::filesystem::path, FileEvent> GetLastEventsStartingWithPath(const boost::filesystem::path& fullPath) const;
 private:
 	FileObjectRepository& _fileObjectRepository;
 	FileRefRepository& _fileRefRepository;
+	FileEventStreamRepository& _fileEventStreamRepository;
 };
 
 }
