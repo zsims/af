@@ -24,8 +24,8 @@ public:
 	 * Gets all events in the order they were recorded
 	 */
 	std::vector<FileEvent> GetAllEvents() const;
-	std::map<boost::filesystem::path, FileEvent> GetLastEventsStartingWithPath(const boost::filesystem::path& fullPath) const;
-	boost::optional<FileEvent> FindLastEvent(const boost::filesystem::path& fullPath) const;
+	std::map<boost::filesystem::path, FileEvent> GetLastChangedEventsStartingWithPath(const boost::filesystem::path& fullPath) const;
+	boost::optional<FileEvent> FindLastChangedEvent(const boost::filesystem::path& fullPath) const;
 
 	void AddEvent(const FileEvent& fileEvent);
 
@@ -43,8 +43,8 @@ private:
 	const sqlitepp::ScopedSqlite3Object& _db;
 	sqlitepp::ScopedStatement _insertEventStatement;
 	sqlitepp::ScopedStatement _getAllEventsStatement;
-	sqlitepp::ScopedStatement _getLastEventByPathStatement;
-	sqlitepp::ScopedStatement _getLastEventsUnderPathStatement;
+	sqlitepp::ScopedStatement _getLastChangedEventByPathStatement;
+	sqlitepp::ScopedStatement _getLastChangedEventsUnderPathStatement;
 };
 
 }

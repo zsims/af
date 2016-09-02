@@ -10,7 +10,6 @@
 
 #include <vector>
 #include <map>
-#include <set>
 
 namespace af {
 namespace bslib {
@@ -33,7 +32,7 @@ boost::optional<BlobAddress> FileAdderEs::SaveFileContents(const boost::filesyst
 
 	if (!file)
 	{
-		// TODO: log this as "uh oh"
+		EmitEvent(FileEvent(sourcePath, boost::none, FileEventAction::FailedToRead));
 		return boost::none;
 	}
 
@@ -55,18 +54,10 @@ void FileAdderEs::Add(const boost::filesystem::path& sourcePath)
 		throw PathNotFoundException(sourcePath.string());
 	}
 
-	// Clear from last run
-	_lastEvents.clear();
-	_newEvents.clear();
-
 	if (boost::filesystem::is_regular_file(sourcePath))
 	{
-		const auto previousEvent = _fileEventStreamRepository.FindLastEvent(sourcePath);
-		if (previousEvent)
-		{
-			_lastEvents.insert(std::make_pair(previousEvent->fullPath, previousEvent.value()));
-		}
-		VisitPath(sourcePath);
+		const auto previousEvent = _fileEventStreamRepository.FindLastChangedEvent(sourcePath);
+		VisitPath(sourcePath, previousEvent);
 	}
 	else if (boost::filesystem::is_directory(sourcePath))
 	{
@@ -77,53 +68,47 @@ void FileAdderEs::Add(const boost::filesystem::path& sourcePath)
 		throw SourcePathNotSupportedException(sourcePath.string());
 	}
 
-	_fileEventStreamRepository.AddEvents(_newEvents);
 }
 
 void FileAdderEs::ScanDirectory(const boost::filesystem::path& sourcePath)
 {
-	_lastEvents = _fileEventStreamRepository.GetLastEventsStartingWithPath(sourcePath);
+	auto lastChangeEvents = _fileEventStreamRepository.GetLastChangedEventsStartingWithPath(sourcePath);
 
 	// The directory itself
-	VisitPath(sourcePath);
-
+	VisitPath(sourcePath, FindPreviousEvent(lastChangeEvents, sourcePath));
 
 	// Scan for changes to files on disk
-	std::set<boost::filesystem::path> processedPaths;
 	boost::filesystem::recursive_directory_iterator itr(sourcePath);
-	for (const auto& path : itr)
+	for (const auto& entry : itr)
 	{
-		VisitPath(path);
-		processedPaths.insert(path);
+		auto path = entry.path();
+
+		// Directories should always be processed with a slash
+		if (boost::filesystem::is_directory(path))
+		{
+			path = DirectoryPath(path);
+		}
+
+		VisitPath(path, FindPreviousEvent(lastChangeEvents, path));
+		lastChangeEvents.erase(path);
 	}
 
 	// Work out what happend to paths we once knew about but haven't seen again
-	for (const auto& previousEvent : _lastEvents)
+	for (const auto& previousEvent : lastChangeEvents)
 	{
-		// already seen this event, skip
-		if (processedPaths.count(previousEvent.first) != 0)
-		{
-			continue;
-		}
-		VisitPath(previousEvent.first);
+		VisitPath(previousEvent.first, previousEvent.second);
 	}
 }
 
-void FileAdderEs::VisitPath(const boost::filesystem::path& sourcePath)
+void FileAdderEs::VisitPath(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
-	const auto& previousEvent = FindPreviousEvent(sourcePath);
-
 	if (!boost::filesystem::exists(sourcePath))
 	{
-		if (previousEvent && previousEvent->action != FileEventAction::Removed)
+		if (previousEvent && previousEvent->action != FileEventAction::ChangedRemoved)
 		{
-			PushEvent(FileEvent(sourcePath, previousEvent->contentBlobAddress, FileEventAction::Removed));
+			EmitEvent(FileEvent(sourcePath, previousEvent->contentBlobAddress, FileEventAction::ChangedRemoved));
 		}
-		else
-		{
-			// Unchanged since last time
-			return;
-		}
+		return;
 	}
 
 	if (boost::filesystem::is_regular_file(sourcePath))
@@ -132,7 +117,11 @@ void FileAdderEs::VisitPath(const boost::filesystem::path& sourcePath)
 	}
 	else if (boost::filesystem::is_directory(sourcePath))
 	{
-		VisitDirectory(sourcePath);
+		VisitDirectory(sourcePath, previousEvent);
+	}
+	else
+	{
+		EmitEvent(FileEvent(sourcePath, boost::none, FileEventAction::Unsupported));
 	}
 }
 
@@ -141,38 +130,61 @@ void FileAdderEs::VisitFile(const boost::filesystem::path& sourcePath, const boo
 	const auto blobAddress = SaveFileContents(sourcePath);
 	if (!blobAddress)
 	{
-		// Expected some contents as this is a file
-		// TODO: Record this
 		return;
 	}
 
-	auto action = FileEventAction::Added;
-	if (previousEvent && blobAddress != previousEvent->contentBlobAddress)
+	// Assume added
+	auto action = FileEventAction::ChangedAdded;
+	if (previousEvent)
 	{
-		action = FileEventAction::Modified;
+		switch (previousEvent->action)
+		{
+			case FileEventAction::ChangedAdded:
+			case FileEventAction::ChangedModified:
+				if (previousEvent->contentBlobAddress == blobAddress)
+				{
+					EmitEvent(FileEvent(sourcePath, previousEvent->contentBlobAddress, FileEventAction::Unchanged));
+					return;
+				}
+				action = FileEventAction::ChangedModified;
+				break;
+			
+			case FileEventAction::ChangedRemoved:
+				break;
+		}
 	}
 
-	PushEvent(FileEvent(sourcePath, blobAddress, action));
+	EmitEvent(FileEvent(sourcePath, blobAddress, action));
 }
 
-void FileAdderEs::VisitDirectory(const boost::filesystem::path& sourcePath)
+void FileAdderEs::VisitDirectory(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
-	PushEvent(FileEvent(DirectoryPath(sourcePath), boost::none, FileEventAction::Added));
+	if (!previousEvent)
+	{
+		EmitEvent(FileEvent(DirectoryPath(sourcePath), boost::none, FileEventAction::ChangedAdded));
+	}
 }
 
-boost::optional<FileEvent> FileAdderEs::FindPreviousEvent(const boost::filesystem::path& fullPath) const
+boost::optional<FileEvent> FileAdderEs::FindPreviousEvent(
+	const std::map<boost::filesystem::path, FileEvent>& fileEvents,
+	const boost::filesystem::path& fullPath)
 {
-	const auto it = _lastEvents.find(fullPath);
-	if (it == _lastEvents.end())
+	const auto it = fileEvents.find(fullPath);
+	if (it == fileEvents.end())
 	{
 		return boost::none;
 	}
 	return it->second;
 }
 
-void FileAdderEs::PushEvent(const FileEvent& fileEvent)
+void FileAdderEs::EmitEvent(const FileEvent& fileEvent)
 {
-	_newEvents.push_back(fileEvent);
+	_emittedEvents.push_back(fileEvent);
+	_fileEventStreamRepository.AddEvent(fileEvent);
+	if (_subscriber)
+	{
+		_subscriber(fileEvent);
+	}
 }
 
 }

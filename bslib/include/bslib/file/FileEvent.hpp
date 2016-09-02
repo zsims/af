@@ -14,9 +14,15 @@ namespace file {
 
 enum class FileEventAction : int
 {
-	Added = 0,
-	Modified,
-	Removed
+	// Change in content or properties
+	ChangedAdded = 0,
+	ChangedModified,
+	ChangedRemoved,
+
+	// Status events
+	FailedToRead,
+	Unsupported,
+	Unchanged
 };
 
 struct FileEvent

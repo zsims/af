@@ -53,11 +53,11 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetAllEvents_Success)
 	blobRepo.AddBlob(blobInfo2);
 
 	const std::vector<FileEvent> expectedEvents = {
-		FileEvent("/foo", boost::none, FileEventAction::Added),
-		FileEvent("/foo", blobInfo1.GetAddress(), FileEventAction::Modified),
-		FileEvent("/foo", boost::none, FileEventAction::Modified),
-		FileEvent("/bar", blobInfo2.GetAddress(), FileEventAction::Added),
-		FileEvent("/foo", boost::none, FileEventAction::Removed)
+		FileEvent("/foo", boost::none, FileEventAction::ChangedAdded),
+		FileEvent("/foo", blobInfo1.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent("/foo", boost::none, FileEventAction::ChangedModified),
+		FileEvent("/bar", blobInfo2.GetAddress(), FileEventAction::ChangedAdded),
+		FileEvent("/foo", boost::none, FileEventAction::ChangedRemoved)
 	};
 	repo.AddEvents(expectedEvents);
 
@@ -68,7 +68,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetAllEvents_Success)
 	EXPECT_EQ(result, expectedEvents);
 }
 
-TEST_F(FileEventStreamRepositoryIntegrationTest, FindLastEvent_Success)
+TEST_F(FileEventStreamRepositoryIntegrationTest, FindLastGoodEvent_Success)
 {
 	// Arrange
 	FileEventStreamRepository repo(*_connection);
@@ -79,47 +79,48 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, FindLastEvent_Success)
 	blobRepo.AddBlob(blobInfo1);
 	blobRepo.AddBlob(blobInfo2);
 
-	const FileEvent expectedEvent("/then that", blobInfo2.GetAddress(), FileEventAction::Added);
+	const FileEvent expectedEvent("/then that", blobInfo2.GetAddress(), FileEventAction::ChangedAdded);
 	const std::vector<FileEvent> events = {
-		FileEvent("/something complex", boost::none, FileEventAction::Added),
-		FileEvent("/then that", blobInfo1.GetAddress(), FileEventAction::Modified),
-		FileEvent("/and this", boost::none, FileEventAction::Modified),
+		FileEvent("/something complex", boost::none, FileEventAction::ChangedAdded),
+		FileEvent("/then that", blobInfo1.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent("/and this", boost::none, FileEventAction::ChangedModified),
 		expectedEvent,
-		FileEvent("/Then that", blobInfo1.GetAddress(), FileEventAction::Modified),
-		FileEvent("/something", boost::none, FileEventAction::Removed)
+		FileEvent("/Then that", blobInfo1.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent("/then that", blobInfo1.GetAddress(), FileEventAction::Unchanged),
+		FileEvent("/something", boost::none, FileEventAction::ChangedRemoved)
 	};
 	repo.AddEvents(events);
 
 	// Act
-	const auto& found = repo.FindLastEvent("/then that");
+	const auto& found = repo.FindLastChangedEvent("/then that");
 
 	// Assert
 	ASSERT_TRUE(found);
 	EXPECT_EQ(found.value(), expectedEvent);
 }
 
-TEST_F(FileEventStreamRepositoryIntegrationTest, FindLastEvent_CaseSensitiveSuccess)
+TEST_F(FileEventStreamRepositoryIntegrationTest, FindLastGoodEvent_CaseSensitiveSuccess)
 {
 	// Arrange
 	FileEventStreamRepository repo(*_connection);
 
-	const FileEvent expectedEvent(R"(C:\Foo\bar.txt)", boost::none, FileEventAction::Modified);
+	const FileEvent expectedEvent(R"(C:\Foo\bar.txt)", boost::none, FileEventAction::ChangedModified);
 	const std::vector<FileEvent> events = {
-		FileEvent(R"(C:\oTher root\bar.txt)", boost::none, FileEventAction::Added),
+		FileEvent(R"(C:\oTher root\bar.txt)", boost::none, FileEventAction::ChangedAdded),
 		expectedEvent,
-		FileEvent(R"(C:\other root\bar.txt)", boost::none, FileEventAction::Removed),
+		FileEvent(R"(C:\other root\bar.txt)", boost::none, FileEventAction::ChangedRemoved),
 	};
 	repo.AddEvents(events);
 
 	// Act
-	const auto& found = repo.FindLastEvent(expectedEvent.fullPath);
+	const auto& found = repo.FindLastChangedEvent(expectedEvent.fullPath);
 
 	// Assert
 	ASSERT_TRUE(found);
 	EXPECT_EQ(found.value(), expectedEvent);
 }
 
-TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastEventsUnderPath_Success)
+TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastGoodEventsUnderPath_Success)
 {
 	// Arrange
 	FileEventStreamRepository repo(*_connection);
@@ -130,17 +131,18 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastEventsUnderPath_Success)
 	blobRepo.AddBlob(blobInfo2);
 
 	const std::vector<FileEvent> events = {
-		FileEvent("/root folder", boost::none, FileEventAction::Added),
-		FileEvent(R"(C:\other root\)", blobInfo1.GetAddress(), FileEventAction::Modified),
-		FileEvent(R"(C:\other root\something\baz.txt)", blobInfo2.GetAddress(), FileEventAction::Modified),
-		FileEvent(R"(C:\other something\)", boost::none, FileEventAction::Added),
-		FileEvent("/root folder/home", boost::none, FileEventAction::Removed),
-		FileEvent(R"(C:\other root\something\baz.txt)", blobInfo2.GetAddress(), FileEventAction::Modified),
-		FileEvent(R"(C:\other root\single.txt)", blobInfo2.GetAddress(), FileEventAction::Modified),
+		FileEvent("/root folder", boost::none, FileEventAction::ChangedAdded),
+		FileEvent(R"(C:\other root\)", blobInfo1.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(R"(C:\other root\something\baz.txt)", blobInfo2.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(R"(C:\other something\)", boost::none, FileEventAction::ChangedAdded),
+		FileEvent("/root folder/home", boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(R"(C:\other root\something\baz.txt)", blobInfo2.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(R"(C:\other root\single.txt)", blobInfo2.GetAddress(), FileEventAction::ChangedModified),
 		// Note the change in case, so shouldn't be included
-		FileEvent(R"(C:\Other root\single.txt)", blobInfo2.GetAddress(), FileEventAction::Modified),
-		FileEvent(R"(C:\other root\)", boost::none, FileEventAction::Modified),
-		FileEvent(R"(C:\other root hehehe\)", boost::none, FileEventAction::Modified),
+		FileEvent(R"(C:\Other root\single.txt)", blobInfo2.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(R"(C:\other root\)", boost::none, FileEventAction::ChangedModified),
+		FileEvent(R"(C:\other root\)", boost::none, FileEventAction::FailedToRead),
+		FileEvent(R"(C:\other root hehehe\)", boost::none, FileEventAction::ChangedModified),
 	};
 	repo.AddEvents(events);
 
@@ -151,7 +153,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastEventsUnderPath_Success)
 	};
 
 	// Act
-	const auto& result = repo.GetLastEventsStartingWithPath(R"(C:\other root\)");
+	const auto& result = repo.GetLastChangedEventsStartingWithPath(R"(C:\other root\)");
 
 	// Assert
 	std::vector<FileEvent> justEvents;
@@ -162,16 +164,16 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastEventsUnderPath_Success)
 	EXPECT_THAT(justEvents, ::testing::UnorderedElementsAreArray(expectedEvents));
 }
 
-TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastEventsUnderPath_HandlesSpecialCharactersSuccess)
+TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastGoodEventsUnderPath_HandlesSpecialCharactersSuccess)
 {
 	// Arrange
 	FileEventStreamRepository repo(*_connection);
 
 	const std::vector<FileEvent> events = {
-		FileEvent(R"(C:\Itsa\)", boost::none, FileEventAction::Modified),
-		FileEvent(R"(C:\Its_\)", boost::none, FileEventAction::Modified),
-		FileEvent(R"(C:\Its_\Here)", boost::none, FileEventAction::Modified),
-		FileEvent(R"(C:\Its \)", boost::none, FileEventAction::Modified),
+		FileEvent(R"(C:\Itsa\)", boost::none, FileEventAction::ChangedModified),
+		FileEvent(R"(C:\Its_\)", boost::none, FileEventAction::ChangedModified),
+		FileEvent(R"(C:\Its_\Here)", boost::none, FileEventAction::ChangedModified),
+		FileEvent(R"(C:\Its \)", boost::none, FileEventAction::ChangedModified),
 	};
 	repo.AddEvents(events);
 
@@ -181,7 +183,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastEventsUnderPath_HandlesS
 	};
 
 	// Act
-	const auto& result = repo.GetLastEventsStartingWithPath(R"(C:\Its_\)");
+	const auto& result = repo.GetLastChangedEventsStartingWithPath(R"(C:\Its_\)");
 
 	// Assert
 	std::vector<FileEvent> justEvents;
@@ -198,7 +200,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, AddEvent_NoBlobSuccess)
 	FileEventStreamRepository repo(*_connection);
 
 	const std::vector<FileEvent> events = {
-		FileEvent("/look/phil/no/hands", boost::none, FileEventAction::Modified),
+		FileEvent("/look/phil/no/hands", boost::none, FileEventAction::ChangedModified),
 	};
 
 	// Act
@@ -217,7 +219,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, AddEvent_MissingBlobThrows)
 
 	// Act
 	// Assert
-	ASSERT_THROW(repo.AddEvent(FileEvent("/look/phil/no/hands", madeUpBlobAddress, FileEventAction::Added)), AddFileEventFailedException);
+	ASSERT_THROW(repo.AddEvent(FileEvent("/look/phil/no/hands", madeUpBlobAddress, FileEventAction::ChangedAdded)), AddFileEventFailedException);
 }
 
 }
