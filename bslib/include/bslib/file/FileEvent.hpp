@@ -30,6 +30,13 @@ struct FileEvent
 		, action(action)
 	{
 	}
+	
+	// ANTHONY HEAAAAAAALP see http://stackoverflow.com/questions/14374802/boostoptional-with-const-members
+	FileEvent& operator=(const FileEvent&)
+	{
+		throw "this is not possible";
+		return *this;
+	}
 
 	const boost::filesystem::path fullPath;
 	const boost::optional<BlobAddress> contentBlobAddress;
