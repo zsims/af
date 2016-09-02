@@ -1,6 +1,6 @@
 #include <bslib/Forest.hpp>
 #include <bslib/exceptions.hpp>
-#include <bslib/file/FileAdder.hpp>
+#include <bslib/file/FileAdderEs.hpp>
 #include <bslib/file/exceptions.hpp>
 #include <bslib/blob/DirectoryBlobStore.hpp>
 
@@ -23,25 +23,14 @@ int Backup(const boost::filesystem::path& sourcePath, const boost::filesystem::p
 		forest.OpenOrCreate();
 
 		auto uow = forest.CreateUnitOfWork();
-		auto adder = uow->CreateFileAdder();
+		auto adder = uow->CreateFileAdderEs();
+
+		adder->SubscribeToEmit([](const auto& fileEvent) {
+			std::cout << fileEvent.action << " " << fileEvent.fullPath << std::endl;
+		});
+
 		adder->Add(sourcePath);
 		uow->Commit();
-
-		// Show what was added
-		const auto& added = adder->GetAddedPaths();
-		std::cout << "Added: " << std::endl;
-		for (const auto& addedPath : added)
-		{
-			std::cout << "  " << addedPath << std::endl;
-		}
-
-		const auto& skipped = adder->GetSkippedPaths();
-		std::cout << "Skipped: " << std::endl;
-		for (const auto& skippedPath : skipped)
-		{
-			std::cout << "  " << skippedPath << std::endl;
-		}
-
 		return 0;
 	}
 	catch (const af::bslib::file::PathNotFoundException& e)

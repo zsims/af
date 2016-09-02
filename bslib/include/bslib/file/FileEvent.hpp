@@ -56,6 +56,27 @@ struct FileEvent
 	}
 };
 
+inline std::ostream& operator<<(std::ostream & os, FileEventAction action)
+{
+	switch (action)
+	{
+		case FileEventAction::ChangedAdded:
+			return os << "Added";
+		case FileEventAction::ChangedModified:
+			return os << "Modified";
+		case FileEventAction::FailedToRead:
+			return os << "Failed to read";
+		case FileEventAction::Unsupported:
+			return os << "Unsupported";
+		case FileEventAction::ChangedRemoved:
+			return os << "Removed";
+		case FileEventAction::Unchanged:
+			return os << "Unchanged";
+	};
+
+	return os << "Unknown";
+}
+
 }
 }
 }
