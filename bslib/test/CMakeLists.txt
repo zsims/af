@@ -11,6 +11,7 @@ add_executable(
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
     src/file/FileAdderIntegrationTest.cpp
+    src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRefRepositoryIntegrationTest.cpp
     src/file/FileRestorerIntegrationTest.cpp
     src/file/FileObjectRepositoryIntegrationTest.cpp

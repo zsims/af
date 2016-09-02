@@ -30,6 +30,14 @@ void open_database_or_throw(const char* filename, sqlite3** ppDb, int flags);
 void prepare_or_throw(sqlite3* db, const char* sql, sqlite3_stmt** statement);
 
 /**
+ * Executes the given SQL or throws an exception. This is equivalent to calling sqlite3_exec and checking the return code.
+ * \param db The database connection
+ * \param sql The statement SQL
+ * \throws ExecuteFailedException The statement couldn't be prepared.
+ */
+void exec_or_throw(sqlite3* db, const char* sql);
+
+/**
  * Binds a text parameter by name (e.g. :Foo)
  * \param statement The statement to bind the parameter to
  * \param name The name of the parameter

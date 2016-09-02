@@ -20,7 +20,6 @@ ScopedTransaction::ScopedTransaction(sqlite3* db)
 	{
 		throw BeginTransactionFailedException((boost::format("Failed to start transaction. SQLite error %1%: %2%") % beginResult % errorMessage).str());
 	}
-
 	_isOpen = true;
 }
 

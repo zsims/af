@@ -26,6 +26,15 @@ void prepare_or_throw(sqlite3* db, const char* sql, sqlite3_stmt** statement)
 	}
 }
 
+void exec_or_throw(sqlite3* db, const char* sql)
+{
+	const auto executeResult = sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
+	if (executeResult != SQLITE_OK)
+	{
+		throw ExecuteFailedException(executeResult);
+	}
+}
+
 void BindByParameterNameText(sqlite3_stmt* statement, const std::string& name, const std::string& value)
 {
 	const auto index = sqlite3_bind_parameter_index(statement, name.c_str());

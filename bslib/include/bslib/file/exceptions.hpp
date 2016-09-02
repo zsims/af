@@ -23,6 +23,15 @@ public:
 	}
 };
 
+class EventNotFoundException : public std::runtime_error
+{
+public:
+	explicit EventNotFoundException(const std::string& message)
+		: std::runtime_error(message)
+	{
+	}
+};
+
 class RefNotFoundException : public std::runtime_error
 {
 public:
@@ -51,6 +60,20 @@ class AddObjectFailedException : public std::runtime_error
 public:
 	explicit AddObjectFailedException(const std::string& message)
 		: std::runtime_error(message)
+	{
+	}
+};
+
+class AddFileEventFailedException : public std::runtime_error
+{
+public:
+	explicit AddFileEventFailedException(const std::string& message)
+		: std::runtime_error(message)
+	{
+	}
+
+	explicit AddFileEventFailedException(int sqlError)
+		: std::runtime_error("Failed to insert file event object, SQL error " + std::to_string(sqlError))
 	{
 	}
 };

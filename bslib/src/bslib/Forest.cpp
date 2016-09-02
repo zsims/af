@@ -32,6 +32,7 @@ void Forest::Open()
 	// Share the connection between the repos, note that the repos should be destroyed before this connection is
 	_connection.reset(new sqlitepp::ScopedSqlite3Object());
 	sqlitepp::open_database_or_throw(_forestPath.string().c_str(), *_connection, SQLITE_OPEN_READWRITE);
+	sqlitepp::exec_or_throw(*_connection, "PRAGMA case_sensitive_like = true;");
 }
 
 void Forest::Create()
@@ -65,6 +66,12 @@ void Forest::Create()
 			CREATE TABLE FileRef (
 				FullPath TEXT NOT NULL PRIMARY KEY,
 				FileObjectId INTEGER NOT NULL REFERENCES FileObject (Id)
+			);
+			CREATE TABLE FileEvent (
+				Id INTEGER PRIMARY KEY AUTOINCREMENT,
+				FullPath TEXT NOT NULL COLLATE BINARY,
+				ContentBlobAddress BLOB(20) REFERENCES Blob (Address),
+				Action INTEGER NOT NULL
 			);
 		)";
 
