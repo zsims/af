@@ -75,14 +75,13 @@ TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithFile)
 	_adder->SubscribeToEmit([&](const auto& fileEvent) {
 		emittedEvents.push_back(fileEvent);
 	});
-	const std::vector<FileEvent> expectedEmittedEvents = {
-		FileEvent(filePath, fileAddress, FileEventAction::ChangedAdded)
-	};
-
 	// Act
 	_adder->Add(filePath);
 
 	// Assert
+	const std::vector<FileEvent> expectedEmittedEvents = {
+		FileEvent(filePath, fileAddress, FileEventAction::ChangedAdded)
+	};
 	EXPECT_TRUE(_finder->FindLastChangedEventByPath(filePath));
 	EXPECT_THAT(emittedEvents, ::testing::UnorderedElementsAreArray(expectedEmittedEvents));
 }
@@ -96,14 +95,13 @@ TEST_F(FileAdderEsIntegrationTest, Add_SkipsLockedFile)
 
 	bslib::test::utility::ScopedExclusiveFileAccess exclusiveAccess(filePath);
 
-	const std::vector<FileEvent> expectedEmittedEvents = {
-		FileEvent(filePath, boost::none, FileEventAction::FailedToRead)
-	};
-
 	// Act
 	_adder->Add(filePath);
 
 	// Assert
+	const std::vector<FileEvent> expectedEmittedEvents = {
+		FileEvent(filePath, boost::none, FileEventAction::FailedToRead)
+	};
 	EXPECT_FALSE(_finder->FindLastChangedEventByPath(filePath));
 	EXPECT_THAT(_adder->GetEmittedEvents(), ::testing::UnorderedElementsAreArray(expectedEmittedEvents));
 }
@@ -122,17 +120,16 @@ TEST_F(FileAdderEsIntegrationTest, Add_RecordsAllStates)
 	const auto preExistingAddress = CreateFile(preExistingPath, "heybby");
 	_adder->Add(preExistingPath);
 
+	// Act
+	_adder->Add(directoryPath);
+
+	// Assert
 	const std::vector<FileEvent> expectedAllEvents = {
 		FileEvent(preExistingPath, preExistingAddress, FileEventAction::ChangedAdded),
 		FileEvent(directoryPath, boost::none, FileEventAction::ChangedAdded),
 		FileEvent(preExistingPath, preExistingAddress, FileEventAction::Unchanged),
 		FileEvent(lockedFilePath, boost::none, FileEventAction::FailedToRead)
 	};
-
-	// Act
-	_adder->Add(directoryPath);
-
-	// Assert
 	const auto& allEvents = _finder->GetAllEvents();
 	EXPECT_EQ(allEvents, expectedAllEvents);
 }
@@ -153,14 +150,13 @@ TEST_F(FileAdderEsIntegrationTest, Add_EmptyDirectory)
 	const DirectoryPath path(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
 	boost::filesystem::create_directories(path);
 
-	const std::vector<FileEvent> expectedEmittedEvents = {
-		FileEvent(DirectoryPath(path), boost::none, FileEventAction::ChangedAdded)
-	};
-
 	// Act
 	_adder->Add(path);
 
 	// Assert
+	const std::vector<FileEvent> expectedEmittedEvents = {
+		FileEvent(DirectoryPath(path), boost::none, FileEventAction::ChangedAdded)
+	};
 	EXPECT_TRUE(_finder->FindLastChangedEventByPath(path));
 	EXPECT_THAT(_adder->GetEmittedEvents(), ::testing::UnorderedElementsAreArray(expectedEmittedEvents));
 }
@@ -176,17 +172,16 @@ TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithDirectory)
 	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
 	const auto fileAddress = CreateFile(filePath, "hello");
 
-	const std::vector<FileEvent> expectedEmittedEvents = {
-		FileEvent(path, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(deepDirectory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(filePath, fileAddress, FileEventAction::ChangedAdded)
-	};
-
 	// Act
 	_adder->Add(path);
 	_uow->Commit();
 
 	// Assert
+	const std::vector<FileEvent> expectedEmittedEvents = {
+		FileEvent(path, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(deepDirectory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(filePath, fileAddress, FileEventAction::ChangedAdded)
+	};
 	EXPECT_THAT(_adder->GetEmittedEvents(), ::testing::UnorderedElementsAreArray(expectedEmittedEvents));
 	EXPECT_TRUE(_finder->FindLastChangedEventByPath(path));
 	EXPECT_TRUE(_finder->FindLastChangedEventByPath(deepDirectory));
@@ -227,35 +222,32 @@ TEST_F(FileAdderEsIntegrationTest, Add_ExistingSuccessWithDirectory)
 	adder2->Add(path);
 	uow2->Commit();
 
+	// Assert
 	const std::vector<FileEvent> expectedSecondEmittedEvents = {
 		// Directories are unchanged, so they won't be here
 		FileEvent(filePath, updatedFileAddress, FileEventAction::ChangedModified),
 		FileEvent(deepFilePath, deepFileAddress, FileEventAction::ChangedAdded)
 	};
-
-	// Assert
 	EXPECT_THAT(adder2->GetEmittedEvents(), ::testing::UnorderedElementsAreArray(expectedSecondEmittedEvents));
+	auto uow3 = _forest->CreateUnitOfWork();
+	auto finder3 = uow3->CreateFileFinder();
+	EXPECT_TRUE(finder3->FindLastChangedEventByPath(path));
+	EXPECT_TRUE(finder3->FindLastChangedEventByPath(deepDirectory));
+	EXPECT_TRUE(finder3->FindLastChangedEventByPath(deepFilePath));
+	EXPECT_TRUE(finder3->FindLastChangedEventByPath(filePath));
+
+	// Deep file
 	{
-		auto uow3 = _forest->CreateUnitOfWork();
-		auto finder3 = uow3->CreateFileFinder();
-		EXPECT_TRUE(finder3->FindLastChangedEventByPath(path));
-		EXPECT_TRUE(finder3->FindLastChangedEventByPath(deepDirectory));
-		EXPECT_TRUE(finder3->FindLastChangedEventByPath(deepFilePath));
-		EXPECT_TRUE(finder3->FindLastChangedEventByPath(filePath));
+		const auto fileEvent = finder3->FindLastChangedEventByPath(deepFilePath);
+		ASSERT_TRUE(fileEvent);
+		EXPECT_EQ(helloBytes, uow3->GetBlob(fileEvent->contentBlobAddress.value()));
+	}
 
-		// Deep file
-		{
-			const auto fileEvent = finder3->FindLastChangedEventByPath(deepFilePath);
-			ASSERT_TRUE(fileEvent);
-			EXPECT_EQ(helloBytes, uow3->GetBlob(fileEvent->contentBlobAddress.value()));
-		}
-
-		// Updated file
-		{
-			const auto fileEvent = finder3->FindLastChangedEventByPath(filePath);
-			ASSERT_TRUE(fileEvent);
-			EXPECT_EQ(hellBytes, uow3->GetBlob(fileEvent->contentBlobAddress.value()));
-		}
+	// Updated file
+	{
+		const auto fileEvent = finder3->FindLastChangedEventByPath(filePath);
+		ASSERT_TRUE(fileEvent);
+		EXPECT_EQ(hellBytes, uow3->GetBlob(fileEvent->contentBlobAddress.value()));
 	}
 }
 
@@ -269,14 +261,6 @@ TEST_F(FileAdderEsIntegrationTest, Add_RespectsCase)
 	const auto fileAddress = CreateFile(samsonPath, "samson was here");
 	const auto samsonUpperPath = fooPath / "Samson.txt";
 
-	const std::vector<FileEvent> expectedEvents = {
-		FileEvent(path, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(fooPath, boost::none, FileEventAction::ChangedAdded),
-		// The old case isn't checked, so the same file may be in here twice
-		FileEvent(samsonPath, fileAddress, FileEventAction::ChangedAdded),
-		FileEvent(samsonUpperPath, fileAddress, FileEventAction::ChangedAdded),
-	};
-
 	_adder->Add(path);
 
 	// Recreate "Samson.txt", and note this should be tracked as completely new file
@@ -288,6 +272,13 @@ TEST_F(FileAdderEsIntegrationTest, Add_RespectsCase)
 	_uow->Commit();
 
 	// Assert
+	const std::vector<FileEvent> expectedEvents = {
+		FileEvent(path, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(fooPath, boost::none, FileEventAction::ChangedAdded),
+		// The old case isn't checked, so the same file may be in here twice
+		FileEvent(samsonPath, fileAddress, FileEventAction::ChangedAdded),
+		FileEvent(samsonUpperPath, fileAddress, FileEventAction::ChangedAdded),
+	};
 	auto uow2 = _forest->CreateUnitOfWork();
 	auto finder2 = uow2->CreateFileFinder();
 	const auto& result = finder2->GetLastChangedEventsStartingWithPath(path);
@@ -320,6 +311,26 @@ TEST_F(FileAdderEsIntegrationTest, Add_DetectsModifications)
 	const auto fizzPath = DirectoryPath(path / "fizz");
 	boost::filesystem::create_directories(fizzPath);
 
+	// Make not of the number of emitted events so we can work out what events were emitted in the second Add()
+	auto beforeCount = _adder->GetEmittedEvents().size();
+
+	// Act
+	_adder->Add(path);
+	_uow->Commit();
+
+	// Assert
+	const std::vector<FileEvent> expectedEmittedEvents = {
+		FileEvent(samsonPath, fileAddress, FileEventAction::ChangedModified),
+		FileEvent(barPath, boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(sakoPath, sakoContentAddress, FileEventAction::ChangedRemoved),
+		FileEvent(fizzPath, boost::none, FileEventAction::ChangedAdded)
+	};
+	const auto all = _adder->GetEmittedEvents();
+	std::vector<FileEvent> newEvents(all.begin() + beforeCount, all.end());
+	EXPECT_THAT(newEvents, ::testing::UnorderedElementsAreArray(expectedEmittedEvents));
+	auto uow2 = _forest->CreateUnitOfWork();
+	auto finder2 = uow2->CreateFileFinder();
+	const auto& result = finder2->GetLastChangedEventsStartingWithPath(path);
 	const std::vector<FileEvent> expectedEvents = {
 		FileEvent(path, boost::none, FileEventAction::ChangedAdded),
 		FileEvent(fooPath, boost::none, FileEventAction::ChangedAdded),
@@ -328,27 +339,6 @@ TEST_F(FileAdderEsIntegrationTest, Add_DetectsModifications)
 		FileEvent(barPath, boost::none, FileEventAction::ChangedRemoved),
 		FileEvent(fizzPath, boost::none, FileEventAction::ChangedAdded),
 	};
-
-	// Second log only
-	auto beforeCount = _adder->GetEmittedEvents().size();
-	const std::vector<FileEvent> expectedEmittedEvents = {
-		FileEvent(samsonPath, fileAddress, FileEventAction::ChangedModified),
-		FileEvent(barPath, boost::none, FileEventAction::ChangedRemoved),
-		FileEvent(sakoPath, sakoContentAddress, FileEventAction::ChangedRemoved),
-		FileEvent(fizzPath, boost::none, FileEventAction::ChangedAdded)
-	};
-
-	// Act
-	_adder->Add(path);
-	_uow->Commit();
-
-	// Assert
-	const auto all = _adder->GetEmittedEvents();
-	std::vector<FileEvent> newEvents(all.begin() + beforeCount, all.end());
-	EXPECT_THAT(newEvents, ::testing::UnorderedElementsAreArray(expectedEmittedEvents));
-	auto uow2 = _forest->CreateUnitOfWork();
-	auto finder2 = uow2->CreateFileFinder();
-	const auto& result = finder2->GetLastChangedEventsStartingWithPath(path);
 	EXPECT_THAT(expectedEvents, ::testing::UnorderedElementsAreArray(result | boost::adaptors::map_values));
 }
 
@@ -365,17 +355,16 @@ TEST_F(FileAdderEsIntegrationTest, Add_HandlesChangeInType)
 	boost::filesystem::remove_all(fooDirectoryPath);
 	const auto fileAddress = CreateFile(fooFilePath, "samson was here");
 
-	const std::vector<FileEvent> expectedEvents = {
-		FileEvent(path, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(fooDirectoryPath, boost::none, FileEventAction::ChangedRemoved),
-		FileEvent(fooFilePath, fileAddress, FileEventAction::ChangedAdded)
-	};
-
 	// Act
 	_adder->Add(path);
 	_uow->Commit();
 
 	// Assert
+	const std::vector<FileEvent> expectedEvents = {
+		FileEvent(path, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(fooDirectoryPath, boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(fooFilePath, fileAddress, FileEventAction::ChangedAdded)
+	};
 	auto uow2 = _forest->CreateUnitOfWork();
 	auto finder2 = uow2->CreateFileFinder();
 	const auto& result = finder2->GetLastChangedEventsStartingWithPath(path);
