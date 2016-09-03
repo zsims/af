@@ -13,7 +13,7 @@ class NullBlobStore : public BlobStore
 {
 public:
 	void CreateBlob(const BlobAddress& address, const std::vector<uint8_t>& content) override { }
-	std::vector<uint8_t> GetBlob(const BlobAddress& address) override { return std::vector<uint8_t>(); }
+	std::vector<uint8_t> GetBlob(const BlobAddress& address) const override { return std::vector<uint8_t>(); }
 };
 
 }

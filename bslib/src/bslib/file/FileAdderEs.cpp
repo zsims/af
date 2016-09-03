@@ -2,7 +2,7 @@
 
 #include "bslib/blob/BlobStore.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
-#include "bslib/file/DirectoryPath.hpp"
+#include "bslib/file/path_util.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileEventStreamRepository.hpp"
 
@@ -61,7 +61,7 @@ void FileAdderEs::Add(const boost::filesystem::path& sourcePath)
 	}
 	else if (boost::filesystem::is_directory(sourcePath))
 	{
-		ScanDirectory(DirectoryPath(sourcePath));
+		ScanDirectory(EnsureTrailingSlashCopy(sourcePath));
 	}
 	else
 	{
@@ -86,7 +86,7 @@ void FileAdderEs::ScanDirectory(const boost::filesystem::path& sourcePath)
 		// Directories should always be processed with a slash
 		if (boost::filesystem::is_directory(path))
 		{
-			path = DirectoryPath(path);
+			EnsureTrailingSlash(path);
 		}
 
 		VisitPath(path, FindPreviousEvent(lastChangeEvents, path));
@@ -161,7 +161,7 @@ void FileAdderEs::VisitDirectory(const boost::filesystem::path& sourcePath, cons
 {
 	if (!previousEvent)
 	{
-		EmitEvent(DirectoryEvent(DirectoryPath(sourcePath), FileEventAction::ChangedAdded));
+		EmitEvent(DirectoryEvent(EnsureTrailingSlashCopy(sourcePath), FileEventAction::ChangedAdded));
 	}
 }
 

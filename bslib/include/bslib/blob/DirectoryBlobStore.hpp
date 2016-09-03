@@ -18,7 +18,7 @@ class DirectoryBlobStore : public BlobStore
 public:
 	explicit DirectoryBlobStore(const boost::filesystem::path& rootPath);
 	void CreateBlob(const BlobAddress& address, const std::vector<uint8_t>& content) override;
-	std::vector<uint8_t> GetBlob(const BlobAddress& address) override;
+	std::vector<uint8_t> GetBlob(const BlobAddress& address) const override;
 private:
 	const boost::filesystem::path _rootPath;
 };

@@ -55,7 +55,6 @@ private:
 	blob::BlobStore& _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;
 	FileEventStreamRepository& _fileEventStreamRepository;
-
 	std::vector<FileEvent> _emittedEvents;
 	EventManager<FileEvent> _eventManager;
 };

@@ -27,6 +27,7 @@ public:
 	std::unique_ptr<file::FileAdder> CreateFileAdder() override;
 	std::unique_ptr<file::FileAdderEs> CreateFileAdderEs() override;
 	std::unique_ptr<file::FileRestorer> CreateFileRestorer() override;
+	std::unique_ptr<file::FileRestorerEs> CreateFileRestorerEs() override;
 	std::unique_ptr<file::FileFinder> CreateFileFinder() override;
 	std::vector<uint8_t> GetBlob(const BlobAddress& address) const override;
 private:
