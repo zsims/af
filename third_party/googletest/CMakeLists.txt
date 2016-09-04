@@ -11,7 +11,7 @@ ExternalBuild_Add(
     build_googletest
     SOURCE_DIR "${SOURCE_DIR}"
     BUILD_DIR_VAR BUILD_DIR
-    CUSTOM_STAMP_FILE "${CACHE_DIR}/eb.success"
+    CUSTOM_STAMP_FILE "${CUSTOM_STAMP_FILE}"
 )
 set_property(TARGET build_googletest PROPERTY FOLDER "third_party")
 
