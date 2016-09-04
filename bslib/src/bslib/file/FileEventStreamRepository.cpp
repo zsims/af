@@ -39,14 +39,14 @@ FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlit
 	)", _getAllEventsStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
 		SELECT Id, FullPath, ContentBlobAddress, Action FROM FileEvent
-		WHERE FullPath LIKE :Needle ESCAPE '"'
+		WHERE FullPath LIKE :Needle ESCAPE '"' AND Action IN (0, 1, 2)
 		GROUP BY FullPath HAVING Id = max(Id)
-	)", _getLastEventsUnderPathStatement);
+	)", _getLastChangedEventsUnderPathStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
 		SELECT Id, FullPath, ContentBlobAddress, Action FROM FileEvent
-		WHERE FullPath = :FullPath
+		WHERE FullPath = :FullPath AND Action IN (0, 1, 2)
 		ORDER BY Id DESC LIMIT 1
-	)", _getLastEventByPathStatement);
+	)", _getLastChangedEventByPathStatement);
 }
 
 std::vector<FileEvent> FileEventStreamRepository::GetAllEvents() const
@@ -63,7 +63,7 @@ std::vector<FileEvent> FileEventStreamRepository::GetAllEvents() const
 	return result;
 }
 
-std::map<boost::filesystem::path, FileEvent> FileEventStreamRepository::GetLastEventsStartingWithPath(const boost::filesystem::path& fullPath) const
+std::map<boost::filesystem::path, FileEvent> FileEventStreamRepository::GetLastChangedEventsStartingWithPath(const boost::filesystem::path& fullPath) const
 {
 	std::map<boost::filesystem::path, FileEvent> result;
 
@@ -74,13 +74,13 @@ std::map<boost::filesystem::path, FileEvent> FileEventStreamRepository::GetLastE
 	boost::replace_all(needle, "_", "\"_");
 	needle += "%";
 
-	sqlitepp::ScopedStatementReset reset(_getLastEventsUnderPathStatement);
-	sqlitepp::BindByParameterNameText(_getLastEventsUnderPathStatement, ":Needle", needle);
+	sqlitepp::ScopedStatementReset reset(_getLastChangedEventsUnderPathStatement);
+	sqlitepp::BindByParameterNameText(_getLastChangedEventsUnderPathStatement, ":Needle", needle);
 
 	auto stepResult = 0;
-	while ((stepResult = sqlite3_step(_getLastEventsUnderPathStatement)) == SQLITE_ROW)
+	while ((stepResult = sqlite3_step(_getLastChangedEventsUnderPathStatement)) == SQLITE_ROW)
 	{
-		const auto& row = MapRowToEvent(_getLastEventsUnderPathStatement);
+		const auto& row = MapRowToEvent(_getLastChangedEventsUnderPathStatement);
 		result.insert(std::make_pair(row.fullPath, row));
 	}
 
@@ -93,9 +93,12 @@ void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent)
 	const auto& rawPath = fileEvent.fullPath.string();
 	sqlitepp::BindByParameterNameText(_insertEventStatement, ":FullPath", rawPath);
 
+	// TODO: This has to stay in scope for the duration of the statement, find a better way to do this without copying
+	binary_address binaryContentAddress;
+
 	if (fileEvent.contentBlobAddress)
 	{
-		const auto binaryContentAddress = fileEvent.contentBlobAddress.value().ToBinary();
+		binaryContentAddress = fileEvent.contentBlobAddress.value().ToBinary();
 		sqlitepp::BindByParameterNameBlob(_insertEventStatement, ":ContentBlobAddress", &binaryContentAddress[0], binaryContentAddress.size());
 	}
 	else
@@ -112,19 +115,19 @@ void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent)
 	}
 }
 
-boost::optional<FileEvent> FileEventStreamRepository::FindLastEvent(const boost::filesystem::path& fullPath) const
+boost::optional<FileEvent> FileEventStreamRepository::FindLastChangedEvent(const boost::filesystem::path& fullPath) const
 {
-	sqlitepp::ScopedStatementReset reset(_getLastEventByPathStatement);
+	sqlitepp::ScopedStatementReset reset(_getLastChangedEventByPathStatement);
 	const auto& rawPath = fullPath.string();
-	sqlitepp::BindByParameterNameText(_getLastEventByPathStatement, ":FullPath", rawPath);
+	sqlitepp::BindByParameterNameText(_getLastChangedEventByPathStatement, ":FullPath", rawPath);
 
-	auto stepResult = sqlite3_step(_getLastEventByPathStatement);
+	auto stepResult = sqlite3_step(_getLastChangedEventByPathStatement);
 	if (stepResult != SQLITE_ROW)
 	{
 		return boost::none;
 	}
 
-	return MapRowToEvent(_getLastEventByPathStatement);
+	return MapRowToEvent(_getLastChangedEventByPathStatement);
 }
 
 FileEvent FileEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStatement& statement) const

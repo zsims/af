@@ -6,6 +6,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/optional.hpp>
 
+#include <functional>
 #include <vector>
 #include <map>
 
@@ -17,6 +18,8 @@ class BlobStore;
 }
 namespace file {
 class FileEventStreamRepository;
+
+typedef std::function<void(const FileEvent& fileEvent)> EmitEventFn;
 
 /**
  * Adds files to the backup
@@ -35,24 +38,31 @@ public:
 	* \exception SourcePathNotSupportedException The given source isn't a file or directory
 	*/
 	void Add(const boost::filesystem::path& sourcePath);
+
+	/**
+	 * Subscribes the given callback to be called whenever an event is emitted
+	 */
+	void SubscribeToEmit(EmitEventFn function) { _subscriber = function; }
+	
+	const std::vector<FileEvent>& GetEmittedEvents() { return _emittedEvents; }
 private:
 	boost::optional<BlobAddress> SaveFileContents(const boost::filesystem::path& sourcePath);
 
 	void ScanDirectory(const boost::filesystem::path& sourcePath);
-	void VisitPath(const boost::filesystem::path& sourcePath);
+	void VisitPath(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent);
 	void VisitFile(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent);
-	void VisitDirectory(const boost::filesystem::path& sourcePath);
+	void VisitDirectory(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent);
+	void EmitEvent(const FileEvent& fileEvent);
+	static boost::optional<FileEvent> FindPreviousEvent(
+		const std::map<boost::filesystem::path, FileEvent>& fileEvents,
+		const boost::filesystem::path& fullPath);
 
 	blob::BlobStore& _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;
 	FileEventStreamRepository& _fileEventStreamRepository;
 
-	boost::optional<FileEvent> FindPreviousEvent(const boost::filesystem::path& fullPath) const;
-	void PushEvent(const FileEvent& fileEvent);
-
-	// For building state
-	std::map<boost::filesystem::path, FileEvent> _lastEvents;
-	std::vector<FileEvent> _newEvents;
+	std::vector<FileEvent> _emittedEvents;
+	EmitEventFn _subscriber;
 };
 
 }

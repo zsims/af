@@ -34,24 +34,29 @@ FileObject FileFinder::GetObjectById(foid id) const
 	return _fileObjectRepository.GetObject(id);
 }
 
-boost::optional<FileEvent> FileFinder::FindLastEventByPath(const boost::filesystem::path& fullPath) const
+boost::optional<FileEvent> FileFinder::FindLastChangedEventByPath(const boost::filesystem::path& fullPath) const
 {
-	return _fileEventStreamRepository.FindLastEvent(fullPath);
+	return _fileEventStreamRepository.FindLastChangedEvent(fullPath);
 }
 
-std::map<boost::filesystem::path, FileEvent> FileFinder::GetLastEventsStartingWithPath(const boost::filesystem::path& fullPath) const
+std::map<boost::filesystem::path, FileEvent> FileFinder::GetLastChangedEventsStartingWithPath(const boost::filesystem::path& fullPath) const
 {
-	return _fileEventStreamRepository.GetLastEventsStartingWithPath(fullPath);
+	return _fileEventStreamRepository.GetLastChangedEventsStartingWithPath(fullPath);
 }
 
 FileEvent FileFinder::GetLastEventByPath(const boost::filesystem::path& fullPath) const
 {
-	const auto ev = _fileEventStreamRepository.FindLastEvent(fullPath);
+	const auto ev = _fileEventStreamRepository.FindLastChangedEvent(fullPath);
 	if (!ev)
 	{
 		throw EventNotFoundException("Event with path " + fullPath.string() + " not found");
 	}
 	return ev.value();
+}
+
+std::vector<FileEvent> FileFinder::GetAllEvents() const
+{
+	return _fileEventStreamRepository.GetAllEvents();
 }
 
 }
