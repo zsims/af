@@ -93,9 +93,12 @@ void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent)
 	const auto& rawPath = fileEvent.fullPath.string();
 	sqlitepp::BindByParameterNameText(_insertEventStatement, ":FullPath", rawPath);
 
+	// TODO: This has to stay in scope for the duration of the statement, find a better way to do this without copying
+	binary_address binaryContentAddress;
+
 	if (fileEvent.contentBlobAddress)
 	{
-		const auto binaryContentAddress = fileEvent.contentBlobAddress.value().ToBinary();
+		binaryContentAddress = fileEvent.contentBlobAddress.value().ToBinary();
 		sqlitepp::BindByParameterNameBlob(_insertEventStatement, ":ContentBlobAddress", &binaryContentAddress[0], binaryContentAddress.size());
 	}
 	else
