@@ -1,0 +1,1 @@
+add_subdirectory(bs_backup_cli)
