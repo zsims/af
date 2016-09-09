@@ -13,6 +13,7 @@ add_library(
     include/bslib/blob/BlobStore.hpp
     include/bslib/blob/DirectoryBlobStore.hpp
     include/bslib/blob/NullBlobStore.hpp
+    include/bslib/EventManager.hpp
     include/bslib/file/exceptions.hpp
     include/bslib/file/FileAdder.hpp
     include/bslib/file/FileAdderEs.hpp
