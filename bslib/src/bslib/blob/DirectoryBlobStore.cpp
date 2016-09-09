@@ -30,7 +30,7 @@ void DirectoryBlobStore::CreateBlob(const BlobAddress& address, const std::vecto
 	std::copy(content.begin(), content.end(), std::ostreambuf_iterator<char>(f));
 }
 
-std::vector<uint8_t> DirectoryBlobStore::GetBlob(const BlobAddress& address)
+std::vector<uint8_t> DirectoryBlobStore::GetBlob(const BlobAddress& address) const
 {
 	std::vector<uint8_t> result;
 	const auto stringAddress = address.ToString();

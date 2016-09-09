@@ -15,10 +15,12 @@ add_executable(
     src/file/FileAdderIntegrationTest.cpp
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRefRepositoryIntegrationTest.cpp
+    src/file/FileRestorerEsIntegrationTest.cpp
     src/file/FileRestorerIntegrationTest.cpp
     src/file/FileObjectRepositoryIntegrationTest.cpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp
+    src/utility/matchers.cpp
     src/utility/matchers.hpp
     src/utility/ScopedExclusiveFileAccess.cpp
     src/utility/ScopedExclusiveFileAccess.hpp
