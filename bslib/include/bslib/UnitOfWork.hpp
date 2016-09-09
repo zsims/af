@@ -1,10 +1,8 @@
 #pragma once
 
 #include "bslib/Address.hpp"
-#include "bslib/file/FileAdder.hpp"
 #include "bslib/file/FileAdderEs.hpp"
 #include "bslib/file/FileFinder.hpp"
-#include "bslib/file/FileRestorer.hpp"
 #include "bslib/file/FileRestorerEs.hpp"
 
 #include <boost/core/noncopyable.hpp>
@@ -28,13 +26,11 @@ public:
 	/**
 	 * Creates a file adder for backing up files and directories.
 	 */
-	virtual std::unique_ptr<file::FileAdder> CreateFileAdder() = 0;
 	virtual std::unique_ptr<file::FileAdderEs> CreateFileAdderEs() = 0;
 
 	/**
 	 * Creates a file restorer for restoring files and directories.
 	 */
-	virtual std::unique_ptr<file::FileRestorer> CreateFileRestorer() = 0;
 	virtual std::unique_ptr<file::FileRestorerEs> CreateFileRestorerEs() = 0;
 
 	/**

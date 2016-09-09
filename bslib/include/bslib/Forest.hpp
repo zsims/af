@@ -1,7 +1,6 @@
 #pragma once
 
 #include "bslib/Address.hpp"
-#include "bslib/file/FileObject.hpp"
 #include "bslib/UnitOfWork.hpp"
 
 #include <boost/filesystem/path.hpp>
@@ -15,10 +14,6 @@ namespace bslib {
 namespace blob {
 class BlobInfoRepository;
 class BlobStore;
-}
-
-namespace file {
-class FileObjectRepository;
 }
 
 namespace sqlitepp {

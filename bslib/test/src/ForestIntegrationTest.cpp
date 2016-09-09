@@ -4,7 +4,8 @@
 #include "bslib/blob/exceptions.hpp"
 #include "bslib/blob/NullBlobStore.hpp"
 #include "bslib/file/exceptions.hpp"
-#include "bslib/file/FileAdder.hpp"
+#include "bslib/file/FileAdderEs.hpp"
+#include "bslib/file/path_util.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -81,12 +82,12 @@ TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
 	// Arrange
 	_forest->Create();
 
-	file::foid fileId;
+	const auto targetPath = file::EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
 	{
 		auto uow = _forest->CreateUnitOfWork();
-		auto adder = uow->CreateFileAdder();
-		const std::vector<uint8_t> content = { 1, 2, 3, 4 };
-		fileId = adder->Add("/here/it/is", content);
+		auto adder = uow->CreateFileAdderEs();
+		boost::filesystem::create_directories(targetPath);
+		adder->Add(targetPath);
 		// Act
 		uow->Commit();
 	}
@@ -95,7 +96,7 @@ TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
 	{
 		auto uow = _forest->CreateUnitOfWork();
 		auto finder = uow->CreateFileFinder();
-		EXPECT_EQ(fileId, finder->FindObjectById(fileId)->id);
+		EXPECT_TRUE(finder->FindLastChangedEventByPath(targetPath));
 	}
 }
 
@@ -117,39 +118,20 @@ TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
 	_forest->Create();
 
 	// Act
-	file::foid fileId;
+	const auto targetPath = file::EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
 	{
 		auto uow = _forest->CreateUnitOfWork();
-		auto adder = uow->CreateFileAdder();
-		const std::vector<uint8_t> content = { 1, 2, 3, 4 };
-		fileId = adder->Add("/somewhere", content);
+		auto adder = uow->CreateFileAdderEs();
+		boost::filesystem::create_directories(targetPath);
+		adder->Add(targetPath);
 	}
 
 	// Assert
 	{
 		auto uow = _forest->CreateUnitOfWork();
 		auto finder = uow->CreateFileFinder();
-		EXPECT_THROW(finder->GetObjectById(fileId), file::ObjectNotFoundException);
+		EXPECT_FALSE(finder->FindLastChangedEventByPath(targetPath));
 	}
-}
-
-TEST_F(ForestIntegrationTest, CreateBlobDuplicateSuccess)
-{
-	// Arrange
-	_forest->Create();
-	auto uow = _forest->CreateUnitOfWork();
-	const std::vector<uint8_t> content = {1, 2, 3, 4};
-
-	// Act
-	auto adder = uow->CreateFileAdder();
-	const auto object1 = adder->Add("/somewhere", content);
-	const auto object2 = adder->Add("/otherwhere", content);
-	auto finder = uow->CreateFileFinder();
-	const auto blobAddress = finder->GetObjectById(object1).contentBlobAddress;
-	const auto blobAddress2 = finder->GetObjectById(object2).contentBlobAddress;
-
-	// Assert
-	EXPECT_EQ(blobAddress, blobAddress2);
 }
 
 TEST_F(ForestIntegrationTest, OpenOrCreateExisting)

@@ -15,15 +15,11 @@ add_library(
     include/bslib/blob/NullBlobStore.hpp
     include/bslib/EventManager.hpp
     include/bslib/file/exceptions.hpp
-    include/bslib/file/FileAdder.hpp
     include/bslib/file/FileAdderEs.hpp
     include/bslib/file/FileEvent.hpp
     include/bslib/file/FileRestoreEvent.hpp
     include/bslib/file/FileFinder.hpp
-    include/bslib/file/FileRef.hpp
-    include/bslib/file/FileRestorer.hpp
     include/bslib/file/FileRestorerEs.hpp
-    include/bslib/file/FileObject.hpp
     include/bslib/UnitOfWork.hpp
     src/bslib/Address.cpp
     src/bslib/blob/BlobInfo.hpp
@@ -34,17 +30,11 @@ add_library(
     src/bslib/Forest.cpp
     src/bslib/ForestUnitOfWork.cpp
     src/bslib/ForestUnitOfWork.hpp
-    src/bslib/file/FileAdder.cpp
     src/bslib/file/FileAdderEs.cpp
     src/bslib/file/FileEventStreamRepository.cpp
     src/bslib/file/FileEventStreamRepository.hpp
     src/bslib/file/FileFinder.cpp
-    src/bslib/file/FileRefRepository.cpp
-    src/bslib/file/FileRefRepository.hpp
-    src/bslib/file/FileRestorer.cpp
     src/bslib/file/FileRestorerEs.cpp
-    src/bslib/file/FileObjectRepository.cpp
-    src/bslib/file/FileObjectRepository.hpp
     src/bslib/file/path_util.cpp
     src/bslib/file/path_util.hpp
     src/bslib/sqlitepp/exceptions.hpp

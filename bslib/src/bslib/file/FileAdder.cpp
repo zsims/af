@@ -1,4 +1,3 @@
-#include "bslib/file/FileAdder.hpp"
 
 #include "bslib/blob/BlobStore.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
