@@ -49,25 +49,32 @@ boost::optional<blob::Address> FileAdderEs::SaveFileContents(const boost::filesy
 
 void FileAdderEs::Add(const boost::filesystem::path& sourcePath)
 {
-	if (!boost::filesystem::exists(sourcePath))
+	// Get the full path resolving symlinks and . + .. references
+	// This also checks the path exists
+	boost::system::error_code ec;
+	auto canonicalPath = boost::filesystem::canonical(sourcePath, ec);
+	if (ec != boost::system::errc::success)
 	{
-		throw PathNotFoundException(sourcePath.string());
+		throw PathNotFoundException(canonicalPath.string());
 	}
 
-	if (boost::filesystem::is_regular_file(sourcePath))
+	// Ensure slashes are using the system preferred / or \, this is important as canonical() doesn't do this
+	// (in fact, it changes the root \ to / on Windows :/)
+	canonicalPath.make_preferred();
+
+	if (boost::filesystem::is_regular_file(canonicalPath))
 	{
-		const auto previousEvent = _fileEventStreamRepository.FindLastChangedEvent(sourcePath);
-		VisitPath(sourcePath, previousEvent);
+		const auto previousEvent = _fileEventStreamRepository.FindLastChangedEvent(canonicalPath);
+		VisitPath(canonicalPath, previousEvent);
 	}
-	else if (boost::filesystem::is_directory(sourcePath))
+	else if (boost::filesystem::is_directory(canonicalPath))
 	{
-		ScanDirectory(EnsureTrailingSlashCopy(sourcePath));
+		ScanDirectory(EnsureTrailingSlashCopy(canonicalPath));
 	}
 	else
 	{
-		throw SourcePathNotSupportedException(sourcePath.string());
+		throw SourcePathNotSupportedException(canonicalPath.string());
 	}
-
 }
 
 void FileAdderEs::ScanDirectory(const boost::filesystem::path& sourcePath)
