@@ -72,7 +72,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithFile)
 	const auto fileAddress = CreateFile(filePath, "hello");
 
 	std::vector<FileEvent> emittedEvents;
-	_adder->SubscribeToEmit([&](const auto& fileEvent) {
+	_adder->GetEventManager().Subscribe([&](const auto& fileEvent) {
 		emittedEvents.push_back(fileEvent);
 	});
 	// Act

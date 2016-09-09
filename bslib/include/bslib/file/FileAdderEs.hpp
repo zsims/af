@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bslib/Address.hpp"
+#include "bslib/EventManager.hpp"
 #include "bslib/file/FileEvent.hpp"
 
 #include <boost/filesystem/path.hpp>
@@ -18,8 +19,6 @@ class BlobStore;
 }
 namespace file {
 class FileEventStreamRepository;
-
-typedef std::function<void(const FileEvent& fileEvent)> EmitEventFn;
 
 /**
  * Adds files to the backup
@@ -39,12 +38,8 @@ public:
 	*/
 	void Add(const boost::filesystem::path& sourcePath);
 
-	/**
-	 * Subscribes the given callback to be called whenever an event is emitted
-	 */
-	void SubscribeToEmit(EmitEventFn function) { _subscriber = function; }
-	
 	const std::vector<FileEvent>& GetEmittedEvents() { return _emittedEvents; }
+	EventManager<FileEvent>& GetEventManager() { return _eventManager; }
 private:
 	boost::optional<BlobAddress> SaveFileContents(const boost::filesystem::path& sourcePath);
 
@@ -62,7 +57,7 @@ private:
 	FileEventStreamRepository& _fileEventStreamRepository;
 
 	std::vector<FileEvent> _emittedEvents;
-	EmitEventFn _subscriber;
+	EventManager<FileEvent> _eventManager;
 };
 
 }
