@@ -9,8 +9,6 @@ ForestUnitOfWork::ForestUnitOfWork(const sqlitepp::ScopedSqlite3Object& connecti
 	: _transaction(connection)
 	, _blobStore(blobStore)
 	, _blobInfoRepository(connection)
-	, _fileObjectRepository(connection)
-	, _fileRefRepository(connection)
 	, _fileEventStreamRepository(connection)
 {
 }
@@ -32,7 +30,7 @@ std::unique_ptr<file::FileRestorerEs> ForestUnitOfWork::CreateFileRestorerEs()
 
 std::unique_ptr<file::FileFinder> ForestUnitOfWork::CreateFileFinder()
 {
-	return std::make_unique<file::FileFinder>(_fileObjectRepository, _fileRefRepository, _fileEventStreamRepository);
+	return std::make_unique<file::FileFinder>(_fileEventStreamRepository);
 }
 
 std::vector<uint8_t> ForestUnitOfWork::GetBlob(const BlobAddress& address) const
