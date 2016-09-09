@@ -25,7 +25,7 @@ int Backup(const boost::filesystem::path& sourcePath, const boost::filesystem::p
 		auto uow = forest.CreateUnitOfWork();
 		auto adder = uow->CreateFileAdderEs();
 
-		adder->SubscribeToEmit([](const auto& fileEvent) {
+		adder->GetEventManager().Subscribe([](const auto& fileEvent) {
 			std::cout << fileEvent.action << " " << fileEvent.fullPath << std::endl;
 		});
 

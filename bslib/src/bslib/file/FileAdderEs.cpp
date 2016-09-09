@@ -181,10 +181,7 @@ void FileAdderEs::EmitEvent(const FileEvent& fileEvent)
 {
 	_emittedEvents.push_back(fileEvent);
 	_fileEventStreamRepository.AddEvent(fileEvent);
-	if (_subscriber)
-	{
-		_subscriber(fileEvent);
-	}
+	_eventManager.Publish(fileEvent);
 }
 
 }
