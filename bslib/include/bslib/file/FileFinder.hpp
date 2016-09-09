@@ -12,8 +12,6 @@ namespace af {
 namespace bslib {
 namespace file {
 
-class FileRefRepository;
-class FileObjectRepository;
 class FileEventStreamRepository;
 
 /**

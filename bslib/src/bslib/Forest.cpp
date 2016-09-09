@@ -57,16 +57,6 @@ void Forest::Create()
 				Address BLOB (20) PRIMARY KEY,
 				SizeBytes INTEGER (8) NOT NULL
 			);
-			CREATE TABLE FileObject (
-				Id INTEGER PRIMARY KEY,
-				ContentBlobAddress BLOB(20) REFERENCES Blob (Address),
-				ParentId INTEGER REFERENCES FileObject (Id),
-				FullPath TEXT NOT NULL
-			);
-			CREATE TABLE FileRef (
-				FullPath TEXT NOT NULL PRIMARY KEY,
-				FileObjectId INTEGER NOT NULL REFERENCES FileObject (Id)
-			);
 			CREATE TABLE FileEvent (
 				Id INTEGER PRIMARY KEY AUTOINCREMENT,
 				FullPath TEXT NOT NULL COLLATE BINARY,
