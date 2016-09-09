@@ -32,7 +32,7 @@ boost::optional<BlobAddress> FileAdderEs::SaveFileContents(const boost::filesyst
 
 	if (!file)
 	{
-		EmitEvent(FileEvent(sourcePath, FileType::RegularFile, boost::none, FileEventAction::FailedToRead));
+		EmitEvent(RegularFileEvent(sourcePath, boost::none, FileEventAction::FailedToRead));
 		return boost::none;
 	}
 
@@ -143,7 +143,7 @@ void FileAdderEs::VisitFile(const boost::filesystem::path& sourcePath, const boo
 			case FileEventAction::ChangedModified:
 				if (previousEvent->contentBlobAddress == blobAddress)
 				{
-					EmitEvent(FileEvent(sourcePath, FileType::RegularFile, previousEvent->contentBlobAddress, FileEventAction::Unchanged));
+					EmitEvent(RegularFileEvent(sourcePath, previousEvent->contentBlobAddress, FileEventAction::Unchanged));
 					return;
 				}
 				action = FileEventAction::ChangedModified;
@@ -154,14 +154,14 @@ void FileAdderEs::VisitFile(const boost::filesystem::path& sourcePath, const boo
 		}
 	}
 
-	EmitEvent(FileEvent(sourcePath, FileType::RegularFile, blobAddress, action));
+	EmitEvent(RegularFileEvent(sourcePath, blobAddress, action));
 }
 
 void FileAdderEs::VisitDirectory(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
 	if (!previousEvent)
 	{
-		EmitEvent(FileEvent(DirectoryPath(sourcePath), FileType::Directory, boost::none, FileEventAction::ChangedAdded));
+		EmitEvent(DirectoryEvent(DirectoryPath(sourcePath), FileEventAction::ChangedAdded));
 	}
 }
 

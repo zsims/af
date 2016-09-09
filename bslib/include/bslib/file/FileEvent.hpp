@@ -45,7 +45,7 @@ struct FileEvent
 		, action(action)
 	{
 	}
-	
+
 	// ANTHONY HEAAAAAAALP see http://stackoverflow.com/questions/14374802/boostoptional-with-const-members
 	FileEvent& operator=(const FileEvent&)
 	{
@@ -64,6 +64,27 @@ struct FileEvent
 			type == rhs.type &&
 			contentBlobAddress == rhs.contentBlobAddress &&
 			action == rhs.action;
+	}
+};
+
+struct DirectoryEvent : public FileEvent
+{
+	DirectoryEvent(
+		const boost::filesystem::path& fullPath,
+		FileEventAction action)
+		: FileEvent(fullPath, FileType::Directory, boost::none, action)
+	{
+	}
+};
+
+struct RegularFileEvent : public FileEvent
+{
+	RegularFileEvent(
+		const boost::filesystem::path& fullPath,
+		const boost::optional<BlobAddress>& contentBlobAddress, 
+		FileEventAction action)
+		: FileEvent(fullPath, FileType::RegularFile, contentBlobAddress, action)
+	{
 	}
 };
 
