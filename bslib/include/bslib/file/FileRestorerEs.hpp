@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bslib/Address.hpp"
+#include "bslib/blob/Address.hpp"
 #include "bslib/EventManager.hpp"
 #include "bslib/file/FileEvent.hpp"
 #include "bslib/file/FileRestoreEvent.hpp"
@@ -47,7 +47,7 @@ public:
 	EventManager<FileRestoreEvent>& GetEventManager() { return _eventManager; }
 private:
 	void RestoreFileEvent(const FileEvent& fileEvent, const boost::filesystem::path& targetPath);
-	bool RestoreBlobToFile(const BlobAddress& blobAddress, const boost::filesystem::path& targetPath) const;
+	bool RestoreBlobToFile(const blob::Address& blobAddress, const boost::filesystem::path& targetPath) const;
 	void EmitEvent(const FileRestoreEvent& fileRestoreEvent);
 
 	static bool IsFileEventActionSupported(FileEventAction action);

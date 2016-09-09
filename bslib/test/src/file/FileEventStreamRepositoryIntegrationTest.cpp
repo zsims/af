@@ -47,8 +47,8 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetAllEvents_Success)
 	FileEventStreamRepository repo(*_connection);
 	blob::BlobInfoRepository blobRepo(*_connection);
 
-	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
-	const blob::BlobInfo blobInfo2(BlobAddress("2f59225215937593795395739753973973593571"), 157UL);
+	const blob::BlobInfo blobInfo1(blob::Address("1259225215937593795395739753973973593571"), 444UL);
+	const blob::BlobInfo blobInfo2(blob::Address("2f59225215937593795395739753973973593571"), 157UL);
 	blobRepo.AddBlob(blobInfo1);
 	blobRepo.AddBlob(blobInfo2);
 
@@ -74,8 +74,8 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, FindLastGoodEvent_Success)
 	FileEventStreamRepository repo(*_connection);
 	blob::BlobInfoRepository blobRepo(*_connection);
 
-	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
-	const blob::BlobInfo blobInfo2(BlobAddress("2f59225215937593795395739753973973593571"), 157UL);
+	const blob::BlobInfo blobInfo1(blob::Address("1259225215937593795395739753973973593571"), 444UL);
+	const blob::BlobInfo blobInfo2(blob::Address("2f59225215937593795395739753973973593571"), 157UL);
 	blobRepo.AddBlob(blobInfo1);
 	blobRepo.AddBlob(blobInfo2);
 
@@ -125,8 +125,8 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastGoodEventsUnderPath_Succ
 	// Arrange
 	FileEventStreamRepository repo(*_connection);
 	blob::BlobInfoRepository blobRepo(*_connection);
-	const blob::BlobInfo blobInfo1(BlobAddress("1259225215937593795395739753973973593571"), 444UL);
-	const blob::BlobInfo blobInfo2(BlobAddress("2f59225215937593795395739753973973593571"), 157UL);
+	const blob::BlobInfo blobInfo1(blob::Address("1259225215937593795395739753973973593571"), 444UL);
+	const blob::BlobInfo blobInfo2(blob::Address("2f59225215937593795395739753973973593571"), 157UL);
 	blobRepo.AddBlob(blobInfo1);
 	blobRepo.AddBlob(blobInfo2);
 
@@ -215,7 +215,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, AddEvent_MissingBlobThrows)
 {
 	// Arrange
 	FileEventStreamRepository repo(*_connection);
-	const BlobAddress madeUpBlobAddress("2259225215937593725395732753973973593571");
+	const blob::Address madeUpBlobAddress("2259225215937593725395732753973973593571");
 
 	// Act
 	// Assert

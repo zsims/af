@@ -39,7 +39,7 @@ TEST_F(DirectoryBlobStoreIntegrationTest, SaveLoad)
 	const std::vector<uint8_t> content = {
 		1, 2, 3, 4, 4, 5, 3, 2, 1
 	};
-	const auto address = BlobAddress::CalculateFromContent(content);
+	const auto address = Address::CalculateFromContent(content);
 
 	// Act
 	store.CreateBlob(address, content);
@@ -58,7 +58,7 @@ TEST_F(DirectoryBlobStoreIntegrationTest, GetBlobThrowsIfNotExist)
 		1, 2, 3, 4, 4, 5, 3, 2, 1
 	};
 
-	const BlobAddress address("1234a123451234b123451234a123451234b12345");
+	const Address address("1234a123451234b123451234a123451234b12345");
 
 	// Act
 	EXPECT_THROW(store.GetBlob(address), BlobReadException);

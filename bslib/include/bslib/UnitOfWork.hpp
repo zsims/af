@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bslib/Address.hpp"
+#include "bslib/blob/Address.hpp"
 #include "bslib/file/FileAdderEs.hpp"
 #include "bslib/file/FileFinder.hpp"
 #include "bslib/file/FileRestorerEs.hpp"
@@ -42,7 +42,7 @@ public:
 	 * Gets a blob by address.
 	 * \exception BlobReadException The blob with the given address couldn't be read, e.g. it doesn't exist or a permissions failure.
 	 */
-	virtual std::vector<uint8_t> GetBlob(const BlobAddress& address) const = 0;
+	virtual std::vector<uint8_t> GetBlob(const blob::Address& address) const = 0;
 };
 
 

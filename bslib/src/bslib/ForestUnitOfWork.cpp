@@ -33,7 +33,7 @@ std::unique_ptr<file::FileFinder> ForestUnitOfWork::CreateFileFinder()
 	return std::make_unique<file::FileFinder>(_fileEventStreamRepository);
 }
 
-std::vector<uint8_t> ForestUnitOfWork::GetBlob(const BlobAddress& address) const
+std::vector<uint8_t> ForestUnitOfWork::GetBlob(const blob::Address& address) const
 {
 	// TODO: does this need to be tracked/looked up?
 	return _blobStore.GetBlob(address);

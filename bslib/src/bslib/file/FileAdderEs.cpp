@@ -25,7 +25,7 @@ FileAdderEs::FileAdderEs(
 {
 }
 
-boost::optional<BlobAddress> FileAdderEs::SaveFileContents(const boost::filesystem::path& sourcePath)
+boost::optional<blob::Address> FileAdderEs::SaveFileContents(const boost::filesystem::path& sourcePath)
 {
 	// TODO: ffs should really support files so they don't have to be read into memory. Or at least streaming...
 	std::ifstream file(sourcePath.string(), std::ios::binary | std::ios::in);
@@ -37,7 +37,7 @@ boost::optional<BlobAddress> FileAdderEs::SaveFileContents(const boost::filesyst
 	}
 
 	const auto content = std::vector<uint8_t>(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-	const auto blobAddress = BlobAddress::CalculateFromContent(content);
+	const auto blobAddress = blob::Address::CalculateFromContent(content);
 	const auto existingBlob = _blobInfoRepository.FindBlob(blobAddress);
 	if (!existingBlob)
 	{

@@ -1,4 +1,4 @@
-#include "bslib/Address.hpp"
+#include "bslib/blob/Address.hpp"
 
 #include <boost/uuid/sha1.hpp>
 
@@ -8,6 +8,7 @@
 
 namespace af {
 namespace bslib {
+namespace blob {
 
 Address::Address(const void* rawBuffer, int bufferLength)
 {
@@ -96,6 +97,7 @@ Address Address::CalculateFromContent(const std::vector<uint8_t>& content)
 	return Address(hash);
 }
 
+}
 }
 }
 

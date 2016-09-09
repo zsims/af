@@ -1,6 +1,6 @@
 #include "bslib/file/FileEventStreamRepository.hpp"
 
-#include "bslib/Address.hpp"
+#include "bslib/blob/Address.hpp"
 #include "bslib/file/FileEvent.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
@@ -95,7 +95,7 @@ void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent)
 	sqlitepp::BindByParameterNameText(_insertEventStatement, ":FullPath", rawPath);
 
 	// TODO: This has to stay in scope for the duration of the statement, find a better way to do this without copying
-	binary_address binaryContentAddress;
+	blob::binary_address binaryContentAddress;
 
 	if (fileEvent.contentBlobAddress)
 	{
@@ -138,11 +138,11 @@ FileEvent FileEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStateme
 	const std::string fullPath(reinterpret_cast<const char*>(rawFullPath));
 	
 	const auto contentBlobAddressBytesCount = sqlite3_column_bytes(statement, GetFileEvent_ColumnIndex_ContentBlobAddress);
-	boost::optional<BlobAddress> contentBlobAddress = boost::none;
+	boost::optional<blob::Address> contentBlobAddress = boost::none;
 	if (contentBlobAddressBytesCount > 0)
 	{
 		const auto contentBlobAddressBytes = sqlite3_column_blob(statement, GetFileEvent_ColumnIndex_ContentBlobAddress);
-		contentBlobAddress = BlobAddress(contentBlobAddressBytes, contentBlobAddressBytesCount);
+		contentBlobAddress = blob::Address(contentBlobAddressBytes, contentBlobAddressBytesCount);
 	}
 
 	const FileEventAction action = static_cast<FileEventAction>(sqlite3_column_int(statement, GetFileEvent_ColumnIndex_Action));

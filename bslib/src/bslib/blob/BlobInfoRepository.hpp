@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bslib/address.hpp"
+#include "bslib/blob/address.hpp"
 #include "bslib/blob/BlobInfo.hpp"
 #include "bslib/sqlitepp/handles.hpp"
 
@@ -38,7 +38,7 @@ public:
 	 * Finds a blob by address.
 	 * \return a NULL pointer if the blob couldn't be found, else its information.
 	 */
-	std::unique_ptr<BlobInfo> FindBlob(const BlobAddress& address);
+	std::unique_ptr<BlobInfo> FindBlob(const blob::Address& address);
 private:
 	const sqlitepp::ScopedSqlite3Object& _db;
 	sqlitepp::ScopedStatement _getAllBlobsStatement;

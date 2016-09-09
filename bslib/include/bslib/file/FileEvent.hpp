@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bslib/Address.hpp"
+#include "bslib/blob/Address.hpp"
 
 #include <boost/optional.hpp>
 #include <boost/filesystem/path.hpp>
@@ -37,7 +37,7 @@ struct FileEvent
 	FileEvent(
 		const boost::filesystem::path& fullPath,
 		FileType type,
-		const boost::optional<BlobAddress>& contentBlobAddress, 
+		const boost::optional<blob::Address>& contentBlobAddress, 
 		FileEventAction action)
 		: fullPath(fullPath)
 		, type(type)
@@ -55,7 +55,7 @@ struct FileEvent
 
 	const boost::filesystem::path fullPath;
 	const FileType type;
-	const boost::optional<BlobAddress> contentBlobAddress;
+	const boost::optional<blob::Address> contentBlobAddress;
 	const FileEventAction action;
 
 	bool operator==(const FileEvent& rhs) const
@@ -81,7 +81,7 @@ struct RegularFileEvent : public FileEvent
 {
 	RegularFileEvent(
 		const boost::filesystem::path& fullPath,
-		const boost::optional<BlobAddress>& contentBlobAddress, 
+		const boost::optional<blob::Address>& contentBlobAddress, 
 		FileEventAction action)
 		: FileEvent(fullPath, FileType::RegularFile, contentBlobAddress, action)
 	{

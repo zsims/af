@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bslib/Address.hpp"
+#include "bslib/blob/Address.hpp"
 
 #include <stdexcept>
 
@@ -11,7 +11,7 @@ namespace blob {
 class DuplicateBlobException : public std::runtime_error
 {
 public:
-	explicit DuplicateBlobException(const BlobAddress& address)
+	explicit DuplicateBlobException(const Address& address)
 		: std::runtime_error("Duplicate blob with address " + address.ToString())
 	{
 	}
@@ -20,7 +20,7 @@ public:
 class BlobReadException: public std::runtime_error
 {
 public:
-	explicit BlobReadException(const BlobAddress& address)
+	explicit BlobReadException(const Address& address)
 		: std::runtime_error("Failed to read blob with address " + address.ToString())
 	{
 	}
@@ -43,7 +43,7 @@ public:
 	{
 	}
 
-	explicit BlobNotFoundException(const BlobAddress& address)
+	explicit BlobNotFoundException(const Address& address)
 		: std::runtime_error("Blob with the address " + address.ToString() + " could not be found")
 	{
 	}

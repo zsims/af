@@ -45,7 +45,7 @@ std::vector<std::shared_ptr<BlobInfo>> BlobInfoRepository::GetAllBlobs() const
 	{
 		const auto addressBytesCount = sqlite3_column_bytes(_getAllBlobsStatement, GetAllBlobs_ColumnIndex_Address);
 		const auto addressBytes = sqlite3_column_blob(_getAllBlobsStatement, GetAllBlobs_ColumnIndex_Address);
-		BlobAddress address(addressBytes, addressBytesCount);
+		Address address(addressBytes, addressBytesCount);
 		const auto sizeBytes = static_cast<uint64_t>(sqlite3_column_int64(_getAllBlobsStatement, GetAllBlobs_ColumnIndex_SizeBytes));
 		result.push_back(std::make_shared<BlobInfo>(address, sizeBytes));
 	}
@@ -72,7 +72,7 @@ void BlobInfoRepository::AddBlob(const BlobInfo& info)
 	}
 }
 
-std::unique_ptr<BlobInfo> BlobInfoRepository::FindBlob(const BlobAddress& address)
+std::unique_ptr<BlobInfo> BlobInfoRepository::FindBlob(const Address& address)
 {
 	const auto binaryAddress = address.ToBinary();
 	sqlitepp::ScopedStatementReset reset(_findBlobStatement);

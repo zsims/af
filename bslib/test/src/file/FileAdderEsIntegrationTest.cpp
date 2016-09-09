@@ -47,12 +47,12 @@ protected:
 		boost::filesystem::remove_all(_targetPath, ec);
 	}
 
-	BlobAddress CreateFile(const boost::filesystem::path& path, const std::string& content)
+	blob::Address CreateFile(const boost::filesystem::path& path, const std::string& content)
 	{
 		const std::vector<uint8_t> binaryContent(content.begin(), content.end());
 		std::ofstream f(path.string(), std::ofstream::out | std::ofstream::binary);
 		f.write(reinterpret_cast<const char*>(&binaryContent[0]), binaryContent.size());
-		return BlobAddress::CalculateFromContent(binaryContent);
+		return blob::Address::CalculateFromContent(binaryContent);
 	}
 
 	const boost::filesystem::path _forestDbPath;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bslib/Address.hpp"
+#include "bslib/blob/Address.hpp"
 #include "bslib/EventManager.hpp"
 #include "bslib/file/FileEvent.hpp"
 
@@ -41,7 +41,7 @@ public:
 	const std::vector<FileEvent>& GetEmittedEvents() { return _emittedEvents; }
 	EventManager<FileEvent>& GetEventManager() { return _eventManager; }
 private:
-	boost::optional<BlobAddress> SaveFileContents(const boost::filesystem::path& sourcePath);
+	boost::optional<blob::Address> SaveFileContents(const boost::filesystem::path& sourcePath);
 
 	void ScanDirectory(const boost::filesystem::path& sourcePath);
 	void VisitPath(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent);

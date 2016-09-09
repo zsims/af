@@ -1,12 +1,14 @@
-#include "bslib/Address.hpp"
+#include "bslib/blob/Address.hpp"
 
-#include <array>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <array>
 #include <vector>
 
 namespace af {
 namespace bslib {
+namespace blob {
 namespace test {
 
 TEST(AddressTest, ConstructFromVoidBuffer)
@@ -125,6 +127,7 @@ TEST(AddressTest, CalculateFromEmptyContent)
 	EXPECT_EQ("da39a3ee5e6b4b0d3255bfef95601890afd80709", result.ToString());
 }
 
+}
 }
 }
 }
