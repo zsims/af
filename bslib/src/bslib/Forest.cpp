@@ -71,7 +71,8 @@ void Forest::Create()
 				Id INTEGER PRIMARY KEY AUTOINCREMENT,
 				FullPath TEXT NOT NULL COLLATE BINARY,
 				ContentBlobAddress BLOB(20) REFERENCES Blob (Address),
-				Action INTEGER NOT NULL
+				Action INTEGER NOT NULL,
+				FileType INTEGER NOT NULL
 			);
 		)";
 

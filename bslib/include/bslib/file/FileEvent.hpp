@@ -12,6 +12,13 @@ namespace af {
 namespace bslib {
 namespace file {
 
+enum class FileType : int
+{
+	RegularFile = 0,
+	Directory,
+	Unsupported
+};
+
 enum class FileEventAction : int
 {
 	// Change in content or properties
@@ -29,9 +36,11 @@ struct FileEvent
 {
 	FileEvent(
 		const boost::filesystem::path& fullPath,
+		FileType type,
 		const boost::optional<BlobAddress>& contentBlobAddress, 
 		FileEventAction action)
 		: fullPath(fullPath)
+		, type(type)
 		, contentBlobAddress(contentBlobAddress)
 		, action(action)
 	{
@@ -45,12 +54,14 @@ struct FileEvent
 	}
 
 	const boost::filesystem::path fullPath;
+	const FileType type;
 	const boost::optional<BlobAddress> contentBlobAddress;
 	const FileEventAction action;
 
 	bool operator==(const FileEvent& rhs) const
 	{
 		return fullPath == rhs.fullPath &&
+			type == rhs.type &&
 			contentBlobAddress == rhs.contentBlobAddress &&
 			action == rhs.action;
 	}
