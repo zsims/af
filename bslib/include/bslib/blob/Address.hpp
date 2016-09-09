@@ -6,6 +6,7 @@
 
 namespace af {
 namespace bslib {
+namespace blob {
 
 class InvalidAddressException : public std::runtime_error
 {
@@ -39,8 +40,7 @@ private:
 	binary_address _address;
 };
 
-typedef Address BlobAddress;
-typedef Address ObjectAddress;
 
+}
 }
 }

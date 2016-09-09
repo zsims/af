@@ -6,9 +6,9 @@ source_group("src\\utility" REGULAR_EXPRESSION "src/utility/.*")
 add_executable(
     bslib_test
     src/bslib_test_main.cpp
-    src/AddressTest.cpp
     src/EventManagerTest.cpp
     src/ForestIntegrationTest.cpp
+    src/blob/AddressIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
     src/file/FileAdderEsIntegrationTest.cpp

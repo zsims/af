@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bslib/Address.hpp"
+#include "bslib/blob/Address.hpp"
 #include "bslib/blob/BlobInfo.hpp"
 #include "bslib/blob/BlobStore.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
@@ -24,7 +24,7 @@ public:
 	std::unique_ptr<file::FileAdderEs> CreateFileAdderEs() override;
 	std::unique_ptr<file::FileRestorerEs> CreateFileRestorerEs() override;
 	std::unique_ptr<file::FileFinder> CreateFileFinder() override;
-	std::vector<uint8_t> GetBlob(const BlobAddress& address) const override;
+	std::vector<uint8_t> GetBlob(const blob::Address& address) const override;
 private:
 	sqlitepp::ScopedTransaction _transaction;
 	blob::BlobStore& _blobStore;

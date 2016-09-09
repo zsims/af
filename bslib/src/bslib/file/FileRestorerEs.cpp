@@ -90,7 +90,7 @@ void FileRestorerEs::RestoreFileEvent(const FileEvent& fileEvent, const boost::f
 	}
 }
 
-bool FileRestorerEs::RestoreBlobToFile(const BlobAddress& blobAddress, const boost::filesystem::path& targetPath) const
+bool FileRestorerEs::RestoreBlobToFile(const blob::Address& blobAddress, const boost::filesystem::path& targetPath) const
 {
 	const auto content = _blobStore.GetBlob(blobAddress);
 	std::ofstream file(targetPath.string(), std::ios::binary | std::ios::out);

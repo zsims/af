@@ -44,9 +44,9 @@ TEST_F(BlobInfoRepositoryIntegrationTest, GetAllBlobs)
 	// Arrange
 	BlobInfoRepository repo(*_connection);
 
-	const BlobInfo blobInfo1(BlobAddress("cf23df2207d99a74fbe169e3eba035e633b65d94"), 3573975UL);
-	const BlobInfo blobInfo2(BlobAddress("5323df2207d99a74fbe169e3eba035e635779792"), 75UL);
-	const BlobInfo blobInfo3(BlobAddress("f259225215937593795395739753973973593571"), 444UL);
+	const BlobInfo blobInfo1(Address("cf23df2207d99a74fbe169e3eba035e633b65d94"), 3573975UL);
+	const BlobInfo blobInfo2(Address("5323df2207d99a74fbe169e3eba035e635779792"), 75UL);
+	const BlobInfo blobInfo3(Address("f259225215937593795395739753973973593571"), 444UL);
 
 	repo.AddBlob(blobInfo1);
 	repo.AddBlob(blobInfo2);
@@ -66,7 +66,7 @@ TEST_F(BlobInfoRepositoryIntegrationTest, AddBlobThrowsOnDuplicate)
 	// Arrange
 	BlobInfoRepository repo(*_connection);
 
-	const BlobAddress key("cf23df2207d99a74fbe169e3eba035e633b65d94");
+	const Address key("cf23df2207d99a74fbe169e3eba035e633b65d94");
 	const BlobInfo blobInfo1(key, 3573975UL);
 	const BlobInfo blobInfo2(key, 7UL);
 	repo.AddBlob(blobInfo1);
@@ -81,8 +81,8 @@ TEST_F(BlobInfoRepositoryIntegrationTest, FindBlobNullIfNotFound)
 	// Arrange
 	BlobInfoRepository repo(*_connection);
 
-	const BlobAddress key("cf23df2207d99a74fbe169e3eba035e633b65d94");
-	const BlobAddress key2("ef23df2207d99a74fbe169e3eba035e633b65d94");
+	const Address key("cf23df2207d99a74fbe169e3eba035e633b65d94");
+	const Address key2("ef23df2207d99a74fbe169e3eba035e633b65d94");
 	const BlobInfo blobInfo1(key, 3573975UL);
 	repo.AddBlob(blobInfo1);
 
@@ -98,8 +98,8 @@ TEST_F(BlobInfoRepositoryIntegrationTest, FindBlobSuccess)
 	// Arrange
 	BlobInfoRepository repo(*_connection);
 
-	const BlobInfo blobInfo1(BlobAddress("cf23df2207d99a74fbe169e3eba035e633b65d94"), 3573975UL);
-	const BlobInfo blobInfo2(BlobAddress("5323df2207d99a74fbe169e3eba035e635779792"), 75UL);
+	const BlobInfo blobInfo1(Address("cf23df2207d99a74fbe169e3eba035e633b65d94"), 3573975UL);
+	const BlobInfo blobInfo2(Address("5323df2207d99a74fbe169e3eba035e635779792"), 75UL);
 
 	repo.AddBlob(blobInfo1);
 	repo.AddBlob(blobInfo2);

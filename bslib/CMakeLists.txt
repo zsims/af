@@ -7,9 +7,9 @@ source_group("include\\file" REGULAR_EXPRESSION "include/bslib/file/.*")
 
 add_library(
     bslib
-    include/bslib/Address.hpp
     include/bslib/exceptions.hpp
     include/bslib/Forest.hpp
+    include/bslib/blob/Address.hpp
     include/bslib/blob/BlobStore.hpp
     include/bslib/blob/DirectoryBlobStore.hpp
     include/bslib/blob/NullBlobStore.hpp
@@ -21,7 +21,7 @@ add_library(
     include/bslib/file/FileFinder.hpp
     include/bslib/file/FileRestorerEs.hpp
     include/bslib/UnitOfWork.hpp
-    src/bslib/Address.cpp
+    src/bslib/blob/Address.cpp
     src/bslib/blob/BlobInfo.hpp
     src/bslib/blob/BlobInfoRepository.cpp
     src/bslib/blob/BlobInfoRepository.hpp
