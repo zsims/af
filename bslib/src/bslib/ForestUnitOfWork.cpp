@@ -20,11 +20,6 @@ void ForestUnitOfWork::Commit()
 	_transaction.Commit();
 }
 
-std::unique_ptr<file::FileAdder> ForestUnitOfWork::CreateFileAdder()
-{
-	return std::make_unique<file::FileAdder>(_blobStore, _blobInfoRepository, _fileObjectRepository, _fileRefRepository);
-}
-
 std::unique_ptr<file::FileAdderEs> ForestUnitOfWork::CreateFileAdderEs()
 {
 	return std::make_unique<file::FileAdderEs>(_blobStore, _blobInfoRepository, _fileEventStreamRepository);
