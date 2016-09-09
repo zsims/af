@@ -82,6 +82,26 @@ TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithFile)
 	EXPECT_THAT(emittedEvents, ::testing::ElementsAre(expectedEmittedEvent));
 }
 
+TEST_F(FileAdderEsIntegrationTest, Add_ResolvesFullPath)
+{
+	// Arrange
+	const auto folderName = boost::filesystem::unique_path();
+	const auto workingPath = EnsureTrailingSlash(boost::filesystem::temp_directory_path() / folderName);
+	boost::filesystem::create_directories(workingPath);
+	const auto fileAddress = CreateFile(workingPath / "hi.dat", "hello");
+	const auto sourcePath = workingPath / ".." / folderName;
+
+	// Act
+	_adder->Add(sourcePath);
+
+	// Assert
+	const auto& emittedEvents = _adder->GetEmittedEvents();
+	const auto expectedFileEvent = RegularFileEvent(workingPath / "hi.dat", fileAddress, FileEventAction::ChangedAdded);
+	const auto expectedDirectoryEvent = DirectoryEvent(workingPath, FileEventAction::ChangedAdded);
+	EXPECT_TRUE(_finder->FindLastChangedEventByPath(workingPath));
+	EXPECT_THAT(emittedEvents, ::testing::ElementsAre(expectedDirectoryEvent, expectedFileEvent));
+}
+
 TEST_F(FileAdderEsIntegrationTest, Add_SkipsLockedFile)
 {
 	// Arrange
