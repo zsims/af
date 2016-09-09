@@ -16,7 +16,6 @@ add_executable(
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRefRepositoryIntegrationTest.cpp
     src/file/FileRestorerEsIntegrationTest.cpp
-    src/file/FileRestorerIntegrationTest.cpp
     src/file/FileObjectRepositoryIntegrationTest.cpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp
