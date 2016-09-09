@@ -40,6 +40,11 @@ ExternalBuild_Add_Step(
         --target INSTALL
 )
 
+ExternalBuild_Add_Step(
+    NAME "Update Cache"
+    COMMAND ${CMAKE_COMMAND} -E touch "${CUSTOM_STAMP_FILE}"
+)
+
 # CMake requires include paths be valid at configure time
 set(INCLUDE_DIR "${CACHE_DIR}/$<CONFIG>/include")
 file(GENERATE OUTPUT "${INCLUDE_DIR}/.eb" CONTENT "")
