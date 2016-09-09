@@ -12,6 +12,13 @@ namespace af {
 namespace bslib {
 namespace file {
 
+enum class FileType : int
+{
+	RegularFile = 0,
+	Directory,
+	Unsupported
+};
+
 enum class FileEventAction : int
 {
 	// Change in content or properties
@@ -29,14 +36,16 @@ struct FileEvent
 {
 	FileEvent(
 		const boost::filesystem::path& fullPath,
+		FileType type,
 		const boost::optional<BlobAddress>& contentBlobAddress, 
 		FileEventAction action)
 		: fullPath(fullPath)
+		, type(type)
 		, contentBlobAddress(contentBlobAddress)
 		, action(action)
 	{
 	}
-	
+
 	// ANTHONY HEAAAAAAALP see http://stackoverflow.com/questions/14374802/boostoptional-with-const-members
 	FileEvent& operator=(const FileEvent&)
 	{
@@ -45,14 +54,37 @@ struct FileEvent
 	}
 
 	const boost::filesystem::path fullPath;
+	const FileType type;
 	const boost::optional<BlobAddress> contentBlobAddress;
 	const FileEventAction action;
 
 	bool operator==(const FileEvent& rhs) const
 	{
 		return fullPath == rhs.fullPath &&
+			type == rhs.type &&
 			contentBlobAddress == rhs.contentBlobAddress &&
 			action == rhs.action;
+	}
+};
+
+struct DirectoryEvent : public FileEvent
+{
+	DirectoryEvent(
+		const boost::filesystem::path& fullPath,
+		FileEventAction action)
+		: FileEvent(fullPath, FileType::Directory, boost::none, action)
+	{
+	}
+};
+
+struct RegularFileEvent : public FileEvent
+{
+	RegularFileEvent(
+		const boost::filesystem::path& fullPath,
+		const boost::optional<BlobAddress>& contentBlobAddress, 
+		FileEventAction action)
+		: FileEvent(fullPath, FileType::RegularFile, contentBlobAddress, action)
+	{
 	}
 };
 

@@ -23,7 +23,8 @@ enum GetObjectColumnIndex
 	GetFileEvent_ColumnIndex_Id = 0,
 	GetFileEvent_ColumnIndex_FullPath,
 	GetFileEvent_ColumnIndex_ContentBlobAddress,
-	GetFileEvent_ColumnIndex_Action
+	GetFileEvent_ColumnIndex_Action,
+	GetFileEvent_ColumnIndex_FileType
 };
 }
 
@@ -31,19 +32,19 @@ FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlit
 	: _db(connection)
 {
 	sqlitepp::prepare_or_throw(_db, R"(
-		INSERT INTO FileEvent (FullPath, ContentBlobAddress, Action) VALUES (:FullPath, :ContentBlobAddress, :Action)
+		INSERT INTO FileEvent (FullPath, ContentBlobAddress, Action, FileType) VALUES (:FullPath, :ContentBlobAddress, :Action, :FileType)
 	)", _insertEventStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Id, FullPath, ContentBlobAddress, Action FROM FileEvent
+		SELECT Id, FullPath, ContentBlobAddress, Action, FileType FROM FileEvent
 		ORDER BY Id ASC
 	)", _getAllEventsStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Id, FullPath, ContentBlobAddress, Action FROM FileEvent
+		SELECT Id, FullPath, ContentBlobAddress, Action, FileType FROM FileEvent
 		WHERE FullPath LIKE :Needle ESCAPE '"' AND Action IN (0, 1, 2)
 		GROUP BY FullPath HAVING Id = max(Id)
 	)", _getLastChangedEventsUnderPathStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Id, FullPath, ContentBlobAddress, Action FROM FileEvent
+		SELECT Id, FullPath, ContentBlobAddress, Action, FileType FROM FileEvent
 		WHERE FullPath = :FullPath AND Action IN (0, 1, 2)
 		ORDER BY Id DESC LIMIT 1
 	)", _getLastChangedEventByPathStatement);
@@ -107,6 +108,7 @@ void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent)
 	}
 
 	sqlitepp::BindByParameterNameInt64(_insertEventStatement, ":Action", static_cast<int64_t>(fileEvent.action));
+	sqlitepp::BindByParameterNameInt64(_insertEventStatement, ":FileType", static_cast<int64_t>(fileEvent.type));
 
 	const auto stepResult = sqlite3_step(_insertEventStatement);
 	if (stepResult != SQLITE_DONE)
@@ -144,7 +146,8 @@ FileEvent FileEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStateme
 	}
 
 	const FileEventAction action = static_cast<FileEventAction>(sqlite3_column_int(statement, GetFileEvent_ColumnIndex_Action));
-	return FileEvent(fullPath, contentBlobAddress, action);
+	const FileType type = static_cast<FileType>(sqlite3_column_int(statement, GetFileEvent_ColumnIndex_FileType));
+	return FileEvent(fullPath, type, contentBlobAddress, action);
 }
 
 }

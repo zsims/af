@@ -32,7 +32,7 @@ boost::optional<BlobAddress> FileAdderEs::SaveFileContents(const boost::filesyst
 
 	if (!file)
 	{
-		EmitEvent(FileEvent(sourcePath, boost::none, FileEventAction::FailedToRead));
+		EmitEvent(RegularFileEvent(sourcePath, boost::none, FileEventAction::FailedToRead));
 		return boost::none;
 	}
 
@@ -106,7 +106,7 @@ void FileAdderEs::VisitPath(const boost::filesystem::path& sourcePath, const boo
 	{
 		if (previousEvent && previousEvent->action != FileEventAction::ChangedRemoved)
 		{
-			EmitEvent(FileEvent(sourcePath, previousEvent->contentBlobAddress, FileEventAction::ChangedRemoved));
+			EmitEvent(FileEvent(sourcePath, previousEvent->type, previousEvent->contentBlobAddress, FileEventAction::ChangedRemoved));
 		}
 		return;
 	}
@@ -121,7 +121,7 @@ void FileAdderEs::VisitPath(const boost::filesystem::path& sourcePath, const boo
 	}
 	else
 	{
-		EmitEvent(FileEvent(sourcePath, boost::none, FileEventAction::Unsupported));
+		EmitEvent(FileEvent(sourcePath, FileType::Unsupported, boost::none, FileEventAction::Unsupported));
 	}
 }
 
@@ -143,7 +143,7 @@ void FileAdderEs::VisitFile(const boost::filesystem::path& sourcePath, const boo
 			case FileEventAction::ChangedModified:
 				if (previousEvent->contentBlobAddress == blobAddress)
 				{
-					EmitEvent(FileEvent(sourcePath, previousEvent->contentBlobAddress, FileEventAction::Unchanged));
+					EmitEvent(RegularFileEvent(sourcePath, previousEvent->contentBlobAddress, FileEventAction::Unchanged));
 					return;
 				}
 				action = FileEventAction::ChangedModified;
@@ -154,14 +154,14 @@ void FileAdderEs::VisitFile(const boost::filesystem::path& sourcePath, const boo
 		}
 	}
 
-	EmitEvent(FileEvent(sourcePath, blobAddress, action));
+	EmitEvent(RegularFileEvent(sourcePath, blobAddress, action));
 }
 
 void FileAdderEs::VisitDirectory(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
 	if (!previousEvent)
 	{
-		EmitEvent(FileEvent(DirectoryPath(sourcePath), boost::none, FileEventAction::ChangedAdded));
+		EmitEvent(DirectoryEvent(DirectoryPath(sourcePath), FileEventAction::ChangedAdded));
 	}
 }
 
