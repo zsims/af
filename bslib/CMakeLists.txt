@@ -1,6 +1,7 @@
 source_group("src\\bslib" REGULAR_EXPRESSION "src/bslib/.*")
 source_group("src\\bslib\\blob" REGULAR_EXPRESSION "src/bslib/blob/.*")
 source_group("src\\bslib\\file" REGULAR_EXPRESSION "src/bslib/file/.*")
+source_group("src\\bslib\\file\\fs" REGULAR_EXPRESSION "src/bslib/file/fs/.*")
 source_group("src\\bslib\\sqlitepp" REGULAR_EXPRESSION "src/bslib/sqlitepp/.*")
 source_group("include\\bslib" REGULAR_EXPRESSION "include/bslib/.*")
 source_group("include\\file" REGULAR_EXPRESSION "include/bslib/file/.*")
@@ -20,6 +21,7 @@ add_library(
     include/bslib/file/FileRestoreEvent.hpp
     include/bslib/file/FileFinder.hpp
     include/bslib/file/FileRestorerEs.hpp
+    include/bslib/file/fs/WindowsPath.hpp
     include/bslib/UnitOfWork.hpp
     include/bslib/unicode.hpp
     src/bslib/blob/Address.cpp
@@ -38,6 +40,7 @@ add_library(
     src/bslib/file/FileRestorerEs.cpp
     src/bslib/file/path_util.cpp
     src/bslib/file/path_util.hpp
+    src/bslib/file/fs/WindowsPath.cpp
     src/bslib/sqlitepp/exceptions.hpp
     src/bslib/sqlitepp/handles.hpp
     src/bslib/sqlitepp/ScopedStatementReset.hpp
