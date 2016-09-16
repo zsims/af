@@ -40,6 +40,7 @@ add_library(
     src/bslib/file/FileRestorerEs.cpp
     src/bslib/file/path_util.cpp
     src/bslib/file/path_util.hpp
+    src/bslib/file/fs/DirectoryContentIterator.hpp
     src/bslib/file/fs/WindowsPath.cpp
     src/bslib/file/fs/operations.cpp
     src/bslib/file/fs/operations.hpp
