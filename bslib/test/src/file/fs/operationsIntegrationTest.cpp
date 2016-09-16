@@ -2,6 +2,7 @@
 
 #include "bslib/file/exceptions.hpp"
 
+#include <boost/scope_exit.hpp>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -128,6 +129,48 @@ TEST(operationsIntegrationTest, CreateDirectories_FileExistsFails)
 	// Assert
 	EXPECT_FALSE(CreateDirectories(unique, ec));
 	EXPECT_TRUE(ec);
+}
+
+TEST(operationsIntegrationTest, GetAbsolutePath_Success)
+{
+	// Arrange
+	const auto originalWorkingDir = GetWorkingDirectory();
+	BOOST_SCOPE_EXIT(&originalWorkingDir)
+	{
+		SetWorkingDirectory(originalWorkingDir);
+	} BOOST_SCOPE_EXIT_END
+
+	const auto expected = GenerateUniqueTempPath();
+	const auto name = expected.GetFilename();
+	const auto relativePath = UTF8ToWideString(name + R"(\..\)" + name );
+	SetWorkingDirectory(expected / "..");
+
+	// Act
+	const auto actual = GetAbsolutePath(relativePath);
+
+	// Assert
+	EXPECT_EQ(expected, actual);
+}
+
+TEST(operationsIntegrationTest, GetAbsolutePath_RootSuccess)
+{
+	// Arrange
+	const auto originalWorkingDir = GetWorkingDirectory();
+	BOOST_SCOPE_EXIT(&originalWorkingDir)
+	{
+		SetWorkingDirectory(originalWorkingDir);
+	} BOOST_SCOPE_EXIT_END
+
+	const auto unique = GenerateUniqueTempPath();
+	const auto root = unique.GetIntermediatePaths()[0];
+	SetWorkingDirectory(root);
+
+	// Act
+	auto actual = GetAbsolutePath(L".");
+	actual.EnsureTrailingSlash();
+
+	// Assert
+	EXPECT_EQ(root, actual);
 }
 
 }

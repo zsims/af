@@ -39,6 +39,27 @@ bool CreateDirectorySexy(const WindowsPath& path);
 bool CreateDirectories(const WindowsPath& path, boost::system::error_code& ec) noexcept;
 bool CreateDirectories(const WindowsPath& path);
 
+/**
+ * Sets the current working directory
+ */
+void SetWorkingDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcept;
+void SetWorkingDirectory(const WindowsPath& path);
+
+/**
+ * Gets the current working directory
+ * \remarks TODO: Handle UNC paths as this may return \\server\xxx for example
+ */
+WindowsPath GetWorkingDirectory(boost::system::error_code& ec) noexcept;
+WindowsPath GetWorkingDirectory();
+
+/**
+ * Computes a well formed absolute path from the given path segment that may be relative or absolute
+ * \remarks This is not thread safe, as the "current directory" is a global concept
+ * \returns A well formed path if ec is marked as success
+ */
+WindowsPath GetAbsolutePath(const std::wstring& path, boost::system::error_code& ec) noexcept;
+WindowsPath GetAbsolutePath(const std::wstring& path);
+
 }
 }
 }

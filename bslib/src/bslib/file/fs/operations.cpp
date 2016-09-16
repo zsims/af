@@ -133,6 +133,93 @@ bool CreateDirectories(const WindowsPath& path)
 	return result;
 }
 
+void SetWorkingDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcept
+{
+	const auto wideString = path.ToExtendedWideString();
+	const auto result = SetCurrentDirectoryW(wideString.c_str());
+	if (!result)
+	{
+		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
+		return;
+	}
+	ec = boost::system::error_code();
+}
+
+void SetWorkingDirectory(const WindowsPath& path)
+{
+	boost::system::error_code ec;
+	SetWorkingDirectory(path, ec);
+	if (ec)
+	{
+		throw boost::system::system_error(ec, "Failed to set working directory");
+	}
+}
+
+WindowsPath GetWorkingDirectory(boost::system::error_code& ec) noexcept
+{
+	const auto requiredBufferSize = GetCurrentDirectoryW(0, nullptr);
+	if (requiredBufferSize == 0)
+	{
+		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
+		return WindowsPath();
+	}
+	std::unique_ptr<wchar_t[]> buffer(new wchar_t[requiredBufferSize]);
+	const auto writtenCharacterCount = GetCurrentDirectoryW(requiredBufferSize, &buffer[0]);
+	if(requiredBufferSize == 0)
+	{
+		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
+		return WindowsPath();
+	}
+	ec = boost::system::error_code();
+	return WindowsPath(buffer.get());
+}
+
+WindowsPath GetWorkingDirectory()
+{
+	boost::system::error_code ec;
+	const auto result = GetWorkingDirectory(ec);
+	if (ec)
+	{
+		throw boost::system::system_error(ec, "Failed to get working directory");
+	}
+	return result;
+}
+
+WindowsPath GetAbsolutePath(const std::wstring& path, boost::system::error_code& ec) noexcept
+{
+	// Find out how big the buffer needs to be
+	const auto requiredBufferSize = GetFullPathNameW(path.c_str(), 0, nullptr, nullptr);
+	if (requiredBufferSize == 0)
+	{
+		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
+		return WindowsPath();
+	}
+
+	// allocate a buffer without initializing the memory
+	std::unique_ptr<wchar_t[]> buffer(new wchar_t[requiredBufferSize]);
+
+	// Copy into the allocated buffer
+	const auto writtenCharacterCount = GetFullPathNameW(path.c_str(), requiredBufferSize, buffer.get(), nullptr);
+	if (writtenCharacterCount == 0)
+	{
+		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
+		return WindowsPath();
+	}
+	ec = boost::system::error_code();
+	return WindowsPath(buffer.get());
+}
+
+WindowsPath GetAbsolutePath(const std::wstring& path)
+{
+	boost::system::error_code ec;
+	auto result = GetAbsolutePath(path, ec);
+	if (ec)
+	{
+		throw boost::system::system_error(ec, "Failed to get absolute path");
+	}
+	return result;
+}
+
 }
 }
 }
