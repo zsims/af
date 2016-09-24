@@ -9,6 +9,12 @@ namespace bslib {
 
 std::wstring UTF8ToWideString(const UTF8String& str)
 {
+	/*
+		Note: std::wstring_convert<std::codecvt_utf8<wchar_t>> converter(...); (standard since C++11) isn't used here
+		as it's much slower than the native Windows APIs that leverage SSE (http://stackoverflow.com/questions/26196686/utf8-utf16-codecvt-poor-performance)
+
+		If this needs to be cross platform, suggest using the above.
+	*/
 	if (str.empty())
 	{
 		return std::wstring();

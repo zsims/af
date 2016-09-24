@@ -20,9 +20,12 @@ if(MSVC)
         set(PLATFORM_NAME "x64")
     endif()
 
-    add_definitions("-DBOOST_CB_DISABLE_DEBUG")
+    add_definitions(-DBOOST_CB_DISABLE_DEBUG)
     # Disable auto linking
-    add_definitions("-DBOOST_ALL_NO_LIB")
+    add_definitions(-DBOOST_ALL_NO_LIB)
+
+    # Ensure all Win32 APIs take wide characters, avoiding accidentally passing non-wide ANSI strings
+    add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 # Setup a verify target + place for tests

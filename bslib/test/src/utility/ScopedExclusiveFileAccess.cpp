@@ -16,7 +16,7 @@ namespace utility {
 ScopedExclusiveFileAccess::ScopedExclusiveFileAccess(const boost::filesystem::path& path)
 	: _path(path)
 {
-	_windowsHandle = ::CreateFile(path.string().c_str(), GENERIC_READ, 0 /* no share */, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+	_windowsHandle = ::CreateFileA(path.string().c_str(), GENERIC_READ, 0 /* no share */, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (_windowsHandle == INVALID_HANDLE_VALUE)
 	{
 		throw std::runtime_error("Failed to open file exclusively");
