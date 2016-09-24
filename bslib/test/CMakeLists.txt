@@ -14,6 +14,7 @@ add_executable(
     src/file/FileAdderEsIntegrationTest.cpp
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRestorerEsIntegrationTest.cpp
+    src/unicodeIntegrationTest.cpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp
     src/utility/matchers.cpp

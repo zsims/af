@@ -21,6 +21,7 @@ add_library(
     include/bslib/file/FileFinder.hpp
     include/bslib/file/FileRestorerEs.hpp
     include/bslib/UnitOfWork.hpp
+    include/bslib/unicode.hpp
     src/bslib/blob/Address.cpp
     src/bslib/blob/BlobInfo.hpp
     src/bslib/blob/BlobInfoRepository.cpp
@@ -44,6 +45,7 @@ add_library(
     src/bslib/sqlitepp/ScopedTransaction.hpp
     src/bslib/sqlitepp/sqlitepp.cpp
     src/bslib/sqlitepp/sqlitepp.hpp
+    src/bslib/unicode.cpp
 )
 set_property(TARGET bslib PROPERTY FOLDER "bslib")
 
