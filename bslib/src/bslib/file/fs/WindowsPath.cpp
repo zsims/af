@@ -45,16 +45,6 @@ WindowsPath::WindowsPath(const char* path)
 {
 }
 
-WindowsPath::WindowsPath(const std::wstring& path)
-	: WindowsPath(WideToUTF8String(path))
-{
-}
-
-WindowsPath::WindowsPath(const wchar_t* path)
-	: WindowsPath(std::wstring(path))
-{
-}
-
 WindowsPath& WindowsPath::EnsureTrailingSlash()
 {
 	if (!EndsWithSeparator(_path))

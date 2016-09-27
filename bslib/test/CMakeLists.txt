@@ -15,7 +15,9 @@ add_executable(
     src/file/FileAdderEsIntegrationTest.cpp
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRestorerEsIntegrationTest.cpp
+    src/file/fs/DirectoryContentIteratorIntegrationTest.cpp
     src/file/fs/WindowsPathIntegrationTest.cpp
+    src/file/fs/operationsIntegrationTest.cpp
     src/unicodeIntegrationTest.cpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp

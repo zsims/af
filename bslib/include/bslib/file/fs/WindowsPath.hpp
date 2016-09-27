@@ -35,12 +35,6 @@ public:
 	explicit WindowsPath(const char* path);
 
 	/**
-	 * Constructs a path from a wide string
-	 */
-	explicit WindowsPath(const std::wstring& path);
-	explicit WindowsPath(const wchar_t* path);
-
-	/**
 	 * Ensures that the given path has a trailing separator
 	 */
 	WindowsPath& EnsureTrailingSlash();
@@ -66,13 +60,11 @@ public:
 	 * Returns the "extended" path (with the extended prefix)
 	 */
 	const UTF8String& ToExtendedString() const { return _path; }
-	std::wstring ToExtendedWideString() const { return UTF8ToWideString(_path); }
 
 	/**
 	 * Returns the "normal" path (without the extended prefix)
 	 */
 	UTF8String ToNormalString() const;
-	std::wstring ToNormalWideString() const { return UTF8ToWideString(ToNormalString()); }
 
 	/**
 	 * Appends the given segment
