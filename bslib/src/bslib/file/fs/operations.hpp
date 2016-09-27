@@ -18,6 +18,14 @@ WindowsPath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept;
 WindowsPath GenerateUniqueTempPath();
 
 /**
+ * Generates a unique temporary path that's beyond 260 characters, e.g. C:\temp\something so very long
+ * \remarks This can be useful for testing extended path support
+ * \returns The full path to the unique temporary path
+ */
+WindowsPath GenerateUniqueTempExtendedPath(boost::system::error_code& ec) noexcept;
+WindowsPath GenerateUniqueTempExtendedPath();
+
+/**
  * Determines whether the given path exists and represents a directory
  * \returns true if the given path is a directory, false otherwise
  **/

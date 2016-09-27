@@ -54,6 +54,38 @@ WindowsPath GenerateUniqueTempPath()
 	return result;
 }
 
+WindowsPath GenerateUniqueTempExtendedPath(boost::system::error_code& ec) noexcept
+{
+	wchar_t buffer[MAX_PATH];
+	if (!::GetTempPathW(MAX_PATH, buffer))
+	{
+		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
+		return WindowsPath();
+	}
+	WindowsPath result(buffer);
+	// put 150 characters into the path via creating a long directory name
+	// note that files can still not be named > 255 characters
+	auto intermediate = result / UTF8String(150, 'a');
+	CreateDirectorySexy(intermediate, ec);
+	if (ec)
+	{
+		return WindowsPath();
+	}
+	auto uniqueLongPart = GenerateUuid() + UTF8String(150, 'b');
+	return (intermediate / uniqueLongPart);
+}
+
+WindowsPath GenerateUniqueTempExtendedPath()
+{
+	boost::system::error_code ec;
+	auto result = GenerateUniqueTempPath(ec);
+	if (ec)
+	{
+		throw boost::system::system_error(ec, "Failed to generate unique extended temporary path");
+	}
+	return result;
+}
+
 bool IsDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcept
 {
 	const auto wideString = path.ToExtendedWideString();

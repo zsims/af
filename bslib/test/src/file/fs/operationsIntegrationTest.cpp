@@ -15,12 +15,12 @@ namespace file {
 namespace fs {
 namespace test {
 
-TEST(operationsIntegrationTest, GenerateUniqueTempPath_Success)
+TEST(operationsIntegrationTest, GenerateUniqueTempExtendedPath_Success)
 {
 	// Arrange
 	// Act
-	const auto first = GenerateUniqueTempPath();
-	const auto second = GenerateUniqueTempPath();
+	const auto first = GenerateUniqueTempExtendedPath();
+	const auto second = GenerateUniqueTempExtendedPath();
 	// Assert
 	EXPECT_NE(first, second);
 }
@@ -28,7 +28,7 @@ TEST(operationsIntegrationTest, GenerateUniqueTempPath_Success)
 TEST(operationsIntegrationTest, IsDirectory_Success)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GenerateUniqueTempExtendedPath();
 	const auto parent = first.ParentPathCopy();
 
 	// Act
@@ -41,7 +41,7 @@ TEST(operationsIntegrationTest, IsDirectory_Success)
 TEST(operationsIntegrationTest, IsDirectory_NotExistSuccess)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GenerateUniqueTempExtendedPath();
 
 	// Act
 	boost::system::error_code ec;
@@ -55,7 +55,7 @@ TEST(operationsIntegrationTest, IsDirectory_NotExistSuccess)
 TEST(operationsIntegrationTest, IsRegularFile_Success)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GenerateUniqueTempExtendedPath();
 	std::ofstream f(UTF8ToWideString(first.ToExtendedString()), std::ofstream::out | std::ofstream::binary);
 
 	// Act
@@ -68,7 +68,7 @@ TEST(operationsIntegrationTest, IsRegularFile_Success)
 TEST(operationsIntegrationTest, IsRegularFile_NotExistSuccess)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GenerateUniqueTempExtendedPath();
 
 	// Act
 	boost::system::error_code ec;
@@ -82,7 +82,7 @@ TEST(operationsIntegrationTest, IsRegularFile_NotExistSuccess)
 TEST(operationsIntegrationTest, IsRegularFile_WithDirectoryFalse)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GenerateUniqueTempExtendedPath();
 	const auto parent = first.ParentPathCopy();
 
 	// Act
@@ -91,13 +91,13 @@ TEST(operationsIntegrationTest, IsRegularFile_WithDirectoryFalse)
 
 	// Assert
 	EXPECT_FALSE(isFile);
-	EXPECT_TRUE(ec);
+	EXPECT_FALSE(ec);
 }
 
 TEST(operationsIntegrationTest, CreateDirectorySexy_Success)
 {
 	// Arrange
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GenerateUniqueTempExtendedPath();
 
 	// Act
 	ASSERT_TRUE(CreateDirectorySexy(unique));
@@ -110,7 +110,7 @@ TEST(operationsIntegrationTest, CreateDirectorySexy_Success)
 TEST(operationsIntegrationTest, CreateDirectorySexy_AlreadyExistingSuccess)
 {
 	// Arrange
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GenerateUniqueTempExtendedPath();
 	CreateDirectorySexy(unique);
 
 	// Act
@@ -123,7 +123,7 @@ TEST(operationsIntegrationTest, CreateDirectorySexy_AlreadyExistingSuccess)
 TEST(operationsIntegrationTest, CreateDirectories_Success)
 {
 	// Arrange
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GenerateUniqueTempExtendedPath();
 	const auto full = unique / "and" / u8"我这样做对吗" / "deeper";
 
 	// Act
@@ -136,7 +136,7 @@ TEST(operationsIntegrationTest, CreateDirectories_Success)
 TEST(operationsIntegrationTest, CreateDirectories_ExtendedPathSuccess)
 {
 	// Arrange
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GenerateUniqueTempExtendedPath();
 	const auto full = unique / "and" / UTF8String(150, 'a') / "deeper" / UTF8String(150, 'b') / u8"我";
 
 	// Act
@@ -149,7 +149,7 @@ TEST(operationsIntegrationTest, CreateDirectories_ExtendedPathSuccess)
 TEST(operationsIntegrationTest, CreateDirectories_AlreadyExistsSuccess)
 {
 	// Arrange
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GenerateUniqueTempExtendedPath();
 	ASSERT_TRUE(CreateDirectorySexy(unique));
 
 	// Act
@@ -163,7 +163,7 @@ TEST(operationsIntegrationTest, CreateDirectories_FileExistsFails)
 {
 	// Arrange
 	boost::system::error_code ec;
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GenerateUniqueTempExtendedPath();
 	const auto widePath = unique.ToExtendedWideString();
 	std::ofstream f(widePath.c_str(), std::ofstream::out | std::ofstream::binary);
 
@@ -182,7 +182,7 @@ TEST(operationsIntegrationTest, GetAbsolutePath_Success)
 		SetWorkingDirectory(originalWorkingDir);
 	} BOOST_SCOPE_EXIT_END
 
-	const auto expected = GenerateUniqueTempPath();
+	const auto expected = GenerateUniqueTempExtendedPath();
 	const auto name = expected.GetFilename();
 	const auto relativePath = UTF8ToWideString(name + R"(\..\)" + name );
 	SetWorkingDirectory(expected / "..");
@@ -203,7 +203,7 @@ TEST(operationsIntegrationTest, GetAbsolutePath_RootSuccess)
 		SetWorkingDirectory(originalWorkingDir);
 	} BOOST_SCOPE_EXIT_END
 
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GenerateUniqueTempExtendedPath();
 	const auto root = unique.GetIntermediatePaths()[0];
 	SetWorkingDirectory(root);
 
