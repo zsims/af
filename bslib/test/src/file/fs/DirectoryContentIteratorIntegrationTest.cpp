@@ -17,7 +17,7 @@ namespace test {
 namespace {
 void Touch(const WindowsPath& path)
 {
-	const auto widePath = path.ToExtendedWideString();
+	const auto widePath = UTF8ToWideString(path.ToExtendedString());
 	std::ofstream f(widePath.c_str(), std::ofstream::out | std::ofstream::binary);
 }
 }

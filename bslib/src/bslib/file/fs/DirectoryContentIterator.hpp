@@ -62,10 +62,15 @@ public:
 		// Handle root directory searches, per 
 		// "Note  Prepending the string "\\?\" does not allow access to the root directory." - https://msdn.microsoft.com/en-us/library/windows/desktop/aa364419(v=vs.85).aspx
 		// To work around this, don't use \\?\ for paths shorter than MAX_PATH
-		auto searchString = searchPath.ToNormalWideString();
-		if (searchString.size() >= MAX_PATH)
+		std::wstring searchString;
+		const auto extendedString = searchPath.ToExtendedString();
+		if (extendedString.size() >= MAX_PATH)
 		{
-			searchString = searchPath.ToExtendedWideString();
+			searchString = UTF8ToWideString(extendedString);
+		}
+		else
+		{
+			searchString = UTF8ToWideString(searchPath.ToNormalString());
 		}
 
 		auto handle = FindFirstFileExW(
@@ -154,7 +159,6 @@ private:
 	}
 
 	// shared_ptr provides shallow-copy semantics required for InputIterators.
-	// m_imp.get()==0 indicates the end iterator.
 	std::shared_ptr</*HANDLE*/void> _handle;
 	const WindowsPath _path;
 	std::shared_ptr<DirectoryEntry> _current;

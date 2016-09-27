@@ -164,7 +164,7 @@ TEST(operationsIntegrationTest, CreateDirectories_FileExistsFails)
 	// Arrange
 	boost::system::error_code ec;
 	const auto unique = GenerateUniqueTempExtendedPath();
-	const auto widePath = unique.ToExtendedWideString();
+	const auto widePath = UTF8ToWideString(unique.ToExtendedString());
 	std::ofstream f(widePath.c_str(), std::ofstream::out | std::ofstream::binary);
 
 	// Act

@@ -37,7 +37,7 @@ WindowsPath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept
 		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
 		return WindowsPath();
 	}
-	WindowsPath result(buffer);
+	WindowsPath result(WideToUTF8String(buffer));
 	result.AppendSegment(GenerateUuid());
 	ec = boost::system::error_code();
 	return result;
@@ -62,7 +62,7 @@ WindowsPath GenerateUniqueTempExtendedPath(boost::system::error_code& ec) noexce
 		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
 		return WindowsPath();
 	}
-	WindowsPath result(buffer);
+	WindowsPath result(WideToUTF8String(buffer));
 	// put 150 characters into the path via creating a long directory name
 	// note that files can still not be named > 255 characters
 	auto intermediate = result / UTF8String(150, 'a');
@@ -88,7 +88,7 @@ WindowsPath GenerateUniqueTempExtendedPath()
 
 bool IsDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcept
 {
-	const auto wideString = path.ToExtendedWideString();
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
 	const auto result = ::GetFileAttributesW(wideString.c_str());
 	if (result == INVALID_FILE_ATTRIBUTES)
 	{
@@ -112,7 +112,7 @@ bool IsDirectory(const WindowsPath& path)
 
 bool IsRegularFile(const WindowsPath& path, boost::system::error_code& ec) noexcept
 {
-	const auto wideString = path.ToExtendedWideString();
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
 	const auto result = ::GetFileAttributesW(wideString.c_str());
 	if (result == INVALID_FILE_ATTRIBUTES)
 	{
@@ -137,7 +137,7 @@ bool IsRegularFile(const WindowsPath& path)
 
 bool CreateDirectorySexy(const WindowsPath& path, boost::system::error_code& ec) noexcept
 {
-	const auto wideString = path.ToExtendedWideString();
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
 	// BOOL is a 32-bit int, so compare against false see https://msdn.microsoft.com/en-us/library/windows/desktop/bb773621(v=vs.85).aspx
 	if (::CreateDirectoryW(wideString.c_str(), nullptr) != FALSE)
 	{
@@ -192,7 +192,7 @@ bool CreateDirectories(const WindowsPath& path)
 
 void SetWorkingDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcept
 {
-	const auto wideString = path.ToExtendedWideString();
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
 	const auto result = SetCurrentDirectoryW(wideString.c_str());
 	if (!result)
 	{
@@ -228,7 +228,7 @@ WindowsPath GetWorkingDirectory(boost::system::error_code& ec) noexcept
 		return WindowsPath();
 	}
 	ec = boost::system::error_code();
-	return WindowsPath(buffer.get());
+	return WindowsPath(WideToUTF8String(buffer.get()));
 }
 
 WindowsPath GetWorkingDirectory()
@@ -263,7 +263,7 @@ WindowsPath GetAbsolutePath(const std::wstring& path, boost::system::error_code&
 		return WindowsPath();
 	}
 	ec = boost::system::error_code();
-	return WindowsPath(buffer.get());
+	return WindowsPath(WideToUTF8String(buffer.get()));
 }
 
 WindowsPath GetAbsolutePath(const std::wstring& path)
