@@ -52,6 +52,48 @@ TEST(operationsIntegrationTest, IsDirectory_NotExistSuccess)
 	EXPECT_TRUE(ec);
 }
 
+TEST(operationsIntegrationTest, IsRegularFile_Success)
+{
+	// Arrange
+	const auto first = GenerateUniqueTempPath();
+	std::ofstream f(UTF8ToWideString(first.ToExtendedString()), std::ofstream::out | std::ofstream::binary);
+
+	// Act
+	const auto isFile = IsRegularFile(first);
+
+	// Assert
+	EXPECT_TRUE(isFile);
+}
+
+TEST(operationsIntegrationTest, IsRegularFile_NotExistSuccess)
+{
+	// Arrange
+	const auto first = GenerateUniqueTempPath();
+
+	// Act
+	boost::system::error_code ec;
+	const auto isDirectory = IsRegularFile(first, ec);
+
+	// Assert
+	EXPECT_FALSE(isDirectory);
+	EXPECT_TRUE(ec);
+}
+
+TEST(operationsIntegrationTest, IsRegularFile_WithDirectoryFalse)
+{
+	// Arrange
+	const auto first = GenerateUniqueTempPath();
+	const auto parent = first.ParentPathCopy();
+
+	// Act
+	boost::system::error_code ec;
+	const auto isFile = IsRegularFile(parent, ec);
+
+	// Assert
+	EXPECT_FALSE(isFile);
+	EXPECT_TRUE(ec);
+}
+
 TEST(operationsIntegrationTest, CreateDirectorySexy_Success)
 {
 	// Arrange

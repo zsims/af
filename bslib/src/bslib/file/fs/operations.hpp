@@ -25,6 +25,13 @@ bool IsDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcep
 bool IsDirectory(const WindowsPath& path);
 
 /**
+ * Determines whether the given path exists and represents a regular file
+ * \returns true if the given path is a regular file, false otherwise
+ **/
+bool IsRegularFile(const WindowsPath& path, boost::system::error_code& ec) noexcept;
+bool IsRegularFile(const WindowsPath& path);
+
+/**
  * Creates a directory at the given path.
  * \remarks This clashes with the Windows.h macro CreateDirectory
  * \returns true if a new directory was created, false otherwise
