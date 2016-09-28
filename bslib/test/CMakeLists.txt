@@ -2,6 +2,7 @@ source_group("src" REGULAR_EXPRESSION "src/.*")
 source_group("src\\blob" REGULAR_EXPRESSION "src/blob/.*")
 source_group("src\\file" REGULAR_EXPRESSION "src/file/.*")
 source_group("src\\file\\fs" REGULAR_EXPRESSION "src/file/fs/.*")
+source_group("src\\file\\test_utility" REGULAR_EXPRESSION "src/file/test_utility/.*")
 source_group("src\\utility" REGULAR_EXPRESSION "src/utility/.*")
 
 add_executable(
@@ -18,6 +19,8 @@ add_executable(
     src/file/fs/DirectoryContentIteratorIntegrationTest.cpp
     src/file/fs/WindowsPathIntegrationTest.cpp
     src/file/fs/operationsIntegrationTest.cpp
+    src/file/test_utility/ScopedWorkingDirectory.cpp
+    src/file/test_utility/ScopedWorkingDirectory.hpp
     src/unicodeIntegrationTest.cpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp

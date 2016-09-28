@@ -11,19 +11,19 @@ namespace file {
 namespace fs {
 
 /**
- * Generates a unique temporary path, e.g. C:\temp\<some guid>
+* Generates a unique temporary path, e.g. C:\temp\<some guid>
+* \remarks This will be shorter than GenerateUniqueTempPath() on platforms where the distinction between extended and normal paths exists
+* \returns The full path to the unique temporary path
+*/
+NativePath GenerateShortUniqueTempPath(boost::system::error_code& ec) noexcept;
+NativePath GenerateShortUniqueTempPath();
+
+/**
+ * Generates a unique temporary path that's beyond 260 characters, e.g. C:\temp\something so very long
  * \returns The full path to the unique temporary path
  */
 NativePath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept;
 NativePath GenerateUniqueTempPath();
-
-/**
- * Generates a unique temporary path that's beyond 260 characters, e.g. C:\temp\something so very long
- * \remarks This can be useful for testing extended path support
- * \returns The full path to the unique temporary path
- */
-NativePath GenerateUniqueTempExtendedPath(boost::system::error_code& ec) noexcept;
-NativePath GenerateUniqueTempExtendedPath();
 
 /**
  * Determines whether the given path exists and represents a directory
@@ -53,19 +53,6 @@ bool CreateDirectorySexy(const NativePath& path);
  */
 bool CreateDirectories(const NativePath& path, boost::system::error_code& ec) noexcept;
 bool CreateDirectories(const NativePath& path);
-
-/**
- * Sets the current working directory
- */
-void SetWorkingDirectory(const NativePath& path, boost::system::error_code& ec) noexcept;
-void SetWorkingDirectory(const NativePath& path);
-
-/**
- * Gets the current working directory
- * \remarks TODO: Handle UNC paths as this may return \\server\xxx for example
- */
-NativePath GetWorkingDirectory(boost::system::error_code& ec) noexcept;
-NativePath GetWorkingDirectory();
 
 /**
  * Computes a well formed absolute path from the given path segment that may be relative or absolute

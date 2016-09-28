@@ -27,7 +27,7 @@ std::string GenerateUuid()
 
 }
 
-NativePath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept
+NativePath GenerateShortUniqueTempPath(boost::system::error_code& ec) noexcept
 {
 	// Per https://msdn.microsoft.com/en-us/library/windows/desktop/aa364991(v=vs.85).aspx GUIDs are recommended for 
 	// creating many temporary files to avoid clashes... so lets cut out the middle man ;)
@@ -43,10 +43,10 @@ NativePath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept
 	return result;
 }
 
-NativePath GenerateUniqueTempPath()
+NativePath GenerateShortUniqueTempPath()
 {
 	boost::system::error_code ec;
-	auto result = GenerateUniqueTempPath(ec);
+	auto result = GenerateShortUniqueTempPath(ec);
 	if (ec)
 	{
 		throw boost::system::system_error(ec, "Failed to generate unique temporary path");
@@ -54,7 +54,7 @@ NativePath GenerateUniqueTempPath()
 	return result;
 }
 
-NativePath GenerateUniqueTempExtendedPath(boost::system::error_code& ec) noexcept
+NativePath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept
 {
 	wchar_t buffer[MAX_PATH];
 	if (!::GetTempPathW(MAX_PATH, buffer))
@@ -65,17 +65,17 @@ NativePath GenerateUniqueTempExtendedPath(boost::system::error_code& ec) noexcep
 	WindowsPath result(WideToUTF8String(buffer));
 	// put 150 characters into the path via creating a long directory name
 	// note that files can still not be named > 255 characters
-	auto intermediate = result / UTF8String(150, 'a');
+	const auto uniquePart = GenerateUuid();
+	auto intermediate = result / (uniquePart + UTF8String(150, 'a'));
 	CreateDirectorySexy(intermediate, ec);
 	if (ec)
 	{
 		return WindowsPath();
 	}
-	auto uniqueLongPart = GenerateUuid() + UTF8String(150, 'b');
-	return (intermediate / uniqueLongPart);
+	return (intermediate / (uniquePart + UTF8String(150, 'b')));
 }
 
-WindowsPath GenerateUniqueTempExtendedPath()
+WindowsPath GenerateUniqueTempPath()
 {
 	boost::system::error_code ec;
 	auto result = GenerateUniqueTempPath(ec);
@@ -186,58 +186,6 @@ bool CreateDirectories(const NativePath& path)
 	if (ec)
 	{
 		throw boost::system::system_error(ec, "Failed to create drectories");
-	}
-	return result;
-}
-
-void SetWorkingDirectory(const NativePath& path, boost::system::error_code& ec) noexcept
-{
-	const auto wideString = UTF8ToWideString(path.ToExtendedString());
-	const auto result = SetCurrentDirectoryW(wideString.c_str());
-	if (!result)
-	{
-		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
-		return;
-	}
-	ec = boost::system::error_code();
-}
-
-void SetWorkingDirectory(const NativePath& path)
-{
-	boost::system::error_code ec;
-	SetWorkingDirectory(path, ec);
-	if (ec)
-	{
-		throw boost::system::system_error(ec, "Failed to set working directory");
-	}
-}
-
-NativePath GetWorkingDirectory(boost::system::error_code& ec) noexcept
-{
-	const auto requiredBufferSize = GetCurrentDirectoryW(0, nullptr);
-	if (requiredBufferSize == 0)
-	{
-		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
-		return WindowsPath();
-	}
-	std::unique_ptr<wchar_t[]> buffer(new wchar_t[requiredBufferSize]);
-	const auto writtenCharacterCount = GetCurrentDirectoryW(requiredBufferSize, &buffer[0]);
-	if(requiredBufferSize == 0)
-	{
-		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
-		return WindowsPath();
-	}
-	ec = boost::system::error_code();
-	return WindowsPath(WideToUTF8String(buffer.get()));
-}
-
-NativePath GetWorkingDirectory()
-{
-	boost::system::error_code ec;
-	const auto result = GetWorkingDirectory(ec);
-	if (ec)
-	{
-		throw boost::system::system_error(ec, "Failed to get working directory");
 	}
 	return result;
 }
