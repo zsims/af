@@ -21,6 +21,7 @@ add_library(
     include/bslib/file/FileRestoreEvent.hpp
     include/bslib/file/FileFinder.hpp
     include/bslib/file/FileRestorerEs.hpp
+    include/bslib/file/fs/path.hpp
     include/bslib/file/fs/WindowsPath.hpp
     include/bslib/UnitOfWork.hpp
     include/bslib/unicode.hpp

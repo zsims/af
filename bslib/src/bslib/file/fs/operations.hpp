@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bslib/file/fs/WindowsPath.hpp"
+#include "bslib/file/fs/path.hpp"
 
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
@@ -14,66 +14,66 @@ namespace fs {
  * Generates a unique temporary path, e.g. C:\temp\<some guid>
  * \returns The full path to the unique temporary path
  */
-WindowsPath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept;
-WindowsPath GenerateUniqueTempPath();
+NativePath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept;
+NativePath GenerateUniqueTempPath();
 
 /**
  * Generates a unique temporary path that's beyond 260 characters, e.g. C:\temp\something so very long
  * \remarks This can be useful for testing extended path support
  * \returns The full path to the unique temporary path
  */
-WindowsPath GenerateUniqueTempExtendedPath(boost::system::error_code& ec) noexcept;
-WindowsPath GenerateUniqueTempExtendedPath();
+NativePath GenerateUniqueTempExtendedPath(boost::system::error_code& ec) noexcept;
+NativePath GenerateUniqueTempExtendedPath();
 
 /**
  * Determines whether the given path exists and represents a directory
  * \returns true if the given path is a directory, false otherwise
  **/
-bool IsDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcept;
-bool IsDirectory(const WindowsPath& path);
+bool IsDirectory(const NativePath& path, boost::system::error_code& ec) noexcept;
+bool IsDirectory(const NativePath& path);
 
 /**
  * Determines whether the given path exists and represents a regular file
  * \returns true if the given path is a regular file, false otherwise
  **/
-bool IsRegularFile(const WindowsPath& path, boost::system::error_code& ec) noexcept;
-bool IsRegularFile(const WindowsPath& path);
+bool IsRegularFile(const NativePath& path, boost::system::error_code& ec) noexcept;
+bool IsRegularFile(const NativePath& path);
 
 /**
  * Creates a directory at the given path.
  * \remarks This clashes with the Windows.h macro CreateDirectory
  * \returns true if a new directory was created, false otherwise
  */
-bool CreateDirectorySexy(const WindowsPath& path, boost::system::error_code& ec) noexcept;
-bool CreateDirectorySexy(const WindowsPath& path);
+bool CreateDirectorySexy(const NativePath& path, boost::system::error_code& ec) noexcept;
+bool CreateDirectorySexy(const NativePath& path);
 
 /**
  * Creates all directories up to and including the given path
  * \returns true if a new directory was created, false otherwise
  */
-bool CreateDirectories(const WindowsPath& path, boost::system::error_code& ec) noexcept;
-bool CreateDirectories(const WindowsPath& path);
+bool CreateDirectories(const NativePath& path, boost::system::error_code& ec) noexcept;
+bool CreateDirectories(const NativePath& path);
 
 /**
  * Sets the current working directory
  */
-void SetWorkingDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcept;
-void SetWorkingDirectory(const WindowsPath& path);
+void SetWorkingDirectory(const NativePath& path, boost::system::error_code& ec) noexcept;
+void SetWorkingDirectory(const NativePath& path);
 
 /**
  * Gets the current working directory
  * \remarks TODO: Handle UNC paths as this may return \\server\xxx for example
  */
-WindowsPath GetWorkingDirectory(boost::system::error_code& ec) noexcept;
-WindowsPath GetWorkingDirectory();
+NativePath GetWorkingDirectory(boost::system::error_code& ec) noexcept;
+NativePath GetWorkingDirectory();
 
 /**
  * Computes a well formed absolute path from the given path segment that may be relative or absolute
  * \remarks This is not thread safe, as the "current directory" is a global concept
  * \returns A well formed path if ec is marked as success
  */
-WindowsPath GetAbsolutePath(const std::wstring& path, boost::system::error_code& ec) noexcept;
-WindowsPath GetAbsolutePath(const std::wstring& path);
+NativePath GetAbsolutePath(const std::wstring& path, boost::system::error_code& ec) noexcept;
+NativePath GetAbsolutePath(const std::wstring& path);
 
 }
 }

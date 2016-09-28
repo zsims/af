@@ -27,7 +27,7 @@ std::string GenerateUuid()
 
 }
 
-WindowsPath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept
+NativePath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept
 {
 	// Per https://msdn.microsoft.com/en-us/library/windows/desktop/aa364991(v=vs.85).aspx GUIDs are recommended for 
 	// creating many temporary files to avoid clashes... so lets cut out the middle man ;)
@@ -43,7 +43,7 @@ WindowsPath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept
 	return result;
 }
 
-WindowsPath GenerateUniqueTempPath()
+NativePath GenerateUniqueTempPath()
 {
 	boost::system::error_code ec;
 	auto result = GenerateUniqueTempPath(ec);
@@ -54,7 +54,7 @@ WindowsPath GenerateUniqueTempPath()
 	return result;
 }
 
-WindowsPath GenerateUniqueTempExtendedPath(boost::system::error_code& ec) noexcept
+NativePath GenerateUniqueTempExtendedPath(boost::system::error_code& ec) noexcept
 {
 	wchar_t buffer[MAX_PATH];
 	if (!::GetTempPathW(MAX_PATH, buffer))
@@ -86,7 +86,7 @@ WindowsPath GenerateUniqueTempExtendedPath()
 	return result;
 }
 
-bool IsDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcept
+bool IsDirectory(const NativePath& path, boost::system::error_code& ec) noexcept
 {
 	const auto wideString = UTF8ToWideString(path.ToExtendedString());
 	const auto result = ::GetFileAttributesW(wideString.c_str());
@@ -99,7 +99,7 @@ bool IsDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcep
 	return (result & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
 }
 
-bool IsDirectory(const WindowsPath& path)
+bool IsDirectory(const NativePath& path)
 {
 	boost::system::error_code ec;
 	auto result = IsDirectory(path, ec);
@@ -110,7 +110,7 @@ bool IsDirectory(const WindowsPath& path)
 	return result;
 }
 
-bool IsRegularFile(const WindowsPath& path, boost::system::error_code& ec) noexcept
+bool IsRegularFile(const NativePath& path, boost::system::error_code& ec) noexcept
 {
 	const auto wideString = UTF8ToWideString(path.ToExtendedString());
 	const auto result = ::GetFileAttributesW(wideString.c_str());
@@ -124,7 +124,7 @@ bool IsRegularFile(const WindowsPath& path, boost::system::error_code& ec) noexc
 	return (!(result & FILE_ATTRIBUTE_REPARSE_POINT) && !(result & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-bool IsRegularFile(const WindowsPath& path)
+bool IsRegularFile(const NativePath& path)
 {
 	boost::system::error_code ec;
 	auto result = IsRegularFile(path, ec);
@@ -135,7 +135,7 @@ bool IsRegularFile(const WindowsPath& path)
 	return result;
 }
 
-bool CreateDirectorySexy(const WindowsPath& path, boost::system::error_code& ec) noexcept
+bool CreateDirectorySexy(const NativePath& path, boost::system::error_code& ec) noexcept
 {
 	const auto wideString = UTF8ToWideString(path.ToExtendedString());
 	// BOOL is a 32-bit int, so compare against false see https://msdn.microsoft.com/en-us/library/windows/desktop/bb773621(v=vs.85).aspx
@@ -148,7 +148,7 @@ bool CreateDirectorySexy(const WindowsPath& path, boost::system::error_code& ec)
 	return false;
 }
 
-bool CreateDirectorySexy(const WindowsPath& path)
+bool CreateDirectorySexy(const NativePath& path)
 {
 	boost::system::error_code ec;
 	auto result = CreateDirectorySexy(path, ec);
@@ -159,7 +159,7 @@ bool CreateDirectorySexy(const WindowsPath& path)
 	return result;
 }
 
-bool CreateDirectories(const WindowsPath& path, boost::system::error_code& ec) noexcept
+bool CreateDirectories(const NativePath& path, boost::system::error_code& ec) noexcept
 {
 	if (IsDirectory(path, ec))
 	{
@@ -179,7 +179,7 @@ bool CreateDirectories(const WindowsPath& path, boost::system::error_code& ec) n
 	return true;
 }
 
-bool CreateDirectories(const WindowsPath& path)
+bool CreateDirectories(const NativePath& path)
 {
 	boost::system::error_code ec;
 	auto result = CreateDirectories(path, ec);
@@ -190,7 +190,7 @@ bool CreateDirectories(const WindowsPath& path)
 	return result;
 }
 
-void SetWorkingDirectory(const WindowsPath& path, boost::system::error_code& ec) noexcept
+void SetWorkingDirectory(const NativePath& path, boost::system::error_code& ec) noexcept
 {
 	const auto wideString = UTF8ToWideString(path.ToExtendedString());
 	const auto result = SetCurrentDirectoryW(wideString.c_str());
@@ -202,7 +202,7 @@ void SetWorkingDirectory(const WindowsPath& path, boost::system::error_code& ec)
 	ec = boost::system::error_code();
 }
 
-void SetWorkingDirectory(const WindowsPath& path)
+void SetWorkingDirectory(const NativePath& path)
 {
 	boost::system::error_code ec;
 	SetWorkingDirectory(path, ec);
@@ -212,7 +212,7 @@ void SetWorkingDirectory(const WindowsPath& path)
 	}
 }
 
-WindowsPath GetWorkingDirectory(boost::system::error_code& ec) noexcept
+NativePath GetWorkingDirectory(boost::system::error_code& ec) noexcept
 {
 	const auto requiredBufferSize = GetCurrentDirectoryW(0, nullptr);
 	if (requiredBufferSize == 0)
@@ -231,7 +231,7 @@ WindowsPath GetWorkingDirectory(boost::system::error_code& ec) noexcept
 	return WindowsPath(WideToUTF8String(buffer.get()));
 }
 
-WindowsPath GetWorkingDirectory()
+NativePath GetWorkingDirectory()
 {
 	boost::system::error_code ec;
 	const auto result = GetWorkingDirectory(ec);
@@ -242,7 +242,7 @@ WindowsPath GetWorkingDirectory()
 	return result;
 }
 
-WindowsPath GetAbsolutePath(const std::wstring& path, boost::system::error_code& ec) noexcept
+NativePath GetAbsolutePath(const std::wstring& path, boost::system::error_code& ec) noexcept
 {
 	// Find out how big the buffer needs to be
 	const auto requiredBufferSize = GetFullPathNameW(path.c_str(), 0, nullptr, nullptr);
@@ -266,7 +266,7 @@ WindowsPath GetAbsolutePath(const std::wstring& path, boost::system::error_code&
 	return WindowsPath(WideToUTF8String(buffer.get()));
 }
 
-WindowsPath GetAbsolutePath(const std::wstring& path)
+NativePath GetAbsolutePath(const std::wstring& path)
 {
 	boost::system::error_code ec;
 	auto result = GetAbsolutePath(path, ec);
