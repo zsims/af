@@ -1,10 +1,6 @@
-#pragma once
-
 #include "utility/ScopedExclusiveFileAccess.hpp"
 
-#if WIN32
 #include <windows.h>
-#endif
 
 #include <stdexcept>
 
