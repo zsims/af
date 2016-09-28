@@ -202,6 +202,45 @@ TEST(operationsIntegrationTest, GetAbsolutePath_RootSuccess)
 	EXPECT_EQ(root, actual);
 }
 
+TEST(operationsIntegrationTest, OpenFileRead_Success)
+{
+	// Arrange
+	const auto first = GenerateUniqueTempPath();
+	{
+		auto writeStream = OpenFileWrite(first);
+	}
+
+	// Act
+	auto stream = OpenFileRead(first);
+
+	// Assert
+	EXPECT_TRUE(stream);
+}
+
+TEST(operationsIntegrationTest, OpenFileRead_FailsIfNotExists)
+{
+	// Arrange
+	const auto first = GenerateUniqueTempPath();
+
+	// Act
+	const auto stream = OpenFileRead(first);
+
+	// Assert
+	EXPECT_FALSE(stream);
+}
+
+TEST(operationsIntegrationTest, OpenFileWrite_Success)
+{
+	// Arrange
+	const auto first = GenerateUniqueTempPath();
+
+	// Act
+	auto writeStream = OpenFileWrite(first);
+
+	// Assert
+	EXPECT_TRUE(writeStream);
+}
+
 }
 }
 }

@@ -5,6 +5,8 @@
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
 
+#include <fstream>
+
 namespace af {
 namespace bslib {
 namespace file {
@@ -61,6 +63,16 @@ bool CreateDirectories(const NativePath& path);
  */
 NativePath GetAbsolutePath(const std::wstring& path, boost::system::error_code& ec) noexcept;
 NativePath GetAbsolutePath(const std::wstring& path);
+
+/**
+ * Opens the file at the given path for reading
+ */
+std::ifstream OpenFileRead(const NativePath& path) noexcept;
+
+/**
+ * Opens the file at the given path for writing
+ */
+std::ofstream OpenFileWrite(const NativePath& path) noexcept;
 
 }
 }
