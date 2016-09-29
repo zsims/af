@@ -5,6 +5,9 @@
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/fs/operations.hpp"
 
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/algorithm/copy.hpp>
+
 #include <vector>
 
 namespace af {
@@ -19,22 +22,33 @@ FileRestorerEs::FileRestorerEs(
 {
 }
 
-void FileRestorerEs::Restore(const FileEvent& fileEvent, const fs::NativePath& targetPath)
+void FileRestorerEs::Restore(const FileEvent& fileEvent, const UTF8String& targetPath)
 {
-	RestoreFileEvent(fileEvent, targetPath);
+	auto absolutePath = fs::GetAbsolutePath(targetPath);
+	absolutePath.MakePreferred();
+	RestoreFileEvent(fileEvent, absolutePath);
 }
 
-void FileRestorerEs::Restore(const std::vector<FileEvent>& fileEvents, const fs::NativePath& targetPath)
+void FileRestorerEs::Restore(const std::map<fs::NativePath, FileEvent>& fileEvents, const UTF8String& targetPath)
 {
-	if (!fs::IsDirectory(targetPath))
+	std::vector<FileEvent> events;
+	boost::copy(fileEvents | boost::adaptors::map_values, std::back_inserter(events));
+	Restore(events, targetPath);
+}
+
+void FileRestorerEs::Restore(const std::vector<FileEvent>& fileEvents, const UTF8String& targetPath)
+{
+	auto absolutePath = fs::GetAbsolutePath(targetPath);
+	absolutePath.MakePreferred();
+
+	if (!fs::IsDirectory(absolutePath))
 	{
-		throw TargetPathNotSupportedException(targetPath.ToExtendedString());
+		throw TargetPathNotSupportedException(absolutePath.ToString());
 	}
 
 	for (const auto& fileEvent : fileEvents)
 	{
-		auto fileEventTargetPath = targetPath;
-		fileEventTargetPath.AppendFull(fileEvent.fullPath);
+		auto fileEventTargetPath = absolutePath.AppendFullCopy(fileEvent.fullPath);
 		RestoreFileEvent(fileEvent, fileEventTargetPath);
 	}
 }

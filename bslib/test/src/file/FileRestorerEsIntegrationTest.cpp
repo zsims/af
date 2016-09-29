@@ -3,6 +3,7 @@
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/fs/operations.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
+#include "file/test_utility/ScopedWorkingDirectory.hpp"
 #include "utility/gtest_boost_filesystem_fix.hpp"
 #include "utility/matchers.hpp"
 #include "utility/ScopedExclusiveFileAccess.hpp"
@@ -94,7 +95,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetDoNotExist)
 	const auto restorePath = fs::GenerateUniqueTempPath();
 	// Act
 	// Assert
-	ASSERT_THROW(_restorer->Restore(std::vector<FileEvent>(), restorePath), TargetPathNotSupportedException);
+	ASSERT_THROW(_restorer->Restore(std::vector<FileEvent>(), restorePath.ToString()), TargetPathNotSupportedException);
 }
 
 TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetIsFile)
@@ -104,7 +105,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetIsFile)
 	CreateFile(restorePath, "hello");
 	// Act
 	// Assert
-	ASSERT_THROW(_restorer->Restore(std::vector<FileEvent>(), restorePath), TargetPathNotSupportedException);
+	ASSERT_THROW(_restorer->Restore(std::vector<FileEvent>(), restorePath.ToString()), TargetPathNotSupportedException);
 }
 
 TEST_F(FileRestorerEsIntegrationTest, Restore_FileToFilePath)
@@ -120,7 +121,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_FileToFilePath)
 
 	// Act
 	const auto lastEvent = _finder->GetLastEventByPath(_sampleFilePath);
-	_restorer->Restore(lastEvent, fileRestorePath);
+	_restorer->Restore(lastEvent, fileRestorePath.ToString());
 
 	// Assert
 	const FileRestoreEvent expectedRestoreEvent(lastEvent, fileRestorePath, FileRestoreEventAction::Restored);
@@ -137,7 +138,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_IgnoresUnsupportedEvents)
 	};
 
 	// Act
-	_restorer->Restore(eventsToRestore, _restorePath);
+	_restorer->Restore(eventsToRestore, _restorePath.ToString());
 
 	// Assert
 	const std::vector<FileRestoreEvent> expectedEmittedEvents = {
@@ -153,7 +154,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_Success)
 	_adder->Add(_sampleBasePath.ToString());
 
 	// Act
-	_restorer->Restore(_adder->GetEmittedEvents(), _restorePath);
+	_restorer->Restore(_adder->GetEmittedEvents(), _restorePath.ToString());
 
 	// Assert
 	const auto sampleBasePathRestored = _restorePath.AppendFullCopy(_sampleBasePath).EnsureTrailingSlash();
@@ -163,6 +164,28 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_Success)
 	const auto sampleFilePathRestored = _restorePath.AppendFullCopy(_sampleFilePath);
 	EXPECT_THAT(_sampleFilePath, HasSameFileContents(sampleFilePathRestored));
 	const auto sampleSubFilePathRestored = _restorePath.AppendFullCopy(_sampleSubFilePath);
+	EXPECT_THAT(_sampleSubFilePath, HasSameFileContents(sampleSubFilePathRestored));
+}
+
+TEST_F(FileRestorerEsIntegrationTest, Restore_ToRelativeDirectorySuccess)
+{
+	// Arrange
+	const auto restorePath = fs::GenerateShortUniqueTempPath();
+	fs::CreateDirectories(restorePath);
+	_adder->Add(_sampleBasePath.ToString());
+
+	// Act
+	test_utility::ScopedWorkingDirectory workingDirectory(restorePath);
+	_restorer->Restore(_adder->GetEmittedEvents(), ".");
+
+	// Assert
+	const auto sampleBasePathRestored = restorePath.AppendFullCopy(_sampleBasePath).EnsureTrailingSlash();
+	EXPECT_TRUE(fs::Exists(sampleBasePathRestored));
+	const auto sampleSubDirectoryRestored = restorePath.AppendFullCopy(_sampleSubDirectory).EnsureTrailingSlash();
+	EXPECT_TRUE(fs::Exists(sampleSubDirectoryRestored));
+	const auto sampleFilePathRestored = restorePath.AppendFullCopy(_sampleFilePath);
+	EXPECT_THAT(_sampleFilePath, HasSameFileContents(sampleFilePathRestored));
+	const auto sampleSubFilePathRestored = restorePath.AppendFullCopy(_sampleSubFilePath);
 	EXPECT_THAT(_sampleSubFilePath, HasSameFileContents(sampleSubFilePathRestored));
 }
 
@@ -176,7 +199,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_SkipsExistingFiles)
 	CreateFile(sampleSubFilePathRestored, "Something else");
 
 	// Act
-	_restorer->Restore(_adder->GetEmittedEvents(), _restorePath);
+	_restorer->Restore(_adder->GetEmittedEvents(), _restorePath.ToString());
 
 	// Assert
 	const auto emittedEvents = _restorer->GetEmittedEvents();
@@ -213,7 +236,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_HandlesFileDirectoryClash)
 	CreateFile(sampleSubDirectoryRestored, "Uhoh");
 
 	// Act
-	_restorer->Restore(_adder->GetEmittedEvents(), _restorePath);
+	_restorer->Restore(_adder->GetEmittedEvents(), _restorePath.ToString());
 
 	// Assert
 	const auto emittedEvents = _restorer->GetEmittedEvents();
