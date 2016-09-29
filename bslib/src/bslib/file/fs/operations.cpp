@@ -234,9 +234,12 @@ void RemoveAll(const NativePath& path)
 	const auto wideString = UTF8ToWideString(path.ToExtendedString());
 	boost::filesystem::remove_all(wideString);
 }
+
+NativePath GetAbsolutePath(const UTF8String& path, boost::system::error_code& ec) noexcept
 {
 	// Find out how big the buffer needs to be
-	const auto requiredBufferSize = GetFullPathNameW(path.c_str(), 0, nullptr, nullptr);
+	const auto wideString = UTF8ToWideString(path);
+	const auto requiredBufferSize = GetFullPathNameW(wideString.c_str(), 0, nullptr, nullptr);
 	if (requiredBufferSize == 0)
 	{
 		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
@@ -247,7 +250,7 @@ void RemoveAll(const NativePath& path)
 	std::unique_ptr<wchar_t[]> buffer(new wchar_t[requiredBufferSize]);
 
 	// Copy into the allocated buffer
-	const auto writtenCharacterCount = GetFullPathNameW(path.c_str(), requiredBufferSize, buffer.get(), nullptr);
+	const auto writtenCharacterCount = GetFullPathNameW(wideString.c_str(), requiredBufferSize, buffer.get(), nullptr);
 	if (writtenCharacterCount == 0)
 	{
 		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
@@ -257,7 +260,7 @@ void RemoveAll(const NativePath& path)
 	return WindowsPath(WideToUTF8String(buffer.get()));
 }
 
-NativePath GetAbsolutePath(const std::wstring& path)
+NativePath GetAbsolutePath(const UTF8String& path)
 {
 	boost::system::error_code ec;
 	auto result = GetAbsolutePath(path, ec);

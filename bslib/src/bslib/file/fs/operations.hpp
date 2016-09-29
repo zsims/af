@@ -80,8 +80,8 @@ void RemoveAll(const NativePath& path);
  * \remarks This is not thread safe, as the "current directory" is a global concept
  * \returns A well formed path if ec is marked as success
  */
-NativePath GetAbsolutePath(const std::wstring& path, boost::system::error_code& ec) noexcept;
-NativePath GetAbsolutePath(const std::wstring& path);
+NativePath GetAbsolutePath(const UTF8String& path, boost::system::error_code& ec) noexcept;
+NativePath GetAbsolutePath(const UTF8String& path);
 
 /**
  * Opens the file at the given path for reading
