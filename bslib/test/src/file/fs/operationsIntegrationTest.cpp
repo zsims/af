@@ -155,7 +155,7 @@ TEST(operationsIntegrationTest, CreateDirectories_AlreadyExistsSuccess)
 	// Assert
 	boost::system::error_code ec;
 	EXPECT_FALSE(CreateDirectories(unique, ec));
-	EXPECT_TRUE(ec);
+	EXPECT_FALSE(ec);
 }
 
 TEST(operationsIntegrationTest, CreateDirectories_FileExistsFails)

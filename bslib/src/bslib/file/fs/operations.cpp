@@ -45,7 +45,7 @@ NativePath GenerateShortUniqueTempPath(boost::system::error_code& ec) noexcept
 	}
 	WindowsPath result(WideToUTF8String(buffer));
 	result.AppendSegment(GenerateUuid());
-	ec = boost::system::error_code();
+	ec.clear();
 	return result;
 }
 
@@ -135,7 +135,7 @@ bool CreateDirectorySexy(const NativePath& path, boost::system::error_code& ec) 
 	// BOOL is a 32-bit int, so compare against false see https://msdn.microsoft.com/en-us/library/windows/desktop/bb773621(v=vs.85).aspx
 	if (::CreateDirectoryW(wideString.c_str(), nullptr) != FALSE)
 	{
-		ec = boost::system::error_code();
+		ec.clear();
 		return true;
 	}
 	ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
@@ -157,8 +157,7 @@ bool CreateDirectories(const NativePath& path, boost::system::error_code& ec) no
 {
 	if (IsDirectory(path, ec))
 	{
-		// didn't create it
-		ec = boost::system::error_code(ERROR_ALREADY_EXISTS, boost::system::system_category());
+		// already exists
 		return false;
 	}
 
@@ -231,7 +230,7 @@ NativePath GetAbsolutePath(const UTF8String& path, boost::system::error_code& ec
 		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
 		return WindowsPath();
 	}
-	ec = boost::system::error_code();
+	ec.clear();
 	return WindowsPath(WideToUTF8String(buffer.get()));
 }
 
