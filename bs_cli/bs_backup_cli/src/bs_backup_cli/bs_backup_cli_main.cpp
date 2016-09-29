@@ -53,6 +53,16 @@ int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::pat
 		std::cerr << e.what() << std::endl;
 		return 5;
 	}
+	catch (const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return -1;
+	}
+	catch (...)
+	{
+		std::cerr << "Unexpected error" << std::endl;
+		return -1;
+	}
 }
 
 }
