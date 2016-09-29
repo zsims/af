@@ -16,7 +16,6 @@ add_executable(
     src/file/FileAdderEsIntegrationTest.cpp
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRestorerEsIntegrationTest.cpp
-    src/file/fs/DirectoryContentIteratorIntegrationTest.cpp
     src/file/fs/WindowsPathIntegrationTest.cpp
     src/file/fs/operationsIntegrationTest.cpp
     src/file/test_utility/ScopedWorkingDirectory.cpp
