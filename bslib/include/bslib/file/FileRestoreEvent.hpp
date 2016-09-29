@@ -45,6 +45,25 @@ struct FileRestoreEvent
 	}
 };
 
+inline std::ostream& operator<<(std::ostream & os, FileRestoreEventAction action)
+{
+	switch (action)
+	{
+		case FileRestoreEventAction::Restored:
+			return os << "Restored";
+		case FileRestoreEventAction::Skipped:
+			return os << "Skipped";
+		case FileRestoreEventAction::FailedToWriteFile:
+			return os << "Failed to write";
+		case FileRestoreEventAction::FailedToCreateDirectory:
+			return os << "Failed to write directory";
+		case FileRestoreEventAction::UnsupportedFileEvent:
+			return os << "Unsupported";
+	};
+
+	return os << "Unknown";
+}
+
 }
 }
 }

@@ -1,1 +1,2 @@
 add_subdirectory(bs_backup_cli)
+add_subdirectory(bs_restore_cli)
