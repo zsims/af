@@ -13,22 +13,22 @@ FileFinder::FileFinder(
 {
 }
 
-boost::optional<FileEvent> FileFinder::FindLastChangedEventByPath(const boost::filesystem::path& fullPath) const
+boost::optional<FileEvent> FileFinder::FindLastChangedEventByPath(const fs::NativePath& fullPath) const
 {
 	return _fileEventStreamRepository.FindLastChangedEvent(fullPath);
 }
 
-std::map<boost::filesystem::path, FileEvent> FileFinder::GetLastChangedEventsStartingWithPath(const boost::filesystem::path& fullPath) const
+std::map<fs::NativePath, FileEvent> FileFinder::GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const
 {
 	return _fileEventStreamRepository.GetLastChangedEventsStartingWithPath(fullPath);
 }
 
-FileEvent FileFinder::GetLastEventByPath(const boost::filesystem::path& fullPath) const
+FileEvent FileFinder::GetLastEventByPath(const fs::NativePath& fullPath) const
 {
 	const auto ev = _fileEventStreamRepository.FindLastChangedEvent(fullPath);
 	if (!ev)
 	{
-		throw EventNotFoundException("Event with path " + fullPath.string() + " not found");
+		throw EventNotFoundException("Event with path " + fullPath.ToString() + " not found");
 	}
 	return ev.value();
 }

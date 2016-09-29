@@ -59,6 +59,7 @@ public:
 	/**
 	 * Returns the "extended" path (with the extended prefix)
 	 */
+	const UTF8String& ToString() const { return _path; }
 	const UTF8String& ToExtendedString() const { return _path; }
 
 	/**
@@ -75,6 +76,7 @@ public:
 	 * Appends the given full path, e.g. "C:\foo\bar".Append(WindowsPath("D:\yeah\baby")) == "C:\foo\bar\D\yeah\baby"
 	 */
 	void AppendFull(const WindowsPath& p);
+	WindowsPath AppendFullCopy(const WindowsPath& p) const;
 
 	bool operator==(const WindowsPath& rhs) const
 	{

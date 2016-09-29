@@ -1,12 +1,12 @@
 #include "bslib/file/FileEventStreamRepository.hpp"
 
 #include "bslib/blob/Address.hpp"
-#include "bslib/file/FileEvent.hpp"
 #include "bslib/file/exceptions.hpp"
+#include "bslib/file/FileEvent.hpp"
+#include "bslib/file/fs/path.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/format.hpp>
 #include <sqlite3.h>
 
@@ -64,13 +64,13 @@ std::vector<FileEvent> FileEventStreamRepository::GetAllEvents() const
 	return result;
 }
 
-std::map<boost::filesystem::path, FileEvent> FileEventStreamRepository::GetLastChangedEventsStartingWithPath(const boost::filesystem::path& fullPath) const
+std::map<fs::NativePath, FileEvent> FileEventStreamRepository::GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const
 {
-	std::map<boost::filesystem::path, FileEvent> result;
+	std::map<fs::NativePath, FileEvent> result;
 
 	// " isn't legal in Linux or Windows paths, so use that as an escape sequence
 	// to escape the LIKE operators: http://sqlite.org/lang_expr.html#like
-	std::string needle = fullPath.string();
+	auto needle = fullPath.ToString();
 	boost::replace_all(needle, "%", "\"%");
 	boost::replace_all(needle, "_", "\"_");
 	needle += "%";
@@ -91,7 +91,7 @@ std::map<boost::filesystem::path, FileEvent> FileEventStreamRepository::GetLastC
 void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent)
 {
 	sqlitepp::ScopedStatementReset reset(_insertEventStatement);
-	const auto& rawPath = fileEvent.fullPath.string();
+	const auto& rawPath = fileEvent.fullPath.ToString();
 	sqlitepp::BindByParameterNameText(_insertEventStatement, ":FullPath", rawPath);
 
 	// TODO: This has to stay in scope for the duration of the statement, find a better way to do this without copying
@@ -117,10 +117,10 @@ void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent)
 	}
 }
 
-boost::optional<FileEvent> FileEventStreamRepository::FindLastChangedEvent(const boost::filesystem::path& fullPath) const
+boost::optional<FileEvent> FileEventStreamRepository::FindLastChangedEvent(const fs::NativePath& fullPath) const
 {
 	sqlitepp::ScopedStatementReset reset(_getLastChangedEventByPathStatement);
-	const auto& rawPath = fullPath.string();
+	const auto rawPath = fullPath.ToString();
 	sqlitepp::BindByParameterNameText(_getLastChangedEventByPathStatement, ":FullPath", rawPath);
 
 	auto stepResult = sqlite3_step(_getLastChangedEventByPathStatement);
@@ -135,7 +135,7 @@ boost::optional<FileEvent> FileEventStreamRepository::FindLastChangedEvent(const
 FileEvent FileEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStatement& statement) const
 {
 	const auto rawFullPath = sqlite3_column_text(statement, GetFileEvent_ColumnIndex_FullPath);
-	const std::string fullPath(reinterpret_cast<const char*>(rawFullPath));
+	const fs::NativePath fullPath(reinterpret_cast<const char*>(rawFullPath));
 	
 	const auto contentBlobAddressBytesCount = sqlite3_column_bytes(statement, GetFileEvent_ColumnIndex_ContentBlobAddress);
 	boost::optional<blob::Address> contentBlobAddress = boost::none;

@@ -94,6 +94,13 @@ void WindowsPath::AppendFull(const WindowsPath& p)
 	AppendSegment(sanitized);
 }
 
+WindowsPath WindowsPath::AppendFullCopy(const WindowsPath& p) const
+{
+	auto copy = *this;
+	copy.AppendFull(p);
+	return copy;
+}
+
 UTF8String WindowsPath::GetFilename() const
 {
 	const auto index = _path.find_last_of(SEPARATOR);

@@ -5,6 +5,7 @@
 #include "bslib/file/path_util.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileEventStreamRepository.hpp"
+#include "bslib/file/fs/operations.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -25,10 +26,10 @@ FileAdderEs::FileAdderEs(
 {
 }
 
-boost::optional<blob::Address> FileAdderEs::SaveFileContents(const boost::filesystem::path& sourcePath)
+boost::optional<blob::Address> FileAdderEs::SaveFileContents(const fs::NativePath& sourcePath)
 {
 	// TODO: ffs should really support files so they don't have to be read into memory. Or at least streaming...
-	std::ifstream file(sourcePath.string(), std::ios::binary | std::ios::in);
+	auto file = OpenFileRead(sourcePath);
 
 	if (!file)
 	{
@@ -47,37 +48,32 @@ boost::optional<blob::Address> FileAdderEs::SaveFileContents(const boost::filesy
 	return blobAddress;
 }
 
-void FileAdderEs::Add(const boost::filesystem::path& sourcePath)
+void FileAdderEs::Add(const UTF8String& sourcePath)
 {
-	// Get the full path resolving symlinks and . + .. references
-	// This also checks the path exists
-	boost::system::error_code ec;
-	auto canonicalPath = boost::filesystem::canonical(sourcePath, ec);
-	if (ec != boost::system::errc::success)
+	// Get the full path
+	const auto absolutePath = fs::GetAbsolutePath(sourcePath);
+
+	if (!fs::Exists(absolutePath))
 	{
-		throw PathNotFoundException(canonicalPath.string());
+		throw PathNotFoundException(absolutePath.ToString());
 	}
 
-	// Ensure slashes are using the system preferred / or \, this is important as canonical() doesn't do this
-	// (in fact, it changes the root \ to / on Windows :/)
-	canonicalPath.make_preferred();
-
-	if (boost::filesystem::is_regular_file(canonicalPath))
+	if (fs::IsRegularFile(absolutePath))
 	{
-		const auto previousEvent = _fileEventStreamRepository.FindLastChangedEvent(canonicalPath);
-		VisitPath(canonicalPath, previousEvent);
+		const auto previousEvent = _fileEventStreamRepository.FindLastChangedEvent(absolutePath);
+		VisitPath(absolutePath, previousEvent);
 	}
-	else if (boost::filesystem::is_directory(canonicalPath))
+	else if (fs::IsDirectory(absolutePath))
 	{
-		ScanDirectory(EnsureTrailingSlashCopy(canonicalPath));
+		ScanDirectory(absolutePath.EnsureTrailingSlashCopy());
 	}
 	else
 	{
-		throw SourcePathNotSupportedException(canonicalPath.string());
+		throw SourcePathNotSupportedException(absolutePath.ToString());
 	}
 }
 
-void FileAdderEs::ScanDirectory(const boost::filesystem::path& sourcePath)
+void FileAdderEs::ScanDirectory(const fs::NativePath& sourcePath)
 {
 	auto lastChangeEvents = _fileEventStreamRepository.GetLastChangedEventsStartingWithPath(sourcePath);
 
@@ -85,15 +81,17 @@ void FileAdderEs::ScanDirectory(const boost::filesystem::path& sourcePath)
 	VisitPath(sourcePath, FindPreviousEvent(lastChangeEvents, sourcePath));
 
 	// Scan for changes to files on disk
-	boost::filesystem::recursive_directory_iterator itr(sourcePath);
+
+	// TODO: replace this with the directory iterator that takes a WindowsPath
+	boost::filesystem::recursive_directory_iterator itr(sourcePath.ToExtendedString());
 	for (const auto& entry : itr)
 	{
-		auto path = entry.path();
+		fs::NativePath path(entry.path().string());
 
 		// Directories should always be processed with a slash
-		if (boost::filesystem::is_directory(path))
+		if (fs::IsDirectory(path))
 		{
-			EnsureTrailingSlash(path);
+			path.EnsureTrailingSlash();
 		}
 
 		VisitPath(path, FindPreviousEvent(lastChangeEvents, path));
@@ -107,9 +105,9 @@ void FileAdderEs::ScanDirectory(const boost::filesystem::path& sourcePath)
 	}
 }
 
-void FileAdderEs::VisitPath(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent)
+void FileAdderEs::VisitPath(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
-	if (!boost::filesystem::exists(sourcePath))
+	if (!fs::Exists(sourcePath))
 	{
 		if (previousEvent && previousEvent->action != FileEventAction::ChangedRemoved)
 		{
@@ -118,11 +116,11 @@ void FileAdderEs::VisitPath(const boost::filesystem::path& sourcePath, const boo
 		return;
 	}
 
-	if (boost::filesystem::is_regular_file(sourcePath))
+	if (fs::IsRegularFile(sourcePath))
 	{
 		VisitFile(sourcePath, previousEvent);
 	}
-	else if (boost::filesystem::is_directory(sourcePath))
+	else if (fs::IsDirectory(sourcePath))
 	{
 		VisitDirectory(sourcePath, previousEvent);
 	}
@@ -132,7 +130,7 @@ void FileAdderEs::VisitPath(const boost::filesystem::path& sourcePath, const boo
 	}
 }
 
-void FileAdderEs::VisitFile(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent)
+void FileAdderEs::VisitFile(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
 	const auto blobAddress = SaveFileContents(sourcePath);
 	if (!blobAddress)
@@ -164,17 +162,17 @@ void FileAdderEs::VisitFile(const boost::filesystem::path& sourcePath, const boo
 	EmitEvent(RegularFileEvent(sourcePath, blobAddress, action));
 }
 
-void FileAdderEs::VisitDirectory(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent)
+void FileAdderEs::VisitDirectory(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
 	if (!previousEvent)
 	{
-		EmitEvent(DirectoryEvent(EnsureTrailingSlashCopy(sourcePath), FileEventAction::ChangedAdded));
+		EmitEvent(DirectoryEvent(sourcePath.EnsureTrailingSlashCopy(), FileEventAction::ChangedAdded));
 	}
 }
 
 boost::optional<FileEvent> FileAdderEs::FindPreviousEvent(
-	const std::map<boost::filesystem::path, FileEvent>& fileEvents,
-	const boost::filesystem::path& fullPath)
+	const std::map<fs::NativePath, FileEvent>& fileEvents,
+	const fs::NativePath& fullPath)
 {
 	const auto it = fileEvents.find(fullPath);
 	if (it == fileEvents.end())
