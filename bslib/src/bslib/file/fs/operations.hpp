@@ -64,6 +64,18 @@ bool CreateDirectories(const NativePath& path, boost::system::error_code& ec) no
 bool CreateDirectories(const NativePath& path);
 
 /**
+ * Deletes the given file/directory
+ */
+void Remove(const NativePath& path, boost::system::error_code& ec) noexcept;
+void Remove(const NativePath& path);
+
+/**
+ * Deletes the given file/directories
+ */
+void RemoveAll(const NativePath& path, boost::system::error_code& ec) noexcept;
+void RemoveAll(const NativePath& path);
+
+/**
  * Computes a well formed absolute path from the given path segment that may be relative or absolute
  * \remarks This is not thread safe, as the "current directory" is a global concept
  * \returns A well formed path if ec is marked as success

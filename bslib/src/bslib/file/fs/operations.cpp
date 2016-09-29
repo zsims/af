@@ -209,7 +209,31 @@ bool CreateDirectories(const NativePath& path)
 	return result;
 }
 
-NativePath GetAbsolutePath(const std::wstring& path, boost::system::error_code& ec) noexcept
+void Remove(const NativePath& path, boost::system::error_code& ec) noexcept
+{
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	boost::filesystem::remove(wideString, ec);
+}
+
+void Remove(const NativePath& path)
+{
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	boost::filesystem::remove(wideString);
+}
+
+void RemoveAll(const NativePath& path, boost::system::error_code& ec) noexcept
+{
+	// This is safe with extended paths, and 99x easier than implementing it
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	boost::filesystem::remove_all(wideString, ec);
+}
+
+void RemoveAll(const NativePath& path)
+{
+	// This is safe with extended paths, and 99x easier than implementing it
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	boost::filesystem::remove_all(wideString);
+}
 {
 	// Find out how big the buffer needs to be
 	const auto requiredBufferSize = GetFullPathNameW(path.c_str(), 0, nullptr, nullptr);

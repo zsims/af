@@ -245,8 +245,10 @@ TEST(operationsIntegrationTest, Exists_Success)
 {
 	// Arrange
 	const auto first = GenerateUniqueTempPath();
-	auto writeStream = OpenFileWrite(first);
-	ASSERT_TRUE(writeStream);
+	{
+		auto writeStream = OpenFileWrite(first);
+		ASSERT_TRUE(writeStream);
+	}
 
 	// Act
 	// Assert
@@ -258,6 +260,41 @@ TEST(operationsIntegrationTest, Exists_FalseIfNotExists)
 	// Arrange
 	const auto first = GenerateUniqueTempPath();
 	// Act
+	// Assert
+	EXPECT_FALSE(Exists(first));
+}
+
+TEST(operationsIntegrationTest, Remove_Success)
+{
+	// Arrange
+	const auto first = GenerateUniqueTempPath();
+	{
+		auto writeStream = OpenFileWrite(first);
+		ASSERT_TRUE(writeStream);
+	}
+
+	// Act
+	Remove(first);
+
+	// Assert
+	EXPECT_FALSE(Exists(first));
+}
+
+TEST(operationsIntegrationTest, RemoveAll_Success)
+{
+	// Arrange
+	const auto first = GenerateUniqueTempPath();
+	const auto subDirectory = first / "sub";
+	CreateDirectories(subDirectory);
+	const auto filePath = subDirectory / "file.dat";
+	{
+		auto writeStream = OpenFileWrite(filePath);
+		ASSERT_TRUE(writeStream);
+	}
+
+	// Act
+	RemoveAll(first);
+
 	// Assert
 	EXPECT_FALSE(Exists(first));
 }
