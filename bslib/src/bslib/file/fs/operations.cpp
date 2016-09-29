@@ -1,8 +1,9 @@
 #include "bslib/file/fs/operations.hpp"
 
-#include "bslib/unicode.hpp"
 #include "bslib/file/fs/WindowsPath.hpp"
+#include "bslib/unicode.hpp"
 
+#include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -10,6 +11,11 @@
 #include <windows.h>
 
 #include <string>
+
+/**
+ * Note that all operations here should support unicode and extended paths.
+ * Some boost operations support extended paths, in those cases it's preferrable to wrap boost with wide strings to avoid code page conversion
+ */
 
 namespace af {
 namespace bslib {
@@ -133,6 +139,19 @@ bool IsRegularFile(const NativePath& path)
 		throw boost::system::system_error(ec, "Failed to determine if the given path is a regular file");
 	}
 	return result;
+}
+
+bool Exists(const NativePath& path, boost::system::error_code& ec) noexcept
+{
+	// This is safe with extended paths, and 99x easier than implementing it
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	return boost::filesystem::exists(wideString, ec);
+}
+
+bool Exists(const NativePath& path)
+{
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	return boost::filesystem::exists(wideString);
 }
 
 bool CreateDirectorySexy(const NativePath& path, boost::system::error_code& ec) noexcept

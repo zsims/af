@@ -42,6 +42,13 @@ bool IsRegularFile(const NativePath& path, boost::system::error_code& ec) noexce
 bool IsRegularFile(const NativePath& path);
 
 /**
+ * Determines whether the given path exists
+ * \returns true if the given path exists, false otherwise
+ **/
+bool Exists(const NativePath& path, boost::system::error_code& ec) noexcept;
+bool Exists(const NativePath& path);
+
+/**
  * Creates a directory at the given path.
  * \remarks This clashes with the Windows.h macro CreateDirectory
  * \returns true if a new directory was created, false otherwise

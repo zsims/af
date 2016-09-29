@@ -177,7 +177,7 @@ TEST(operationsIntegrationTest, GetAbsolutePath_Success)
 	// Arrange
 	const auto expected = GenerateShortUniqueTempPath();
 	const auto name = expected.GetFilename();
-	const auto relativePath = UTF8ToWideString(name + R"(\..\)" + name );
+	const auto relativePath = name + R"(\..\)" + name;
 	test_utility::ScopedWorkingDirectory workingDirectory(expected / "..");
 
 	// Act
@@ -195,7 +195,7 @@ TEST(operationsIntegrationTest, GetAbsolutePath_RootSuccess)
 	test_utility::ScopedWorkingDirectory workingDirectory(root);
 
 	// Act
-	auto actual = GetAbsolutePath(L".");
+	auto actual = GetAbsolutePath(".");
 	actual.EnsureTrailingSlash();
 
 	// Assert
@@ -239,6 +239,27 @@ TEST(operationsIntegrationTest, OpenFileWrite_Success)
 
 	// Assert
 	EXPECT_TRUE(writeStream);
+}
+
+TEST(operationsIntegrationTest, Exists_Success)
+{
+	// Arrange
+	const auto first = GenerateUniqueTempPath();
+	auto writeStream = OpenFileWrite(first);
+	ASSERT_TRUE(writeStream);
+
+	// Act
+	// Assert
+	EXPECT_TRUE(Exists(first));
+}
+
+TEST(operationsIntegrationTest, Exists_FalseIfNotExists)
+{
+	// Arrange
+	const auto first = GenerateUniqueTempPath();
+	// Act
+	// Assert
+	EXPECT_FALSE(Exists(first));
 }
 
 }
