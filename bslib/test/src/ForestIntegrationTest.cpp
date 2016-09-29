@@ -6,7 +6,6 @@
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileAdderEs.hpp"
 #include "bslib/file/fs/operations.hpp"
-#include "bslib/file/path_util.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>

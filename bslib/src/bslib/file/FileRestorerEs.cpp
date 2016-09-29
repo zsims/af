@@ -4,7 +4,6 @@
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/fs/operations.hpp"
-#include "bslib/file/path_util.hpp"
 
 #include <vector>
 

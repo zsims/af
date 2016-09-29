@@ -2,7 +2,6 @@
 
 #include "bslib/blob/BlobStore.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
-#include "bslib/file/path_util.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileEventStreamRepository.hpp"
 #include "bslib/file/fs/operations.hpp"
