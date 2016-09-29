@@ -1,9 +1,9 @@
 #pragma once
 
 #include "bslib/file/FileEvent.hpp"
+#include "bslib/file/fs/path.hpp"
 
 #include <boost/optional.hpp>
-#include <boost/filesystem/path.hpp>
 
 #include <cstdint>
 #include <string>
@@ -25,7 +25,7 @@ struct FileRestoreEvent
 {
 	FileRestoreEvent(
 		const FileEvent& originalEvent,
-		const boost::filesystem::path& targetPath,
+		const fs::NativePath& targetPath,
 		FileRestoreEventAction action)
 		: originalEvent(originalEvent)
 		, targetPath(targetPath)
@@ -34,7 +34,7 @@ struct FileRestoreEvent
 	}
 	
 	const FileEvent originalEvent;
-	const boost::filesystem::path targetPath;
+	const fs::NativePath targetPath;
 	const FileRestoreEventAction action;
 
 	bool operator==(const FileRestoreEvent& rhs) const

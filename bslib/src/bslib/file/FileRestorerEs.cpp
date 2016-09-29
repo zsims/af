@@ -3,9 +3,7 @@
 #include "bslib/blob/BlobStore.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/file/exceptions.hpp"
-#include "bslib/file/path_util.hpp"
-
-#include <boost/filesystem.hpp>
+#include "bslib/file/fs/operations.hpp"
 
 #include <vector>
 
@@ -21,26 +19,27 @@ FileRestorerEs::FileRestorerEs(
 {
 }
 
-void FileRestorerEs::Restore(const FileEvent& fileEvent, const boost::filesystem::path& targetPath)
+void FileRestorerEs::Restore(const FileEvent& fileEvent, const fs::NativePath& targetPath)
 {
 	RestoreFileEvent(fileEvent, targetPath);
 }
 
-void FileRestorerEs::Restore(const std::vector<FileEvent>& fileEvents, const boost::filesystem::path& targetPath)
+void FileRestorerEs::Restore(const std::vector<FileEvent>& fileEvents, const fs::NativePath& targetPath)
 {
-	if (!boost::filesystem::is_directory(targetPath))
+	if (!fs::IsDirectory(targetPath))
 	{
-		throw TargetPathNotSupportedException(targetPath.string());
+		throw TargetPathNotSupportedException(targetPath.ToExtendedString());
 	}
 
 	for (const auto& fileEvent : fileEvents)
 	{
-		const auto fileEventTargetPath = CombineFullPaths(targetPath, fileEvent.fullPath);
+		auto fileEventTargetPath = targetPath;
+		fileEventTargetPath.AppendFull(fileEvent.fullPath);
 		RestoreFileEvent(fileEvent, fileEventTargetPath);
 	}
 }
 
-void FileRestorerEs::RestoreFileEvent(const FileEvent& fileEvent, const boost::filesystem::path& targetPath)
+void FileRestorerEs::RestoreFileEvent(const FileEvent& fileEvent, const fs::NativePath& targetPath)
 {
 	if (!IsFileEventActionSupported(fileEvent.action))
 	{
@@ -48,7 +47,7 @@ void FileRestorerEs::RestoreFileEvent(const FileEvent& fileEvent, const boost::f
 		return;
 	}
 
-	if (boost::filesystem::exists(targetPath))
+	if (fs::Exists(targetPath))
 	{
 		EmitEvent(FileRestoreEvent(fileEvent, targetPath, FileRestoreEventAction::Skipped));
 		return;
@@ -58,8 +57,8 @@ void FileRestorerEs::RestoreFileEvent(const FileEvent& fileEvent, const boost::f
 	if(fileEvent.type == FileType::RegularFile && fileEvent.contentBlobAddress)
 	{
 		boost::system::error_code ec;
-		boost::filesystem::create_directories(targetPath.parent_path(), ec);
-		if (ec != boost::system::errc::success)
+		fs::CreateDirectories(targetPath.ParentPathCopy(), ec);
+		if (ec)
 		{
 			EmitEvent(FileRestoreEvent(fileEvent, targetPath, FileRestoreEventAction::FailedToCreateDirectory));
 			return;
@@ -76,8 +75,8 @@ void FileRestorerEs::RestoreFileEvent(const FileEvent& fileEvent, const boost::f
 	{
 		// Directory
 		boost::system::error_code ec;
-		boost::filesystem::create_directories(targetPath, ec);
-		if (ec != boost::system::errc::success)
+		fs::CreateDirectories(targetPath, ec);
+		if (ec)
 		{
 			EmitEvent(FileRestoreEvent(fileEvent, targetPath, FileRestoreEventAction::FailedToCreateDirectory));
 			return;
@@ -90,10 +89,10 @@ void FileRestorerEs::RestoreFileEvent(const FileEvent& fileEvent, const boost::f
 	}
 }
 
-bool FileRestorerEs::RestoreBlobToFile(const blob::Address& blobAddress, const boost::filesystem::path& targetPath) const
+bool FileRestorerEs::RestoreBlobToFile(const blob::Address& blobAddress, const fs::NativePath& targetPath) const
 {
 	const auto content = _blobStore.GetBlob(blobAddress);
-	std::ofstream file(targetPath.string(), std::ios::binary | std::ios::out);
+	auto file = fs::OpenFileWrite(targetPath);
 	if (!file)
 	{
 		return false;

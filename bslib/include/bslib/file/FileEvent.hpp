@@ -1,9 +1,9 @@
 #pragma once
 
 #include "bslib/blob/Address.hpp"
+#include "bslib/file/fs/path.hpp"
 
 #include <boost/optional.hpp>
-#include <boost/filesystem/path.hpp>
 
 #include <cstdint>
 #include <string>
@@ -35,7 +35,7 @@ enum class FileEventAction : int
 struct FileEvent
 {
 	FileEvent(
-		const boost::filesystem::path& fullPath,
+		const fs::NativePath& fullPath,
 		FileType type,
 		const boost::optional<blob::Address>& contentBlobAddress, 
 		FileEventAction action)
@@ -53,7 +53,7 @@ struct FileEvent
 		return *this;
 	}
 
-	const boost::filesystem::path fullPath;
+	const fs::NativePath fullPath;
 	const FileType type;
 	const boost::optional<blob::Address> contentBlobAddress;
 	const FileEventAction action;
@@ -70,7 +70,7 @@ struct FileEvent
 struct DirectoryEvent : public FileEvent
 {
 	DirectoryEvent(
-		const boost::filesystem::path& fullPath,
+		const fs::NativePath& fullPath,
 		FileEventAction action)
 		: FileEvent(fullPath, FileType::Directory, boost::none, action)
 	{
@@ -80,7 +80,7 @@ struct DirectoryEvent : public FileEvent
 struct RegularFileEvent : public FileEvent
 {
 	RegularFileEvent(
-		const boost::filesystem::path& fullPath,
+		const fs::NativePath& fullPath,
 		const boost::optional<blob::Address>& contentBlobAddress, 
 		FileEventAction action)
 		: FileEvent(fullPath, FileType::RegularFile, contentBlobAddress, action)

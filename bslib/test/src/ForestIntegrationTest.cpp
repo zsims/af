@@ -5,7 +5,7 @@
 #include "bslib/blob/NullBlobStore.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileAdderEs.hpp"
-#include "bslib/file/path_util.hpp"
+#include "bslib/file/fs/operations.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -82,12 +82,12 @@ TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
 	// Arrange
 	_forest->Create();
 
-	const auto targetPath = file::EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
+	const auto targetPath = file::fs::GenerateUniqueTempPath().EnsureTrailingSlash();
 	{
 		auto uow = _forest->CreateUnitOfWork();
 		auto adder = uow->CreateFileAdderEs();
-		boost::filesystem::create_directories(targetPath);
-		adder->Add(targetPath);
+		file::fs::CreateDirectories(targetPath);
+		adder->Add(targetPath.ToString());
 		// Act
 		uow->Commit();
 	}
@@ -118,12 +118,12 @@ TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
 	_forest->Create();
 
 	// Act
-	const auto targetPath = file::EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
+	const auto targetPath = file::fs::GenerateUniqueTempPath().EnsureTrailingSlash();
 	{
 		auto uow = _forest->CreateUnitOfWork();
 		auto adder = uow->CreateFileAdderEs();
-		boost::filesystem::create_directories(targetPath);
-		adder->Add(targetPath);
+		file::fs::CreateDirectories(targetPath);
+		adder->Add(targetPath.ToString());
 	}
 
 	// Assert

@@ -1,15 +1,14 @@
 #pragma once
 
 #include "bslib/file/FileEvent.hpp"
+#include "bslib/file/fs/path.hpp"
+#include "bslib/sqlitepp/handles.hpp"
 
 #include <cstdint>
 #include <map>
 #include <vector>
 
-#include "bslib/sqlitepp/handles.hpp"
-
 #include <boost/optional.hpp>
-#include <boost/filesystem/path.hpp>
 
 namespace af {
 namespace bslib {
@@ -24,8 +23,8 @@ public:
 	 * Gets all events in the order they were recorded
 	 */
 	std::vector<FileEvent> GetAllEvents() const;
-	std::map<boost::filesystem::path, FileEvent> GetLastChangedEventsStartingWithPath(const boost::filesystem::path& fullPath) const;
-	boost::optional<FileEvent> FindLastChangedEvent(const boost::filesystem::path& fullPath) const;
+	std::map<fs::NativePath, FileEvent> GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const;
+	boost::optional<FileEvent> FindLastChangedEvent(const fs::NativePath& fullPath) const;
 
 	void AddEvent(const FileEvent& fileEvent);
 

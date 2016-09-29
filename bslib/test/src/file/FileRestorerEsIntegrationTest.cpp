@@ -1,7 +1,7 @@
 #include "bslib/forest.hpp"
 #include "bslib/blob/DirectoryBlobStore.hpp"
-#include "bslib/file/path_util.hpp"
 #include "bslib/file/exceptions.hpp"
+#include "bslib/file/fs/operations.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "utility/gtest_boost_filesystem_fix.hpp"
 #include "utility/matchers.hpp"
@@ -25,14 +25,14 @@ protected:
 	FileRestorerEsIntegrationTest()
 		: _forestDbPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb"))
 		, _targetPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path())
-		, _restorePath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path())
-		, _sampleBasePath(EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path()))
-		, _sampleSubDirectory(_sampleBasePath / boost::filesystem::unique_path())
+		, _restorePath(fs::GenerateUniqueTempPath())
+		, _sampleBasePath(fs::GenerateUniqueTempPath())
+		, _sampleSubDirectory(_sampleBasePath / "sub")
 		, _sampleFilePath(_sampleBasePath / "base.dat")
 		, _sampleSubFilePath(_sampleSubDirectory / "subfile.dat")
 	{
 		boost::filesystem::create_directories(_targetPath);
-		boost::filesystem::create_directories(_restorePath);
+		fs::CreateDirectories(_restorePath);
 		auto blobStore = std::make_unique<blob::DirectoryBlobStore>(_targetPath);
 		_forest.reset(new Forest(_forestDbPath.string(), std::move(blobStore)));
 		_forest->Create();
@@ -43,8 +43,8 @@ protected:
 		_finder = _uow->CreateFileFinder();
 
 		// Test data
-		boost::filesystem::create_directories(_sampleBasePath);
-		boost::filesystem::create_directories(_sampleSubDirectory);
+		fs::CreateDirectories(_sampleBasePath);
+		fs::CreateDirectories(_sampleSubDirectory);
 		CreateFile(_sampleFilePath, "hey babe");
 		CreateFile(_sampleSubFilePath, "hey sub babe");
 	}
@@ -57,17 +57,17 @@ protected:
 		boost::system::error_code ec;
 		boost::filesystem::remove(_forestDbPath, ec);
 		boost::filesystem::remove_all(_targetPath, ec);
-		boost::filesystem::remove_all(_restorePath, ec);
-		boost::filesystem::remove_all(_sampleBasePath, ec);
+		fs::RemoveAll(_restorePath, ec);
+		fs::RemoveAll(_sampleBasePath, ec);
 	}
 
-	static blob::Address CreateFile(const boost::filesystem::path& path, const std::string& content)
+	static blob::Address CreateFile(const fs::NativePath& path, const std::string& content)
 	{
 		const std::vector<uint8_t> binaryContent(content.begin(), content.end());
-		std::ofstream f(path.string(), std::ofstream::out | std::ofstream::binary);
+		auto f = fs::OpenFileWrite(path);
 		if (!f)
 		{
-			throw std::runtime_error("Failed to create test file at " + path.string());
+			throw std::runtime_error("Failed to create test file at " + path.ToString());
 		}
 		f.write(reinterpret_cast<const char*>(&binaryContent[0]), binaryContent.size());
 		return blob::Address::CalculateFromContent(binaryContent);
@@ -75,23 +75,23 @@ protected:
 
 	const boost::filesystem::path _forestDbPath;
 	const boost::filesystem::path _targetPath;
-	const boost::filesystem::path _restorePath;
+	const fs::NativePath _restorePath;
 	std::unique_ptr<Forest> _forest;
 	std::unique_ptr<UnitOfWork> _uow;
 	std::unique_ptr<FileAdderEs> _adder;
 	std::unique_ptr<FileRestorerEs> _restorer;
 	std::unique_ptr<FileFinder> _finder;
 
-	const boost::filesystem::path _sampleBasePath;
-	const boost::filesystem::path _sampleSubDirectory;
-	const boost::filesystem::path _sampleFilePath;
-	const boost::filesystem::path _sampleSubFilePath;
+	const fs::NativePath _sampleBasePath;
+	const fs::NativePath _sampleSubDirectory;
+	const fs::NativePath _sampleFilePath;
+	const fs::NativePath _sampleSubFilePath;
 };
 
 TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetDoNotExist)
 {
 	// Arrange
-	const auto restorePath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+	const auto restorePath = fs::GenerateUniqueTempPath();
 	// Act
 	// Assert
 	ASSERT_THROW(_restorer->Restore(std::vector<FileEvent>(), restorePath), TargetPathNotSupportedException);
@@ -100,7 +100,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetDoNotExist)
 TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetIsFile)
 {
 	// Arrange
-	const auto restorePath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+	const auto restorePath = fs::GenerateUniqueTempPath();
 	CreateFile(restorePath, "hello");
 	// Act
 	// Assert
@@ -110,8 +110,8 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetIsFile)
 TEST_F(FileRestorerEsIntegrationTest, Restore_FileToFilePath)
 {
 	// Arrange
-	const auto fileRestorePath = _restorePath / _sampleFilePath.filename();
-	_adder->Add(_sampleFilePath);
+	const auto fileRestorePath = _restorePath / _sampleFilePath.GetFilename();
+	_adder->Add(_sampleFilePath.ToString());
 
 	std::vector<FileRestoreEvent> emittedEvents;
 	_restorer->GetEventManager().Subscribe([&](const auto& fileRestoreEvent) {
@@ -132,8 +132,8 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_IgnoresUnsupportedEvents)
 {
 	// Arrange
 	std::vector<FileEvent> eventsToRestore = {
-		DirectoryEvent("/hey baby", FileEventAction::ChangedRemoved),
-		RegularFileEvent("/hey other", boost::none, FileEventAction::Unsupported)
+		DirectoryEvent(fs::NativePath(R"(C:\hey baby)"), FileEventAction::ChangedRemoved),
+		RegularFileEvent(fs::NativePath(R"(C:\hey other)"), boost::none, FileEventAction::Unsupported)
 	};
 
 	// Act
@@ -141,8 +141,8 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_IgnoresUnsupportedEvents)
 
 	// Assert
 	const std::vector<FileRestoreEvent> expectedEmittedEvents = {
-		FileRestoreEvent(eventsToRestore[0], _restorePath / "hey baby", FileRestoreEventAction::UnsupportedFileEvent),
-		FileRestoreEvent(eventsToRestore[1], _restorePath / "hey other", FileRestoreEventAction::UnsupportedFileEvent),
+		FileRestoreEvent(eventsToRestore[0], _restorePath / R"(C\hey baby)", FileRestoreEventAction::UnsupportedFileEvent),
+		FileRestoreEvent(eventsToRestore[1], _restorePath / R"(C\hey other)", FileRestoreEventAction::UnsupportedFileEvent),
 	};
 	EXPECT_THAT(_restorer->GetEmittedEvents(), ::testing::UnorderedElementsAreArray(expectedEmittedEvents));
 }
@@ -150,29 +150,29 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_IgnoresUnsupportedEvents)
 TEST_F(FileRestorerEsIntegrationTest, Restore_Success)
 {
 	// Arrange
-	_adder->Add(_sampleBasePath);
+	_adder->Add(_sampleBasePath.ToString());
 
 	// Act
 	_restorer->Restore(_adder->GetEmittedEvents(), _restorePath);
 
 	// Assert
-	const auto sampleBasePathRestored = EnsureTrailingSlash(CombineFullPaths(_restorePath, _sampleBasePath));
-	EXPECT_TRUE(boost::filesystem::exists(sampleBasePathRestored));
-	const auto sampleSubDirectoryRestored = EnsureTrailingSlash(CombineFullPaths(_restorePath, _sampleSubDirectory));
-	EXPECT_TRUE(boost::filesystem::exists(sampleSubDirectoryRestored));
-	const auto sampleFilePathRestored = CombineFullPaths(_restorePath, _sampleFilePath);
+	const auto sampleBasePathRestored = _restorePath.AppendFullCopy(_sampleBasePath).EnsureTrailingSlash();
+	EXPECT_TRUE(fs::Exists(sampleBasePathRestored));
+	const auto sampleSubDirectoryRestored = _restorePath.AppendFullCopy(_sampleSubDirectory).EnsureTrailingSlash();
+	EXPECT_TRUE(fs::Exists(sampleSubDirectoryRestored));
+	const auto sampleFilePathRestored = _restorePath.AppendFullCopy(_sampleFilePath);
 	EXPECT_THAT(_sampleFilePath, HasSameFileContents(sampleFilePathRestored));
-	const auto sampleSubFilePathRestored = CombineFullPaths(_restorePath, _sampleSubFilePath);
+	const auto sampleSubFilePathRestored = _restorePath.AppendFullCopy(_sampleSubFilePath);
 	EXPECT_THAT(_sampleSubFilePath, HasSameFileContents(sampleSubFilePathRestored));
 }
 
 TEST_F(FileRestorerEsIntegrationTest, Restore_SkipsExistingFiles)
 {
 	// Arrange
-	_adder->Add(_sampleBasePath);
+	_adder->Add(_sampleBasePath.ToString());
 
-	const auto sampleSubFilePathRestored = CombineFullPaths(_restorePath, _sampleSubFilePath);
-	boost::filesystem::create_directories(sampleSubFilePathRestored.parent_path());
+	const auto sampleSubFilePathRestored = _restorePath.AppendFullCopy(_sampleSubFilePath);
+	fs::CreateDirectories(sampleSubFilePathRestored.ParentPathCopy());
 	CreateFile(sampleSubFilePathRestored, "Something else");
 
 	// Act
@@ -181,15 +181,15 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_SkipsExistingFiles)
 	// Assert
 	const auto emittedEvents = _restorer->GetEmittedEvents();
 
-	const auto sampleBasePathRestored = EnsureTrailingSlash(CombineFullPaths(_restorePath, _sampleBasePath));
-	EXPECT_TRUE(boost::filesystem::is_directory(sampleBasePathRestored));
+	const auto sampleBasePathRestored = _restorePath.AppendFullCopy(_sampleBasePath).EnsureTrailingSlash();
+	EXPECT_TRUE(fs::IsDirectory(sampleBasePathRestored));
 	EXPECT_THAT(emittedEvents, ::testing::Contains(::testing::Field(&FileRestoreEvent::targetPath, ::testing::Eq(sampleBasePathRestored))));
 
-	const auto sampleSubDirectoryRestored = EnsureTrailingSlash(CombineFullPaths(_restorePath, _sampleSubDirectory));
-	EXPECT_TRUE(boost::filesystem::is_directory(sampleSubDirectoryRestored));
+	const auto sampleSubDirectoryRestored = _restorePath.AppendFullCopy(_sampleSubDirectory).EnsureTrailingSlash();
+	EXPECT_TRUE(fs::IsDirectory(sampleSubDirectoryRestored));
 	EXPECT_THAT(emittedEvents, ::testing::Contains(::testing::Field(&FileRestoreEvent::targetPath, ::testing::Eq(sampleSubDirectoryRestored))));
 
-	const auto sampleFilePathRestored = CombineFullPaths(_restorePath, _sampleFilePath);
+	const auto sampleFilePathRestored = _restorePath.AppendFullCopy(_sampleFilePath);
 	EXPECT_THAT(_sampleFilePath, HasSameFileContents(sampleFilePathRestored));
 	EXPECT_THAT(emittedEvents, ::testing::Contains(::testing::Field(&FileRestoreEvent::targetPath, ::testing::Eq(sampleFilePathRestored))));
 
@@ -205,11 +205,11 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_SkipsExistingFiles)
 TEST_F(FileRestorerEsIntegrationTest, Restore_HandlesFileDirectoryClash)
 {
 	// Arrange
-	_adder->Add(_sampleBasePath);
+	_adder->Add(_sampleBasePath.ToString());
 
 	// Create a file in the spot of one of the directories being restored
-	const auto sampleSubDirectoryRestored = CombineFullPaths(_restorePath, _sampleSubDirectory);
-	boost::filesystem::create_directories(sampleSubDirectoryRestored.parent_path());
+	const auto sampleSubDirectoryRestored = _restorePath.AppendFullCopy(_sampleSubDirectory);
+	fs::CreateDirectories(sampleSubDirectoryRestored.ParentPathCopy());
 	CreateFile(sampleSubDirectoryRestored, "Uhoh");
 
 	// Act
@@ -218,22 +218,22 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_HandlesFileDirectoryClash)
 	// Assert
 	const auto emittedEvents = _restorer->GetEmittedEvents();
 
-	const auto sampleBasePathRestored = EnsureTrailingSlash(CombineFullPaths(_restorePath, _sampleBasePath));
-	EXPECT_TRUE(boost::filesystem::exists(sampleBasePathRestored));
+	const auto sampleBasePathRestored = _restorePath.AppendFullCopy(_sampleBasePath).EnsureTrailingSlash();
+	EXPECT_TRUE(fs::Exists(sampleBasePathRestored));
 
-	EXPECT_TRUE(boost::filesystem::is_regular_file(sampleSubDirectoryRestored));
+	EXPECT_TRUE(fs::IsRegularFile(sampleSubDirectoryRestored));
 	EXPECT_THAT(emittedEvents, ::testing::Contains(
 		::testing::AllOf(
-			::testing::Field(&FileRestoreEvent::targetPath, ::testing::Eq(EnsureTrailingSlashCopy(sampleSubDirectoryRestored))),
+			::testing::Field(&FileRestoreEvent::targetPath, ::testing::Eq(sampleSubDirectoryRestored.EnsureTrailingSlashCopy())),
 			::testing::Field(&FileRestoreEvent::action, ::testing::Eq(FileRestoreEventAction::FailedToCreateDirectory))
 		)
 	));
 
-	const auto sampleFilePathRestored = CombineFullPaths(_restorePath, _sampleFilePath);
+	const auto sampleFilePathRestored = _restorePath.AppendFullCopy(_sampleFilePath);
 	EXPECT_THAT(_sampleFilePath, HasSameFileContents(sampleFilePathRestored));
 
-	const auto sampleSubFilePathRestored = CombineFullPaths(_restorePath, _sampleSubFilePath);
-	EXPECT_TRUE(!boost::filesystem::exists(sampleSubFilePathRestored));
+	const auto sampleSubFilePathRestored = _restorePath.AppendFullCopy(_sampleSubFilePath);
+	EXPECT_TRUE(!fs::Exists(sampleSubFilePathRestored));
 	EXPECT_THAT(emittedEvents, ::testing::Contains(
 		::testing::AllOf(
 			::testing::Field(&FileRestoreEvent::targetPath, ::testing::Eq(sampleSubFilePathRestored)),

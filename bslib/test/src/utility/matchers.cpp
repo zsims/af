@@ -1,20 +1,22 @@
 #include "matchers.hpp"
 
-#include <boost/filesystem/path.hpp>
+#include "bslib/file/fs/operations.hpp"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <fstream>
 #include <algorithm>
 
-namespace blib {
+namespace af {
+namespace bslib {
 namespace test {
 namespace utility {
 
-bool AreContentsTheSame(const boost::filesystem::path& a, const boost::filesystem::path& b)
+bool AreContentsTheSame(const file::fs::NativePath& a, const file::fs::NativePath& b)
 {
-	std::ifstream streamA(a.string(), std::ifstream::in | std::ifstream::ate | std::ios::binary);
-	std::ifstream streamB(b.string(), std::ifstream::in | std::ifstream::ate | std::ios::binary);
+	auto streamA = file::fs::OpenFileRead(a, std::ifstream::in | std::ifstream::ate | std::ios::binary);
+	auto streamB = file::fs::OpenFileRead(b, std::ifstream::in | std::ifstream::ate | std::ios::binary);
 
 	if (streamA.fail() || streamB.fail())
 	{
@@ -35,6 +37,7 @@ bool AreContentsTheSame(const boost::filesystem::path& a, const boost::filesyste
 	return std::equal(itA, std::istreambuf_iterator<char>(), itB);
 }
 
+}
 }
 }
 }

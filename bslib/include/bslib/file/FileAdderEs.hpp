@@ -3,8 +3,8 @@
 #include "bslib/blob/Address.hpp"
 #include "bslib/EventManager.hpp"
 #include "bslib/file/FileEvent.hpp"
+#include "bslib/file/fs/path.hpp"
 
-#include <boost/filesystem/path.hpp>
 #include <boost/optional.hpp>
 
 #include <functional>
@@ -36,21 +36,21 @@ public:
 	* \exception PathNotFoundException File or directory doesn't exist at the given path
 	* \exception SourcePathNotSupportedException The given source isn't a file or directory
 	*/
-	void Add(const boost::filesystem::path& sourcePath);
+	void Add(const UTF8String& sourcePath);
 
 	const std::vector<FileEvent>& GetEmittedEvents() { return _emittedEvents; }
 	EventManager<FileEvent>& GetEventManager() { return _eventManager; }
 private:
-	boost::optional<blob::Address> SaveFileContents(const boost::filesystem::path& sourcePath);
+	boost::optional<blob::Address> SaveFileContents(const fs::NativePath& sourcePath);
 
-	void ScanDirectory(const boost::filesystem::path& sourcePath);
-	void VisitPath(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent);
-	void VisitFile(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent);
-	void VisitDirectory(const boost::filesystem::path& sourcePath, const boost::optional<FileEvent>& previousEvent);
+	void ScanDirectory(const fs::NativePath& sourcePath);
+	void VisitPath(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent);
+	void VisitFile(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent);
+	void VisitDirectory(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent);
 	void EmitEvent(const FileEvent& fileEvent);
 	static boost::optional<FileEvent> FindPreviousEvent(
-		const std::map<boost::filesystem::path, FileEvent>& fileEvents,
-		const boost::filesystem::path& fullPath);
+		const std::map<fs::NativePath, FileEvent>& fileEvents,
+		const fs::NativePath& fullPath);
 
 	blob::BlobStore& _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;

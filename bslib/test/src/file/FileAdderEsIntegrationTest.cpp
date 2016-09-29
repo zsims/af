@@ -1,11 +1,12 @@
 #include "bslib/forest.hpp"
 #include "bslib/blob/DirectoryBlobStore.hpp"
-#include "bslib/file/path_util.hpp"
 #include "bslib/file/exceptions.hpp"
+#include "bslib/file/fs/operations.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "utility/gtest_boost_filesystem_fix.hpp"
 #include "utility/ScopedExclusiveFileAccess.hpp"
 
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <gtest/gtest.h>
@@ -47,10 +48,10 @@ protected:
 		boost::filesystem::remove_all(_targetPath, ec);
 	}
 
-	blob::Address CreateFile(const boost::filesystem::path& path, const std::string& content)
+	blob::Address CreateFile(const fs::NativePath& path, const std::string& content)
 	{
 		const std::vector<uint8_t> binaryContent(content.begin(), content.end());
-		std::ofstream f(path.string(), std::ofstream::out | std::ofstream::binary);
+		auto f = fs::OpenFileWrite(path);
 		f.write(reinterpret_cast<const char*>(&binaryContent[0]), binaryContent.size());
 		return blob::Address::CalculateFromContent(binaryContent);
 	}
@@ -66,7 +67,7 @@ protected:
 TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithFile)
 {
 	// Arrange
-	const auto filePath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+	const auto filePath = fs::GenerateUniqueTempPath();
 	const auto fileAddress = CreateFile(filePath, "hello");
 
 	std::vector<FileEvent> emittedEvents;
@@ -74,7 +75,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithFile)
 		emittedEvents.push_back(fileEvent);
 	});
 	// Act
-	_adder->Add(filePath);
+	_adder->Add(filePath.ToString());
 
 	// Assert
 	const auto expectedEmittedEvent = RegularFileEvent(filePath, fileAddress, FileEventAction::ChangedAdded);
@@ -82,17 +83,33 @@ TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithFile)
 	EXPECT_THAT(emittedEvents, ::testing::ElementsAre(expectedEmittedEvent));
 }
 
+TEST_F(FileAdderEsIntegrationTest, Add_ConvertsForwardSlashes)
+{
+	// Arrange
+	const auto filePath = fs::GenerateUniqueTempPath();
+	const auto fileAddress = CreateFile(filePath, "hello");
+
+	// Act
+	const auto forwardSlashFilePath = boost::replace_last_copy(filePath.ToString(), "\\", "/");
+	_adder->Add(forwardSlashFilePath);
+
+	// Assert
+	const auto expectedEmittedEvent = RegularFileEvent(filePath, fileAddress, FileEventAction::ChangedAdded);
+	EXPECT_TRUE(_finder->FindLastChangedEventByPath(filePath));
+	EXPECT_THAT(_adder->GetEmittedEvents(), ::testing::ElementsAre(expectedEmittedEvent));
+}
+
 TEST_F(FileAdderEsIntegrationTest, Add_ResolvesFullPath)
 {
 	// Arrange
-	const auto folderName = boost::filesystem::unique_path();
-	const auto workingPath = EnsureTrailingSlash(boost::filesystem::temp_directory_path() / folderName);
-	boost::filesystem::create_directories(workingPath);
+	const auto folderName = "folder";
+	const auto workingPath = (fs::GenerateUniqueTempPath() / folderName).EnsureTrailingSlash();
+	fs::CreateDirectories(workingPath);
 	const auto fileAddress = CreateFile(workingPath / "hi.dat", "hello");
 	const auto sourcePath = workingPath / ".." / folderName;
 
 	// Act
-	_adder->Add(sourcePath);
+	_adder->Add(sourcePath.ToString());
 
 	// Assert
 	const auto& emittedEvents = _adder->GetEmittedEvents();
@@ -105,13 +122,13 @@ TEST_F(FileAdderEsIntegrationTest, Add_ResolvesFullPath)
 TEST_F(FileAdderEsIntegrationTest, Add_SkipsLockedFile)
 {
 	// Arrange
-	const auto filePath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+	const auto filePath = fs::GenerateUniqueTempPath();
 	CreateFile(filePath, "hello");
 
 	bslib::test::utility::ScopedExclusiveFileAccess exclusiveAccess(filePath);
 
 	// Act
-	_adder->Add(filePath);
+	_adder->Add(filePath.ToExtendedString());
 
 	// Assert
 	const FileEvent expectedEmittedEvent(filePath, FileType::RegularFile, boost::none, FileEventAction::FailedToRead);
@@ -122,8 +139,8 @@ TEST_F(FileAdderEsIntegrationTest, Add_SkipsLockedFile)
 TEST_F(FileAdderEsIntegrationTest, Add_RecordsAllStates)
 {
 	// Arrange
-	const auto directoryPath = EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
-	boost::filesystem::create_directories(directoryPath);
+	const auto directoryPath = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	fs::CreateDirectories(directoryPath);
 
 	const auto lockedFilePath = directoryPath / "locked.dat";
 	CreateFile(lockedFilePath, "hello");
@@ -131,10 +148,10 @@ TEST_F(FileAdderEsIntegrationTest, Add_RecordsAllStates)
 
 	const auto preExistingPath = directoryPath / "already-here.dat";
 	const auto preExistingAddress = CreateFile(preExistingPath, "heybby");
-	_adder->Add(preExistingPath);
+	_adder->Add(preExistingPath.ToString());
 
 	// Act
-	_adder->Add(directoryPath);
+	_adder->Add(directoryPath.ToString());
 
 	// Assert
 	const std::vector<FileEvent> expectedAllEvents = {
@@ -150,21 +167,21 @@ TEST_F(FileAdderEsIntegrationTest, Add_RecordsAllStates)
 TEST_F(FileAdderEsIntegrationTest, Add_FailIfNotExist)
 {
 	// Arrange
-	const auto path = EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
+	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
 
 	// Act
 	// Assert
-	ASSERT_THROW(_adder->Add(path), PathNotFoundException);
+	ASSERT_THROW(_adder->Add(path.ToString()), PathNotFoundException);
 }
 
 TEST_F(FileAdderEsIntegrationTest, Add_EmptyDirectory)
 {
 	// Arrange
-	const auto path = EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
-	boost::filesystem::create_directories(path);
+	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	fs::CreateDirectories(path);
 
 	// Act
-	_adder->Add(path);
+	_adder->Add(path.ToString());
 
 	// Assert
 	const FileEvent expectedEmittedEvent(path, FileType::Directory, boost::none, FileEventAction::ChangedAdded);
@@ -175,16 +192,16 @@ TEST_F(FileAdderEsIntegrationTest, Add_EmptyDirectory)
 TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithDirectory)
 {
 	// Arrange
-	const auto path = EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
-	boost::filesystem::create_directories(path);
-	const auto deepDirectory = EnsureTrailingSlash(path / boost::filesystem::unique_path());
-	boost::filesystem::create_directories(deepDirectory);
+	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	fs::CreateDirectories(path);
+	const auto deepDirectory = (path / "deep").EnsureTrailingSlash();
+	fs::CreateDirectories(deepDirectory);
 	const auto filePath = path / "file.dat";
 	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
 	const auto fileAddress = CreateFile(filePath, "hello");
 
 	// Act
-	_adder->Add(path);
+	_adder->Add(path.ToString());
 	_uow->Commit();
 
 	// Assert
@@ -213,16 +230,16 @@ TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithDirectory)
 TEST_F(FileAdderEsIntegrationTest, Add_ExistingSuccessWithDirectory)
 {
 	// Arrange
-	const auto path = EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
-	boost::filesystem::create_directories(path);
-	const auto deepDirectory = EnsureTrailingSlash(path / boost::filesystem::unique_path());
-	boost::filesystem::create_directories(deepDirectory);
+	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	fs::CreateDirectories(path);
+	const auto deepDirectory = (path / "deep").EnsureTrailingSlash();
+	fs::CreateDirectories(deepDirectory);
 	const auto filePath = path / "file.dat";
 	const auto deepFilePath = deepDirectory / "foo.dat";
 	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
 	const std::vector<uint8_t> hellBytes = { 104, 101, 108, 108 };
 	CreateFile(filePath, "hello");
-	_adder->Add(path);
+	_adder->Add(path.ToString());
 	_uow->Commit();
 
 	// Act
@@ -230,7 +247,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_ExistingSuccessWithDirectory)
 	auto adder2 = uow2->CreateFileAdderEs();
 	const auto updatedFileAddress = CreateFile(filePath, "hell");
 	const auto deepFileAddress = CreateFile(deepFilePath, "hello");
-	adder2->Add(path);
+	adder2->Add(path.ToString());
 	uow2->Commit();
 
 	// Assert
@@ -265,21 +282,21 @@ TEST_F(FileAdderEsIntegrationTest, Add_ExistingSuccessWithDirectory)
 TEST_F(FileAdderEsIntegrationTest, Add_RespectsCase)
 {
 	// Arrange
-	const auto path = EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
-	const auto fooPath = EnsureTrailingSlash(path / "Foo");
-	boost::filesystem::create_directories(fooPath);
+	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto fooPath = (path / "Foo").EnsureTrailingSlash();
+	fs::CreateDirectories(fooPath);
 	const auto samsonPath = fooPath / "samson.txt";
 	const auto fileAddress = CreateFile(samsonPath, "samson was here");
 	const auto samsonUpperPath = fooPath / "Samson.txt";
 
-	_adder->Add(path);
+	_adder->Add(path.ToString());
 
 	// Recreate "Samson.txt", and note this should be tracked as completely new file
-	boost::filesystem::remove(samsonPath);
+	fs::Remove(samsonPath);
 	CreateFile(samsonUpperPath, "samson was here");
 
 	// Act
-	_adder->Add(path);
+	_adder->Add(path.ToString());
 	_uow->Commit();
 
 	// Assert
@@ -299,34 +316,34 @@ TEST_F(FileAdderEsIntegrationTest, Add_RespectsCase)
 TEST_F(FileAdderEsIntegrationTest, Add_DetectsModifications)
 {
 	// Arrange
-	const auto path = EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
-	const auto fooPath = EnsureTrailingSlash(path / "Foo");
-	boost::filesystem::create_directories(fooPath);
-	const auto barPath = EnsureTrailingSlash(fooPath / "Bar");
-	boost::filesystem::create_directories(barPath);
+	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto fooPath = (path / "Foo").EnsureTrailingSlash();
+	fs::CreateDirectories(fooPath);
+	const auto barPath = (fooPath / "Bar").EnsureTrailingSlash();
+	fs::CreateDirectories(barPath);
 	const auto samsonPath = fooPath / "samson.txt";
 	const auto sakoPath = barPath / "sako.txt";
 	CreateFile(samsonPath, "samson was here");
 	const auto sakoContentAddress = CreateFile(sakoPath, "sako was here");
 
-	_adder->Add(path);
+	_adder->Add(path.ToString());
 
 	// Recreate "samson.txt", and note this should be tracked as completely new file
-	boost::filesystem::remove(samsonPath);
+	fs::Remove(samsonPath);
 	const auto fileAddress = CreateFile(samsonPath, "samson was here with some new content");
 
 	// Also delete bar
-	boost::filesystem::remove_all(barPath);
+	fs::RemoveAll(barPath);
 
 	// Add a new top level directory
-	const auto fizzPath = EnsureTrailingSlash(path / "fizz");
-	boost::filesystem::create_directories(fizzPath);
+	const auto fizzPath = (path / "fizz").EnsureTrailingSlash();
+	fs::CreateDirectories(fizzPath);
 
 	// Make not of the number of emitted events so we can work out what events were emitted in the second Add()
 	auto beforeCount = _adder->GetEmittedEvents().size();
 
 	// Act
-	_adder->Add(path);
+	_adder->Add(path.ToString());
 	_uow->Commit();
 
 	// Assert
@@ -356,18 +373,18 @@ TEST_F(FileAdderEsIntegrationTest, Add_DetectsModifications)
 TEST_F(FileAdderEsIntegrationTest, Add_HandlesChangeInType)
 {
 	// Arrange
-	const auto path = EnsureTrailingSlash(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
-	const auto fooDirectoryPath = EnsureTrailingSlash(path / "Foo");
+	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto fooDirectoryPath = (path / "Foo").EnsureTrailingSlash();
 	const auto fooFilePath = path / "Foo";
-	boost::filesystem::create_directories(fooDirectoryPath);
-	_adder->Add(path);
+	fs::CreateDirectories(fooDirectoryPath);
+	_adder->Add(path.ToString());
 
 	// Recreate foo but as a file
-	boost::filesystem::remove_all(fooDirectoryPath);
+	fs::RemoveAll(fooDirectoryPath);
 	const auto fileAddress = CreateFile(fooFilePath, "samson was here");
 
 	// Act
-	_adder->Add(path);
+	_adder->Add(path.ToString());
 	_uow->Commit();
 
 	// Assert

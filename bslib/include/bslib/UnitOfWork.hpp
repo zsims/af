@@ -7,6 +7,7 @@
 
 #include <boost/core/noncopyable.hpp>
 
+#include <memory>
 #include <string>
 
 namespace af {
