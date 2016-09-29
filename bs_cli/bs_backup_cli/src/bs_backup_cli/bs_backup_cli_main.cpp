@@ -13,7 +13,7 @@
 
 namespace {
 
-int Backup(const boost::filesystem::path& sourcePath, const boost::filesystem::path& targetDirectoryPath)
+int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::path& targetDirectoryPath)
 {
 	const auto forestDb = targetDirectoryPath / "backup.fdb";
 
@@ -26,7 +26,7 @@ int Backup(const boost::filesystem::path& sourcePath, const boost::filesystem::p
 		auto adder = uow->CreateFileAdderEs();
 
 		adder->GetEventManager().Subscribe([](const auto& fileEvent) {
-			std::cout << fileEvent.action << " " << fileEvent.fullPath << std::endl;
+			std::cout << fileEvent.action << " " << fileEvent.fullPath.ToString() << std::endl;
 		});
 
 		adder->Add(sourcePath);
@@ -57,18 +57,20 @@ int Backup(const boost::filesystem::path& sourcePath, const boost::filesystem::p
 
 }
 
-int main(int argc, char* argv[])
+// Per https://msdn.microsoft.com/en-us/library/bky3b5dh.aspx
+// Support Unicode arguments
+int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 {
 	namespace po = boost::program_options;
 
-	std::string sourcePath;
-	std::string targetDirectoryPath;
+	std::wstring sourcePath;
+	std::wstring targetDirectoryPath;
 
 	po::options_description desc("Allowed options");
 	desc.add_options()
 		("help,h", "print usage message")
-		("source,s", po::value(&sourcePath)->required(), "Source path to backup (file or directory)")
-		("target,t", po::value(&targetDirectoryPath)->required(), "Target directory to save the backup to");
+		("source,s", po::wvalue(&sourcePath)->required(), "Source path to backup (file or directory)")
+		("target,t", po::wvalue(&targetDirectoryPath)->required(), "Target directory to save the backup to");
 
 	po::positional_options_description positionalOptions;
 	positionalOptions.add("source", 1);
@@ -76,7 +78,7 @@ int main(int argc, char* argv[])
 	po::variables_map vm;
 	try
 	{
-		po::command_line_parser parser(argc, argv);
+		po::wcommand_line_parser parser(argc, argv);
 		parser.options(desc).positional(positionalOptions);
 		po::store(parser.run(), vm);
 
@@ -100,5 +102,5 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	return Backup(sourcePath, targetDirectoryPath);
+	return Backup(af::bslib::WideToUTF8String(sourcePath), targetDirectoryPath);
 }
