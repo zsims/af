@@ -86,12 +86,12 @@ NativePath GetAbsolutePath(const UTF8String& path);
 /**
  * Opens the file at the given path for reading
  */
-std::ifstream OpenFileRead(const NativePath& path) noexcept;
+std::ifstream OpenFileRead(const NativePath& path, std::ios_base::openmode mode = std::ios_base::in | std::ios_base::binary) noexcept;
 
 /**
  * Opens the file at the given path for writing
  */
-std::ofstream OpenFileWrite(const NativePath& path) noexcept;
+std::ofstream OpenFileWrite(const NativePath& path, std::ios_base::openmode mode = std::ios_base::out | std::ios_base::binary) noexcept;
 
 }
 }

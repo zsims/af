@@ -271,17 +271,17 @@ NativePath GetAbsolutePath(const UTF8String& path)
 	return result;
 }
 
-std::ifstream OpenFileRead(const NativePath& path) noexcept
+std::ifstream OpenFileRead(const NativePath& path, std::ios_base::openmode mode) noexcept
 {
 	// VC++ has a constructor that takes a wide string, note that this doesn't exist on other platforms
-	std::ifstream file(UTF8ToWideString(path.ToExtendedString()), std::ios::binary | std::ios::in);
+	std::ifstream file(UTF8ToWideString(path.ToExtendedString()), mode);
 	return file;
 }
 
-std::ofstream OpenFileWrite(const NativePath& path) noexcept
+std::ofstream OpenFileWrite(const NativePath& path, std::ios_base::openmode mode) noexcept
 {
 	// VC++ has a constructor that takes a wide string, note that this doesn't exist on other platforms
-	std::ofstream file(UTF8ToWideString(path.ToExtendedString()), std::ios::binary | std::ios::out);
+	std::ofstream file(UTF8ToWideString(path.ToExtendedString()), mode);
 	return file;
 }
 
