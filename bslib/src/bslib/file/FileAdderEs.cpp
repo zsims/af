@@ -81,11 +81,10 @@ void FileAdderEs::ScanDirectory(const fs::NativePath& sourcePath)
 
 	// Scan for changes to files on disk
 
-	// TODO: replace this with the directory iterator that takes a WindowsPath
 	boost::filesystem::recursive_directory_iterator itr(sourcePath.ToExtendedString());
 	for (const auto& entry : itr)
 	{
-		fs::NativePath path(entry.path().string());
+		fs::NativePath path(WideToUTF8String(entry.path().wstring()));
 
 		// Directories should always be processed with a slash
 		if (fs::IsDirectory(path))
