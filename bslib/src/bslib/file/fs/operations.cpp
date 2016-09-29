@@ -1,8 +1,9 @@
 #include "bslib/file/fs/operations.hpp"
 
-#include "bslib/unicode.hpp"
 #include "bslib/file/fs/WindowsPath.hpp"
+#include "bslib/unicode.hpp"
 
+#include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -10,6 +11,11 @@
 #include <windows.h>
 
 #include <string>
+
+/**
+ * Note that all operations here should support unicode and extended paths.
+ * Some boost operations support extended paths, in those cases it's preferrable to wrap boost with wide strings to avoid code page conversion
+ */
 
 namespace af {
 namespace bslib {
@@ -39,7 +45,7 @@ NativePath GenerateShortUniqueTempPath(boost::system::error_code& ec) noexcept
 	}
 	WindowsPath result(WideToUTF8String(buffer));
 	result.AppendSegment(GenerateUuid());
-	ec = boost::system::error_code();
+	ec.clear();
 	return result;
 }
 
@@ -89,50 +95,38 @@ WindowsPath GenerateUniqueTempPath()
 bool IsDirectory(const NativePath& path, boost::system::error_code& ec) noexcept
 {
 	const auto wideString = UTF8ToWideString(path.ToExtendedString());
-	const auto result = ::GetFileAttributesW(wideString.c_str());
-	if (result == INVALID_FILE_ATTRIBUTES)
-	{
-		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
-		return false;
-	}
-	ec = boost::system::error_code();
-	return (result & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
+	return boost::filesystem::is_directory(wideString, ec);
 }
 
 bool IsDirectory(const NativePath& path)
 {
-	boost::system::error_code ec;
-	auto result = IsDirectory(path, ec);
-	if (ec)
-	{
-		throw boost::system::system_error(ec, "Failed to determine if the given path is a directory");
-	}
-	return result;
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	return boost::filesystem::is_directory(wideString);
 }
 
 bool IsRegularFile(const NativePath& path, boost::system::error_code& ec) noexcept
 {
 	const auto wideString = UTF8ToWideString(path.ToExtendedString());
-	const auto result = ::GetFileAttributesW(wideString.c_str());
-	if (result == INVALID_FILE_ATTRIBUTES)
-	{
-		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
-		return false;
-	}
-	ec = boost::system::error_code();
-	// There's no "regular file" attribute, so deduce from it not being a directory and not a symlink
-	return (!(result & FILE_ATTRIBUTE_REPARSE_POINT) && !(result & FILE_ATTRIBUTE_DIRECTORY));
+	return boost::filesystem::is_regular_file(wideString, ec);
 }
 
 bool IsRegularFile(const NativePath& path)
 {
-	boost::system::error_code ec;
-	auto result = IsRegularFile(path, ec);
-	if (ec)
-	{
-		throw boost::system::system_error(ec, "Failed to determine if the given path is a regular file");
-	}
-	return result;
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	return boost::filesystem::is_regular_file(wideString);
+}
+
+bool Exists(const NativePath& path, boost::system::error_code& ec) noexcept
+{
+	// This is safe with extended paths, and 99x easier than implementing it
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	return boost::filesystem::exists(wideString, ec);
+}
+
+bool Exists(const NativePath& path)
+{
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	return boost::filesystem::exists(wideString);
 }
 
 bool CreateDirectorySexy(const NativePath& path, boost::system::error_code& ec) noexcept
@@ -141,7 +135,7 @@ bool CreateDirectorySexy(const NativePath& path, boost::system::error_code& ec) 
 	// BOOL is a 32-bit int, so compare against false see https://msdn.microsoft.com/en-us/library/windows/desktop/bb773621(v=vs.85).aspx
 	if (::CreateDirectoryW(wideString.c_str(), nullptr) != FALSE)
 	{
-		ec = boost::system::error_code();
+		ec.clear();
 		return true;
 	}
 	ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
@@ -163,8 +157,7 @@ bool CreateDirectories(const NativePath& path, boost::system::error_code& ec) no
 {
 	if (IsDirectory(path, ec))
 	{
-		// didn't create it
-		ec = boost::system::error_code(ERROR_ALREADY_EXISTS, boost::system::system_category());
+		// already exists
 		return false;
 	}
 
@@ -190,10 +183,37 @@ bool CreateDirectories(const NativePath& path)
 	return result;
 }
 
-NativePath GetAbsolutePath(const std::wstring& path, boost::system::error_code& ec) noexcept
+void Remove(const NativePath& path, boost::system::error_code& ec) noexcept
+{
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	boost::filesystem::remove(wideString, ec);
+}
+
+void Remove(const NativePath& path)
+{
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	boost::filesystem::remove(wideString);
+}
+
+void RemoveAll(const NativePath& path, boost::system::error_code& ec) noexcept
+{
+	// This is safe with extended paths, and 99x easier than implementing it
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	boost::filesystem::remove_all(wideString, ec);
+}
+
+void RemoveAll(const NativePath& path)
+{
+	// This is safe with extended paths, and 99x easier than implementing it
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	boost::filesystem::remove_all(wideString);
+}
+
+NativePath GetAbsolutePath(const UTF8String& path, boost::system::error_code& ec) noexcept
 {
 	// Find out how big the buffer needs to be
-	const auto requiredBufferSize = GetFullPathNameW(path.c_str(), 0, nullptr, nullptr);
+	const auto wideString = UTF8ToWideString(path);
+	const auto requiredBufferSize = GetFullPathNameW(wideString.c_str(), 0, nullptr, nullptr);
 	if (requiredBufferSize == 0)
 	{
 		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
@@ -204,17 +224,17 @@ NativePath GetAbsolutePath(const std::wstring& path, boost::system::error_code& 
 	std::unique_ptr<wchar_t[]> buffer(new wchar_t[requiredBufferSize]);
 
 	// Copy into the allocated buffer
-	const auto writtenCharacterCount = GetFullPathNameW(path.c_str(), requiredBufferSize, buffer.get(), nullptr);
+	const auto writtenCharacterCount = GetFullPathNameW(wideString.c_str(), requiredBufferSize, buffer.get(), nullptr);
 	if (writtenCharacterCount == 0)
 	{
 		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
 		return WindowsPath();
 	}
-	ec = boost::system::error_code();
+	ec.clear();
 	return WindowsPath(WideToUTF8String(buffer.get()));
 }
 
-NativePath GetAbsolutePath(const std::wstring& path)
+NativePath GetAbsolutePath(const UTF8String& path)
 {
 	boost::system::error_code ec;
 	auto result = GetAbsolutePath(path, ec);
@@ -225,17 +245,17 @@ NativePath GetAbsolutePath(const std::wstring& path)
 	return result;
 }
 
-std::ifstream OpenFileRead(const NativePath& path) noexcept
+std::ifstream OpenFileRead(const NativePath& path, std::ios_base::openmode mode) noexcept
 {
 	// VC++ has a constructor that takes a wide string, note that this doesn't exist on other platforms
-	std::ifstream file(UTF8ToWideString(path.ToExtendedString()), std::ios::binary | std::ios::in);
+	std::ifstream file(UTF8ToWideString(path.ToExtendedString()), mode);
 	return file;
 }
 
-std::ofstream OpenFileWrite(const NativePath& path) noexcept
+std::ofstream OpenFileWrite(const NativePath& path, std::ios_base::openmode mode) noexcept
 {
 	// VC++ has a constructor that takes a wide string, note that this doesn't exist on other platforms
-	std::ofstream file(UTF8ToWideString(path.ToExtendedString()), std::ios::binary | std::ios::out);
+	std::ofstream file(UTF8ToWideString(path.ToExtendedString()), mode);
 	return file;
 }
 
