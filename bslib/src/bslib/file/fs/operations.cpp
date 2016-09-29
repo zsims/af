@@ -95,50 +95,25 @@ WindowsPath GenerateUniqueTempPath()
 bool IsDirectory(const NativePath& path, boost::system::error_code& ec) noexcept
 {
 	const auto wideString = UTF8ToWideString(path.ToExtendedString());
-	const auto result = ::GetFileAttributesW(wideString.c_str());
-	if (result == INVALID_FILE_ATTRIBUTES)
-	{
-		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
-		return false;
-	}
-	ec = boost::system::error_code();
-	return (result & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
+	return boost::filesystem::is_directory(wideString, ec);
 }
 
 bool IsDirectory(const NativePath& path)
 {
-	boost::system::error_code ec;
-	auto result = IsDirectory(path, ec);
-	if (ec)
-	{
-		throw boost::system::system_error(ec, "Failed to determine if the given path is a directory");
-	}
-	return result;
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	return boost::filesystem::is_directory(wideString);
 }
 
 bool IsRegularFile(const NativePath& path, boost::system::error_code& ec) noexcept
 {
 	const auto wideString = UTF8ToWideString(path.ToExtendedString());
-	const auto result = ::GetFileAttributesW(wideString.c_str());
-	if (result == INVALID_FILE_ATTRIBUTES)
-	{
-		ec = boost::system::error_code(::GetLastError(), boost::system::system_category());
-		return false;
-	}
-	ec = boost::system::error_code();
-	// There's no "regular file" attribute, so deduce from it not being a directory and not a symlink
-	return (!(result & FILE_ATTRIBUTE_REPARSE_POINT) && !(result & FILE_ATTRIBUTE_DIRECTORY));
+	return boost::filesystem::is_regular_file(wideString, ec);
 }
 
 bool IsRegularFile(const NativePath& path)
 {
-	boost::system::error_code ec;
-	auto result = IsRegularFile(path, ec);
-	if (ec)
-	{
-		throw boost::system::system_error(ec, "Failed to determine if the given path is a regular file");
-	}
-	return result;
+	const auto wideString = UTF8ToWideString(path.ToExtendedString());
+	return boost::filesystem::is_regular_file(wideString);
 }
 
 bool Exists(const NativePath& path, boost::system::error_code& ec) noexcept
