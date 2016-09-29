@@ -78,6 +78,11 @@ public:
 	void AppendFull(const WindowsPath& p);
 	WindowsPath AppendFullCopy(const WindowsPath& p) const;
 
+	/**
+	 * Converts forward slashes to back slashes
+	 */
+	void MakePreferred();
+
 	bool operator==(const WindowsPath& rhs) const
 	{
 		return _path == rhs._path;

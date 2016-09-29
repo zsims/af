@@ -50,7 +50,10 @@ boost::optional<blob::Address> FileAdderEs::SaveFileContents(const fs::NativePat
 void FileAdderEs::Add(const UTF8String& sourcePath)
 {
 	// Get the full path
-	const auto absolutePath = fs::GetAbsolutePath(sourcePath);
+	auto absolutePath = fs::GetAbsolutePath(sourcePath);
+
+	// Ensure forward slashes are back slashes (if applicable)
+	absolutePath.MakePreferred();
 
 	if (!fs::Exists(absolutePath))
 	{

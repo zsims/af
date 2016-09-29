@@ -152,6 +152,11 @@ UTF8String WindowsPath::ToNormalString() const
 	return _path;
 }
 
+void WindowsPath::MakePreferred()
+{
+	boost::replace_all(_path, "/", R"(\)");
+}
+
 }
 }
 }

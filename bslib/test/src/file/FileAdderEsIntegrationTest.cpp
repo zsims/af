@@ -6,6 +6,7 @@
 #include "utility/gtest_boost_filesystem_fix.hpp"
 #include "utility/ScopedExclusiveFileAccess.hpp"
 
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <gtest/gtest.h>
@@ -80,6 +81,22 @@ TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithFile)
 	const auto expectedEmittedEvent = RegularFileEvent(filePath, fileAddress, FileEventAction::ChangedAdded);
 	EXPECT_TRUE(_finder->FindLastChangedEventByPath(filePath));
 	EXPECT_THAT(emittedEvents, ::testing::ElementsAre(expectedEmittedEvent));
+}
+
+TEST_F(FileAdderEsIntegrationTest, Add_ConvertsForwardSlashes)
+{
+	// Arrange
+	const auto filePath = fs::GenerateUniqueTempPath();
+	const auto fileAddress = CreateFile(filePath, "hello");
+
+	// Act
+	const auto forwardSlashFilePath = boost::replace_last_copy(filePath.ToString(), "\\", "/");
+	_adder->Add(forwardSlashFilePath);
+
+	// Assert
+	const auto expectedEmittedEvent = RegularFileEvent(filePath, fileAddress, FileEventAction::ChangedAdded);
+	EXPECT_TRUE(_finder->FindLastChangedEventByPath(filePath));
+	EXPECT_THAT(_adder->GetEmittedEvents(), ::testing::ElementsAre(expectedEmittedEvent));
 }
 
 TEST_F(FileAdderEsIntegrationTest, Add_ResolvesFullPath)
