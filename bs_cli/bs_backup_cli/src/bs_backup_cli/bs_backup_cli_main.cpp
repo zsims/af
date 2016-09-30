@@ -1,6 +1,6 @@
 #include <bslib/Forest.hpp>
 #include <bslib/exceptions.hpp>
-#include <bslib/file/FileAdderEs.hpp>
+#include <bslib/file/FileAdder.hpp>
 #include <bslib/file/exceptions.hpp>
 #include <bslib/blob/DirectoryBlobStore.hpp>
 
@@ -23,7 +23,7 @@ int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::pat
 		forest.OpenOrCreate();
 
 		auto uow = forest.CreateUnitOfWork();
-		auto adder = uow->CreateFileAdderEs();
+		auto adder = uow->CreateFileAdder();
 
 		adder->GetEventManager().Subscribe([](const auto& fileEvent) {
 			std::cout << fileEvent.action << " " << fileEvent.fullPath.ToString() << std::endl;

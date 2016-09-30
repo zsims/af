@@ -20,10 +20,10 @@ namespace bslib {
 namespace file {
 namespace test {
 
-class FileRestorerEsIntegrationTest : public testing::Test
+class FileRestorerIntegrationTest : public testing::Test
 {
 protected:
-	FileRestorerEsIntegrationTest()
+	FileRestorerIntegrationTest()
 		: _forestDbPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb"))
 		, _targetPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path())
 		, _restorePath(fs::GenerateUniqueTempPath())
@@ -39,8 +39,8 @@ protected:
 		_forest->Create();
 
 		_uow = _forest->CreateUnitOfWork();
-		_adder = _uow->CreateFileAdderEs();
-		_restorer = _uow->CreateFileRestorerEs();
+		_adder = _uow->CreateFileAdder();
+		_restorer = _uow->CreateFileRestorer();
 		_finder = _uow->CreateFileFinder();
 
 		// Test data
@@ -50,7 +50,7 @@ protected:
 		CreateFile(_sampleSubFilePath, "hey sub babe");
 	}
 
-	~FileRestorerEsIntegrationTest()
+	~FileRestorerIntegrationTest()
 	{
 		// Reset the UoW before the forest to ensure the transaction is rolled back
 		_uow.reset();
@@ -79,8 +79,8 @@ protected:
 	const fs::NativePath _restorePath;
 	std::unique_ptr<Forest> _forest;
 	std::unique_ptr<UnitOfWork> _uow;
-	std::unique_ptr<FileAdderEs> _adder;
-	std::unique_ptr<FileRestorerEs> _restorer;
+	std::unique_ptr<FileAdder> _adder;
+	std::unique_ptr<FileRestorer> _restorer;
 	std::unique_ptr<FileFinder> _finder;
 
 	const fs::NativePath _sampleBasePath;
@@ -89,7 +89,7 @@ protected:
 	const fs::NativePath _sampleSubFilePath;
 };
 
-TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetDoNotExist)
+TEST_F(FileRestorerIntegrationTest, Restore_ThrowsIfTargetDoNotExist)
 {
 	// Arrange
 	const auto restorePath = fs::GenerateUniqueTempPath();
@@ -98,7 +98,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetDoNotExist)
 	ASSERT_THROW(_restorer->Restore(std::vector<FileEvent>(), restorePath.ToString()), TargetPathNotSupportedException);
 }
 
-TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetIsFile)
+TEST_F(FileRestorerIntegrationTest, Restore_ThrowsIfTargetIsFile)
 {
 	// Arrange
 	const auto restorePath = fs::GenerateUniqueTempPath();
@@ -108,7 +108,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_ThrowsIfTargetIsFile)
 	ASSERT_THROW(_restorer->Restore(std::vector<FileEvent>(), restorePath.ToString()), TargetPathNotSupportedException);
 }
 
-TEST_F(FileRestorerEsIntegrationTest, Restore_FileToFilePath)
+TEST_F(FileRestorerIntegrationTest, Restore_FileToFilePath)
 {
 	// Arrange
 	const auto fileRestorePath = _restorePath / _sampleFilePath.GetFilename();
@@ -129,7 +129,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_FileToFilePath)
 	EXPECT_THAT(_sampleFilePath, HasSameFileContents(fileRestorePath));
 }
 
-TEST_F(FileRestorerEsIntegrationTest, Restore_IgnoresUnsupportedEvents)
+TEST_F(FileRestorerIntegrationTest, Restore_IgnoresUnsupportedEvents)
 {
 	// Arrange
 	std::vector<FileEvent> eventsToRestore = {
@@ -148,7 +148,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_IgnoresUnsupportedEvents)
 	EXPECT_THAT(_restorer->GetEmittedEvents(), ::testing::UnorderedElementsAreArray(expectedEmittedEvents));
 }
 
-TEST_F(FileRestorerEsIntegrationTest, Restore_Success)
+TEST_F(FileRestorerIntegrationTest, Restore_Success)
 {
 	// Arrange
 	_adder->Add(_sampleBasePath.ToString());
@@ -167,7 +167,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_Success)
 	EXPECT_THAT(_sampleSubFilePath, HasSameFileContents(sampleSubFilePathRestored));
 }
 
-TEST_F(FileRestorerEsIntegrationTest, Restore_ToRelativeDirectorySuccess)
+TEST_F(FileRestorerIntegrationTest, Restore_ToRelativeDirectorySuccess)
 {
 	// Arrange
 	const auto restorePath = fs::GenerateShortUniqueTempPath();
@@ -189,7 +189,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_ToRelativeDirectorySuccess)
 	EXPECT_THAT(_sampleSubFilePath, HasSameFileContents(sampleSubFilePathRestored));
 }
 
-TEST_F(FileRestorerEsIntegrationTest, Restore_SkipsExistingFiles)
+TEST_F(FileRestorerIntegrationTest, Restore_SkipsExistingFiles)
 {
 	// Arrange
 	_adder->Add(_sampleBasePath.ToString());
@@ -225,7 +225,7 @@ TEST_F(FileRestorerEsIntegrationTest, Restore_SkipsExistingFiles)
 	));
 }
 
-TEST_F(FileRestorerEsIntegrationTest, Restore_HandlesFileDirectoryClash)
+TEST_F(FileRestorerIntegrationTest, Restore_HandlesFileDirectoryClash)
 {
 	// Arrange
 	_adder->Add(_sampleBasePath.ToString());

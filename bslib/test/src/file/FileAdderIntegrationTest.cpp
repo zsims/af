@@ -20,10 +20,10 @@ namespace bslib {
 namespace file {
 namespace test {
 
-class FileAdderEsIntegrationTest : public testing::Test
+class FileAdderIntegrationTest : public testing::Test
 {
 protected:
-	FileAdderEsIntegrationTest()
+	FileAdderIntegrationTest()
 		: _forestDbPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb"))
 		, _targetPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path())
 	{
@@ -33,11 +33,11 @@ protected:
 		_forest->Create();
 
 		_uow = _forest->CreateUnitOfWork();
-		_adder = _uow->CreateFileAdderEs();
+		_adder = _uow->CreateFileAdder();
 		_finder = _uow->CreateFileFinder();
 	}
 
-	~FileAdderEsIntegrationTest()
+	~FileAdderIntegrationTest()
 	{
 		_adder.reset();
 		_uow.reset();
@@ -60,11 +60,11 @@ protected:
 	const boost::filesystem::path _targetPath;
 	std::unique_ptr<Forest> _forest;
 	std::unique_ptr<UnitOfWork> _uow;
-	std::unique_ptr<FileAdderEs> _adder;
+	std::unique_ptr<FileAdder> _adder;
 	std::unique_ptr<FileFinder> _finder;
 };
 
-TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithFile)
+TEST_F(FileAdderIntegrationTest, Add_SuccessWithFile)
 {
 	// Arrange
 	const auto filePath = fs::GenerateUniqueTempPath();
@@ -83,7 +83,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithFile)
 	EXPECT_THAT(emittedEvents, ::testing::ElementsAre(expectedEmittedEvent));
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_ConvertsForwardSlashes)
+TEST_F(FileAdderIntegrationTest, Add_ConvertsForwardSlashes)
 {
 	// Arrange
 	const auto filePath = fs::GenerateUniqueTempPath();
@@ -99,7 +99,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_ConvertsForwardSlashes)
 	EXPECT_THAT(_adder->GetEmittedEvents(), ::testing::ElementsAre(expectedEmittedEvent));
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_ResolvesFullPath)
+TEST_F(FileAdderIntegrationTest, Add_ResolvesFullPath)
 {
 	// Arrange
 	const auto folderName = "folder";
@@ -119,7 +119,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_ResolvesFullPath)
 	EXPECT_THAT(emittedEvents, ::testing::ElementsAre(expectedDirectoryEvent, expectedFileEvent));
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_SkipsLockedFile)
+TEST_F(FileAdderIntegrationTest, Add_SkipsLockedFile)
 {
 	// Arrange
 	const auto filePath = fs::GenerateUniqueTempPath();
@@ -136,7 +136,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_SkipsLockedFile)
 	EXPECT_THAT(_adder->GetEmittedEvents(), ::testing::ElementsAre(expectedEmittedEvent));
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_RecordsAllStates)
+TEST_F(FileAdderIntegrationTest, Add_RecordsAllStates)
 {
 	// Arrange
 	const auto directoryPath = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
@@ -164,7 +164,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_RecordsAllStates)
 	EXPECT_EQ(allEvents, expectedAllEvents);
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_FailIfNotExist)
+TEST_F(FileAdderIntegrationTest, Add_FailIfNotExist)
 {
 	// Arrange
 	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
@@ -174,7 +174,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_FailIfNotExist)
 	ASSERT_THROW(_adder->Add(path.ToString()), PathNotFoundException);
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_EmptyDirectory)
+TEST_F(FileAdderIntegrationTest, Add_EmptyDirectory)
 {
 	// Arrange
 	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
@@ -189,7 +189,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_EmptyDirectory)
 	EXPECT_THAT(_adder->GetEmittedEvents(), ::testing::ElementsAre(expectedEmittedEvent));
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithDirectory)
+TEST_F(FileAdderIntegrationTest, Add_SuccessWithDirectory)
 {
 	// Arrange
 	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
@@ -227,7 +227,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_SuccessWithDirectory)
 	}
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_ExistingSuccessWithDirectory)
+TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
 {
 	// Arrange
 	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
@@ -244,7 +244,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_ExistingSuccessWithDirectory)
 
 	// Act
 	auto uow2 = _forest->CreateUnitOfWork();
-	auto adder2 = uow2->CreateFileAdderEs();
+	auto adder2 = uow2->CreateFileAdder();
 	const auto updatedFileAddress = CreateFile(filePath, "hell");
 	const auto deepFileAddress = CreateFile(deepFilePath, "hello");
 	adder2->Add(path.ToString());
@@ -279,7 +279,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_ExistingSuccessWithDirectory)
 	}
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_RespectsCase)
+TEST_F(FileAdderIntegrationTest, Add_RespectsCase)
 {
 	// Arrange
 	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
@@ -313,7 +313,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_RespectsCase)
 	EXPECT_THAT(expectedEvents, ::testing::UnorderedElementsAreArray(result | boost::adaptors::map_values));
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_DetectsModifications)
+TEST_F(FileAdderIntegrationTest, Add_DetectsModifications)
 {
 	// Arrange
 	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
@@ -370,7 +370,7 @@ TEST_F(FileAdderEsIntegrationTest, Add_DetectsModifications)
 	EXPECT_THAT(expectedEvents, ::testing::UnorderedElementsAreArray(result | boost::adaptors::map_values));
 }
 
-TEST_F(FileAdderEsIntegrationTest, Add_HandlesChangeInType)
+TEST_F(FileAdderIntegrationTest, Add_HandlesChangeInType)
 {
 	// Arrange
 	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();

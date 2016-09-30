@@ -18,14 +18,14 @@ void ForestUnitOfWork::Commit()
 	_transaction.Commit();
 }
 
-std::unique_ptr<file::FileAdderEs> ForestUnitOfWork::CreateFileAdderEs()
+std::unique_ptr<file::FileAdder> ForestUnitOfWork::CreateFileAdder()
 {
-	return std::make_unique<file::FileAdderEs>(_blobStore, _blobInfoRepository, _fileEventStreamRepository);
+	return std::make_unique<file::FileAdder>(_blobStore, _blobInfoRepository, _fileEventStreamRepository);
 }
 
-std::unique_ptr<file::FileRestorerEs> ForestUnitOfWork::CreateFileRestorerEs()
+std::unique_ptr<file::FileRestorer> ForestUnitOfWork::CreateFileRestorer()
 {
-	return std::make_unique<file::FileRestorerEs>(_blobStore, _blobInfoRepository);
+	return std::make_unique<file::FileRestorer>(_blobStore, _blobInfoRepository);
 }
 
 std::unique_ptr<file::FileFinder> ForestUnitOfWork::CreateFileFinder()
