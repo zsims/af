@@ -33,14 +33,15 @@ public:
 	 * \param fileEvent The event to restore from
 	 * \param targetPath The path to restore to
 	 */
-	void Restore(const FileEvent& fileEvent, const fs::NativePath& targetPath);
+	void Restore(const FileEvent& fileEvent, const UTF8String& targetPath);
 
 	/**
 	 * Restores the given events to the target path
 	 * \param fileEvents The events to restore from
 	 * \param targetPath The path to restore to
 	 */
-	void Restore(const std::vector<FileEvent>& fileEvents, const fs::NativePath& targetPath);
+	void Restore(const std::vector<FileEvent>& fileEvents, const UTF8String& targetPath);
+	void Restore(const std::map<fs::NativePath, FileEvent>& fileEvents, const UTF8String& targetPath);
 
 	const std::vector<FileRestoreEvent>& GetEmittedEvents() { return _emittedEvents; }
 	EventManager<FileRestoreEvent>& GetEventManager() { return _eventManager; }

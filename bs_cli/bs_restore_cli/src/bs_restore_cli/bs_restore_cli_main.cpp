@@ -1,6 +1,7 @@
 #include <bslib/Forest.hpp>
 #include <bslib/exceptions.hpp>
-#include <bslib/file/FileAdderEs.hpp>
+#include <bslib/file/FileFinder.hpp>
+#include <bslib/file/FileRestorerEs.hpp>
 #include <bslib/file/exceptions.hpp>
 #include <bslib/blob/DirectoryBlobStore.hpp>
 
@@ -13,24 +14,26 @@
 
 namespace {
 
-int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::path& targetDirectoryPath)
+int Restore(const af::bslib::UTF8String& pathToRestore, const af::bslib::UTF8String& targetPath, const boost::filesystem::path& backupSource)
 {
-	const auto forestDb = targetDirectoryPath / "backup.fdb";
+	const auto forestDb = backupSource / "backup.fdb";
+	auto queryPath = af::bslib::file::fs::NativePath(pathToRestore);
+	queryPath.MakePreferred();
 
 	try
 	{
-		af::bslib::Forest forest(forestDb, std::make_unique<af::bslib::blob::DirectoryBlobStore>(targetDirectoryPath));
+		af::bslib::Forest forest(forestDb, std::make_unique<af::bslib::blob::DirectoryBlobStore>(backupSource));
 		forest.OpenOrCreate();
 
 		auto uow = forest.CreateUnitOfWork();
-		auto adder = uow->CreateFileAdderEs();
+		const auto finder = uow->CreateFileFinder();
+		auto restorer = uow->CreateFileRestorerEs();
+		const auto events = finder->GetLastChangedEventsStartingWithPath(queryPath);
 
-		adder->GetEventManager().Subscribe([](const auto& fileEvent) {
-			std::cout << fileEvent.action << " " << fileEvent.fullPath.ToString() << std::endl;
+		restorer->GetEventManager().Subscribe([](const auto& fileRestoreEvent) {
+			std::cout << fileRestoreEvent.action << " " << fileRestoreEvent.originalEvent.fullPath.ToString() << " to " << fileRestoreEvent.targetPath.ToString() << std::endl;
 		});
-
-		adder->Add(sourcePath);
-		uow->Commit();
+		restorer->Restore(events, targetPath);
 		return 0;
 	}
 	catch (const af::bslib::file::PathNotFoundException& e)
@@ -38,7 +41,7 @@ int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::pat
 		std::cerr << e.what() << std::endl;
 		return 2;
 	}
-	catch (const af::bslib::file::SourcePathNotSupportedException& e)
+	catch (const af::bslib::file::TargetPathNotSupportedException& e)
 	{
 		std::cerr << e.what() << std::endl;
 		return 3;
@@ -48,7 +51,7 @@ int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::pat
 		std::cerr << e.what() << std::endl;
 		return 4;
 	}
-	catch (const af::bslib::DatabaseNotFoundException & e)
+	catch (const af::bslib::DatabaseNotFoundException& e)
 	{
 		std::cerr << e.what() << std::endl;
 		return 5;
@@ -74,16 +77,18 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 	namespace po = boost::program_options;
 
 	std::wstring sourcePath;
-	std::wstring targetDirectoryPath;
+	std::wstring pathToRestore;
+	std::wstring destinationPath;
 
 	po::options_description desc("Allowed options");
 	desc.add_options()
 		("help,h", "print usage message")
-		("source,s", po::wvalue(&sourcePath)->required(), "Source path to backup (file or directory)")
-		("target,t", po::wvalue(&targetDirectoryPath)->required(), "Target directory to save the backup to");
+		("path,p", po::wvalue(&pathToRestore)->required(), "Path to restore")
+		("source,s", po::wvalue(&sourcePath)->required(), "Source to restore from")
+		("destination,d", po::wvalue(&destinationPath)->required(), "Destination path to restore to");
 
 	po::positional_options_description positionalOptions;
-	positionalOptions.add("source", 1);
+	positionalOptions.add("path", 1);
 
 	po::variables_map vm;
 	try
@@ -112,5 +117,5 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 		return 1;
 	}
 
-	return Backup(af::bslib::WideToUTF8String(sourcePath), targetDirectoryPath);
+	return Restore(af::bslib::WideToUTF8String(pathToRestore), af::bslib::WideToUTF8String(destinationPath), boost::filesystem::path(sourcePath));
 }
