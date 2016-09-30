@@ -22,7 +22,7 @@ public:
 	explicit ScopedWorkingDirectory(const fs::NativePath& path);
 	~ScopedWorkingDirectory();
 private:
-	fs::NativePath _originalPath;
+	const fs::NativePath _originalPath;
 };
 
 }
