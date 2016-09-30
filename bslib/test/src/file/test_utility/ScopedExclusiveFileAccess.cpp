@@ -1,4 +1,4 @@
-#include "utility/ScopedExclusiveFileAccess.hpp"
+#include "file/test_utility/ScopedExclusiveFileAccess.hpp"
 
 #include <windows.h>
 
@@ -6,8 +6,8 @@
 
 namespace af {
 namespace bslib {
-namespace test {
-namespace utility {
+namespace file {
+namespace test_utility {
 
 ScopedExclusiveFileAccess::ScopedExclusiveFileAccess(const file::fs::NativePath& path)
 	: _path(path)

@@ -18,6 +18,8 @@ add_executable(
     src/file/FileRestorerIntegrationTest.cpp
     src/file/fs/WindowsPathIntegrationTest.cpp
     src/file/fs/operationsIntegrationTest.cpp
+    src/file/test_utility/ScopedExclusiveFileAccess.cpp
+    src/file/test_utility/ScopedExclusiveFileAccess.hpp
     src/file/test_utility/ScopedWorkingDirectory.cpp
     src/file/test_utility/ScopedWorkingDirectory.hpp
     src/unicodeIntegrationTest.cpp
@@ -25,8 +27,6 @@ add_executable(
     src/utility/gtest_boost_filesystem_fix.hpp
     src/utility/matchers.cpp
     src/utility/matchers.hpp
-    src/utility/ScopedExclusiveFileAccess.cpp
-    src/utility/ScopedExclusiveFileAccess.hpp
 )
 
 set_property(TARGET bslib_test PROPERTY FOLDER "bslib")
