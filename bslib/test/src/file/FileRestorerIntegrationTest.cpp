@@ -6,7 +6,6 @@
 #include "file/test_utility/ScopedWorkingDirectory.hpp"
 #include "utility/gtest_boost_filesystem_fix.hpp"
 #include "utility/matchers.hpp"
-#include "utility/ScopedExclusiveFileAccess.hpp"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>

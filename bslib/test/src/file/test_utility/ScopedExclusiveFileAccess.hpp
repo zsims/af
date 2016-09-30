@@ -6,8 +6,8 @@
 
 namespace af {
 namespace bslib {
-namespace test {
-namespace utility {
+namespace file {
+namespace test_utility {
 
 /**
  * Access the given file exclusively so it can't be opened elsewhere

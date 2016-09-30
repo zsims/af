@@ -3,8 +3,8 @@
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/fs/operations.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
+#include "file/test_utility/ScopedExclusiveFileAccess.hpp"
 #include "utility/gtest_boost_filesystem_fix.hpp"
-#include "utility/ScopedExclusiveFileAccess.hpp"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -125,7 +125,7 @@ TEST_F(FileAdderIntegrationTest, Add_SkipsLockedFile)
 	const auto filePath = fs::GenerateUniqueTempPath();
 	CreateFile(filePath, "hello");
 
-	bslib::test::utility::ScopedExclusiveFileAccess exclusiveAccess(filePath);
+	test_utility::ScopedExclusiveFileAccess exclusiveAccess(filePath);
 
 	// Act
 	_adder->Add(filePath.ToExtendedString());
@@ -144,7 +144,7 @@ TEST_F(FileAdderIntegrationTest, Add_RecordsAllStates)
 
 	const auto lockedFilePath = directoryPath / "locked.dat";
 	CreateFile(lockedFilePath, "hello");
-	bslib::test::utility::ScopedExclusiveFileAccess exclusiveAccess(lockedFilePath);
+	test_utility::ScopedExclusiveFileAccess exclusiveAccess(lockedFilePath);
 
 	const auto preExistingPath = directoryPath / "already-here.dat";
 	const auto preExistingAddress = CreateFile(preExistingPath, "heybby");
