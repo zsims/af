@@ -16,7 +16,7 @@ add_library(
     include/bslib/blob/NullBlobStore.hpp
     include/bslib/EventManager.hpp
     include/bslib/file/exceptions.hpp
-    include/bslib/file/FileAdderEs.hpp
+    include/bslib/file/FileAdder.hpp
     include/bslib/file/FileEvent.hpp
     include/bslib/file/FileRestoreEvent.hpp
     include/bslib/file/FileFinder.hpp
@@ -34,7 +34,7 @@ add_library(
     src/bslib/Forest.cpp
     src/bslib/ForestUnitOfWork.cpp
     src/bslib/ForestUnitOfWork.hpp
-    src/bslib/file/FileAdderEs.cpp
+    src/bslib/file/FileAdder.cpp
     src/bslib/file/FileEventStreamRepository.cpp
     src/bslib/file/FileEventStreamRepository.hpp
     src/bslib/file/FileFinder.cpp

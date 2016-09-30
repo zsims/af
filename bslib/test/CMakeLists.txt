@@ -13,7 +13,7 @@ add_executable(
     src/blob/AddressIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
-    src/file/FileAdderEsIntegrationTest.cpp
+    src/file/FileAdderIntegrationTest.cpp
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRestorerEsIntegrationTest.cpp
     src/file/fs/WindowsPathIntegrationTest.cpp

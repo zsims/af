@@ -39,7 +39,7 @@ protected:
 		_forest->Create();
 
 		_uow = _forest->CreateUnitOfWork();
-		_adder = _uow->CreateFileAdderEs();
+		_adder = _uow->CreateFileAdder();
 		_restorer = _uow->CreateFileRestorerEs();
 		_finder = _uow->CreateFileFinder();
 
@@ -79,7 +79,7 @@ protected:
 	const fs::NativePath _restorePath;
 	std::unique_ptr<Forest> _forest;
 	std::unique_ptr<UnitOfWork> _uow;
-	std::unique_ptr<FileAdderEs> _adder;
+	std::unique_ptr<FileAdder> _adder;
 	std::unique_ptr<FileRestorerEs> _restorer;
 	std::unique_ptr<FileFinder> _finder;
 

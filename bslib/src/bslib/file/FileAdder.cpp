@@ -1,4 +1,4 @@
-#include "bslib/file/FileAdderEs.hpp"
+#include "bslib/file/FileAdder.hpp"
 
 #include "bslib/blob/BlobStore.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
@@ -15,7 +15,7 @@ namespace af {
 namespace bslib {
 namespace file {
 
-FileAdderEs::FileAdderEs(
+FileAdder::FileAdder(
 	blob::BlobStore& blobStore,
 	blob::BlobInfoRepository& blobInfoRepository,
 	FileEventStreamRepository& fileEventStreamRepository)
@@ -25,7 +25,7 @@ FileAdderEs::FileAdderEs(
 {
 }
 
-boost::optional<blob::Address> FileAdderEs::SaveFileContents(const fs::NativePath& sourcePath)
+boost::optional<blob::Address> FileAdder::SaveFileContents(const fs::NativePath& sourcePath)
 {
 	// TODO: ffs should really support files so they don't have to be read into memory. Or at least streaming...
 	auto file = OpenFileRead(sourcePath);
@@ -47,7 +47,7 @@ boost::optional<blob::Address> FileAdderEs::SaveFileContents(const fs::NativePat
 	return blobAddress;
 }
 
-void FileAdderEs::Add(const UTF8String& sourcePath)
+void FileAdder::Add(const UTF8String& sourcePath)
 {
 	// Get the full path
 	auto absolutePath = fs::GetAbsolutePath(sourcePath);
@@ -75,7 +75,7 @@ void FileAdderEs::Add(const UTF8String& sourcePath)
 	}
 }
 
-void FileAdderEs::ScanDirectory(const fs::NativePath& sourcePath)
+void FileAdder::ScanDirectory(const fs::NativePath& sourcePath)
 {
 	auto lastChangeEvents = _fileEventStreamRepository.GetLastChangedEventsStartingWithPath(sourcePath);
 
@@ -106,7 +106,7 @@ void FileAdderEs::ScanDirectory(const fs::NativePath& sourcePath)
 	}
 }
 
-void FileAdderEs::VisitPath(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent)
+void FileAdder::VisitPath(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
 	if (!fs::Exists(sourcePath))
 	{
@@ -131,7 +131,7 @@ void FileAdderEs::VisitPath(const fs::NativePath& sourcePath, const boost::optio
 	}
 }
 
-void FileAdderEs::VisitFile(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent)
+void FileAdder::VisitFile(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
 	const auto blobAddress = SaveFileContents(sourcePath);
 	if (!blobAddress)
@@ -163,7 +163,7 @@ void FileAdderEs::VisitFile(const fs::NativePath& sourcePath, const boost::optio
 	EmitEvent(RegularFileEvent(sourcePath, blobAddress, action));
 }
 
-void FileAdderEs::VisitDirectory(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent)
+void FileAdder::VisitDirectory(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
 	if (!previousEvent)
 	{
@@ -171,7 +171,7 @@ void FileAdderEs::VisitDirectory(const fs::NativePath& sourcePath, const boost::
 	}
 }
 
-boost::optional<FileEvent> FileAdderEs::FindPreviousEvent(
+boost::optional<FileEvent> FileAdder::FindPreviousEvent(
 	const std::map<fs::NativePath, FileEvent>& fileEvents,
 	const fs::NativePath& fullPath)
 {
@@ -183,7 +183,7 @@ boost::optional<FileEvent> FileAdderEs::FindPreviousEvent(
 	return it->second;
 }
 
-void FileAdderEs::EmitEvent(const FileEvent& fileEvent)
+void FileAdder::EmitEvent(const FileEvent& fileEvent)
 {
 	_emittedEvents.push_back(fileEvent);
 	_fileEventStreamRepository.AddEvent(fileEvent);

@@ -23,10 +23,10 @@ class FileEventStreamRepository;
 /**
  * Adds files to the backup
  */
-class FileAdderEs
+class FileAdder
 {
 public:
-	FileAdderEs(
+	FileAdder(
 		blob::BlobStore& blobStore,
 		blob::BlobInfoRepository& blobInfoRepository,
 		FileEventStreamRepository& fileEventStreamRepository);
