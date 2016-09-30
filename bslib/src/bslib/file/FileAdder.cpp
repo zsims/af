@@ -83,11 +83,23 @@ void FileAdder::ScanDirectory(const fs::NativePath& sourcePath)
 	VisitPath(sourcePath, FindPreviousEvent(lastChangeEvents, sourcePath));
 
 	// Scan for changes to files on disk
-
-	boost::filesystem::recursive_directory_iterator itr(sourcePath.ToExtendedString());
-	for (const auto& entry : itr)
+	boost::system::error_code ec;
+	boost::filesystem::recursive_directory_iterator itr(sourcePath.ToExtendedString(), ec);
+	if (ec)
 	{
-		fs::NativePath path(WideToUTF8String(entry.path().wstring()));
+		EmitEvent(DirectoryEvent(sourcePath, FileEventAction::FailedToRead));
+		return;
+	}
+
+	for (; itr != boost::filesystem::end(itr); itr.increment(ec))
+	{
+		if (ec)
+		{
+			// TODO: log this, we don't have a path as the increment failed so an event can't be raised
+			continue;
+		}
+
+		fs::NativePath path(WideToUTF8String(itr->path().wstring()));
 
 		// Directories should always be processed with a slash
 		if (fs::IsDirectory(path))
