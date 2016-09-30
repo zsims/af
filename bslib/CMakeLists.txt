@@ -20,7 +20,7 @@ add_library(
     include/bslib/file/FileEvent.hpp
     include/bslib/file/FileRestoreEvent.hpp
     include/bslib/file/FileFinder.hpp
-    include/bslib/file/FileRestorerEs.hpp
+    include/bslib/file/FileRestorer.hpp
     include/bslib/file/fs/path.hpp
     include/bslib/file/fs/WindowsPath.hpp
     include/bslib/UnitOfWork.hpp
@@ -38,7 +38,7 @@ add_library(
     src/bslib/file/FileEventStreamRepository.cpp
     src/bslib/file/FileEventStreamRepository.hpp
     src/bslib/file/FileFinder.cpp
-    src/bslib/file/FileRestorerEs.cpp
+    src/bslib/file/FileRestorer.cpp
     src/bslib/file/fs/WindowsPath.cpp
     src/bslib/file/fs/operations.cpp
     src/bslib/file/fs/operations.hpp

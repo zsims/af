@@ -1,7 +1,7 @@
 #include <bslib/Forest.hpp>
 #include <bslib/exceptions.hpp>
 #include <bslib/file/FileFinder.hpp>
-#include <bslib/file/FileRestorerEs.hpp>
+#include <bslib/file/FileRestorer.hpp>
 #include <bslib/file/exceptions.hpp>
 #include <bslib/blob/DirectoryBlobStore.hpp>
 
@@ -27,7 +27,7 @@ int Restore(const af::bslib::UTF8String& pathToRestore, const af::bslib::UTF8Str
 
 		auto uow = forest.CreateUnitOfWork();
 		const auto finder = uow->CreateFileFinder();
-		auto restorer = uow->CreateFileRestorerEs();
+		auto restorer = uow->CreateFileRestorer();
 		const auto events = finder->GetLastChangedEventsStartingWithPath(queryPath);
 
 		restorer->GetEventManager().Subscribe([](const auto& fileRestoreEvent) {
