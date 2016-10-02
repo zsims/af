@@ -9,7 +9,9 @@ namespace fs {
 
 NativePath NativeFromBoostPath(const boost::filesystem::path& path)
 {
-	return WindowsPath(WideToUTF8String(path.wstring()));
+	auto result = WindowsPath(WideToUTF8String(path.wstring()));
+	result.MakePreferred();
+	return result;
 }
 
 boost::filesystem::path BoostPathFromNative(const NativePath& path)

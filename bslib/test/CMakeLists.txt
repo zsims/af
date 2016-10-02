@@ -54,7 +54,7 @@ target_link_libraries(
 
 add_custom_target(
     bslib_test_verify
-    COMMAND "$<TARGET_FILE:bslib_test>" "--gtest_output=xml:${TEST_RESULTS_DIR}/bslib_test.xml"
+    COMMAND "$<TARGET_FILE:bslib_test>" "--gtest_output=xml:${TEST_RESULTS_DIR}/bslib_test.xml" "--temp" "${CMAKE_CURRENT_BINARY_DIR}/test_temp"
 )
 set_property(TARGET bslib_test_verify PROPERTY FOLDER "bslib")
 add_dependencies(ALL_VERIFY bslib_test_verify)
