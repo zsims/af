@@ -1,33 +1,33 @@
 #include "utility/TestEnvironment.hpp"
 
-#include "bslib/file/fs/operations.hpp"
+#include <boost/filesystem.hpp>
 
 namespace af {
 namespace bslib {
 namespace test {
 namespace utility {
 
-file::fs::NativePath TestEnvironment::_temporaryDirectory;
+boost::filesystem::path TestEnvironment::_temporaryDirectory;
 
-void TestEnvironment::SetTemporaryDirectory(const file::fs::NativePath& path)
+void TestEnvironment::SetTemporaryDirectory(const boost::filesystem::path& path)
 {
 	_temporaryDirectory = path;
 }
 
-file::fs::NativePath TestEnvironment::GetTemporaryDirectory()
+boost::filesystem::path TestEnvironment::GetTemporaryDirectory()
 {
 	return _temporaryDirectory;
 }
 
 void TestEnvironment::SetUp()
 {
-	file::fs::CreateDirectories(_temporaryDirectory);
+	boost::filesystem::create_directories(_temporaryDirectory);
 }
 
 void TestEnvironment::TearDown()
 {
 	boost::system::error_code ec;
-	file::fs::RemoveAll(_temporaryDirectory, ec);
+	boost::filesystem::remove_all(_temporaryDirectory, ec);
 }
 
 }

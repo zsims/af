@@ -3,44 +3,37 @@
 #include "bslib/file/fs/operations.hpp"
 #include "utility/TestEnvironment.hpp"
 
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
+#include <boost/filesystem.hpp>
 
 namespace af {
 namespace bslib {
 namespace test {
 
-std::string GenerateUuid()
-{
-	boost::uuids::random_generator generator;
-	boost::uuids::uuid uuid = generator();
-	return boost::uuids::to_string(uuid);
-}
-
 TestBase::TestBase()
-	: _testTemporaryPath(utility::TestEnvironment::GetTemporaryDirectory() / GenerateUuid())
+	: _testTemporaryPath(utility::TestEnvironment::GetTemporaryDirectory() / boost::filesystem::unique_path())
+	, _testForest(_testTemporaryPath)
 {
-	file::fs::CreateDirectories(_testTemporaryPath);
+	boost::filesystem::create_directories(_testTemporaryPath);
 }
 
 TestBase::~TestBase()
 {
+	// Extended paths may have been used in tests. boost::filesystem::remove_all doesn't support extended paths in this case
 	boost::system::error_code ec;
-	file::fs::RemoveAll(_testTemporaryPath, ec);
+	file::fs::RemoveAll(file::fs::NativeFromBoostPath(_testTemporaryPath), ec);
 }
 
-file::fs::NativePath TestBase::GetUniqueTempPath() const
+boost::filesystem::path TestBase::GetUniqueTempPath() const
 {
-	return (_testTemporaryPath / GenerateUuid());
+	return (_testTemporaryPath / boost::filesystem::unique_path());
 }
 
 file::fs::NativePath TestBase::GetUniqueExtendedTempPath() const
 {
 	// make a path > 260 characters
-	auto intermediate = GetUniqueTempPath() / UTF8String(150, 'a') / UTF8String(150, 'b');
-	file::fs::CreateDirectories(intermediate);
-	return (intermediate / GenerateUuid());
+	auto result = file::fs::NativeFromBoostPath(GetUniqueTempPath()) / UTF8String(150, 'a') / UTF8String(150, 'b');
+	file::fs::CreateDirectories(result);
+	return result;
 }
 
 }

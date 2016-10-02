@@ -1,7 +1,6 @@
 #pragma once
 
-#include "bslib/file/fs/path.hpp"
-
+#include <boost/filesystem/path.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -15,10 +14,10 @@ class TestEnvironment : public testing::Environment
 public:
 	virtual void SetUp();
 	virtual void TearDown();
-	static void SetTemporaryDirectory(const file::fs::NativePath& path);
-	static file::fs::NativePath GetTemporaryDirectory();
+	static void SetTemporaryDirectory(const boost::filesystem::path& path);
+	static boost::filesystem::path GetTemporaryDirectory();
 private:
-	static file::fs::NativePath _temporaryDirectory;
+	static boost::filesystem::path _temporaryDirectory;
 };
 
 }

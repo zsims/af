@@ -25,6 +25,8 @@ add_executable(
     src/file/test_utility/ScopedWorkingDirectory.cpp
     src/file/test_utility/ScopedWorkingDirectory.hpp
     src/unicodeIntegrationTest.cpp
+    src/utility/TestForest.cpp
+    src/utility/TestForest.hpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp
     src/utility/TestEnvironment.cpp
@@ -47,6 +49,7 @@ target_link_libraries(
     bslib_test
     PRIVATE bslib
     PRIVATE googletest
+    PRIVATE boost_program_options
 )
 
 add_custom_target(
