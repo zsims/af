@@ -19,16 +19,6 @@ class operationsIntegrationTest : public bslib::test::TestBase
 {
 };
 
-TEST_F(operationsIntegrationTest, GetUniqueExtendedTempPath_Success)
-{
-	// Arrange
-	// Act
-	const auto first = GetUniqueExtendedTempPath();
-	const auto second = GetUniqueExtendedTempPath();
-	// Assert
-	EXPECT_NE(first, second);
-}
-
 TEST_F(operationsIntegrationTest, IsDirectory_Success)
 {
 	// Arrange
@@ -180,7 +170,7 @@ TEST_F(operationsIntegrationTest, CreateDirectories_FileExistsFails)
 TEST_F(operationsIntegrationTest, GetAbsolutePath_Success)
 {
 	// Arrange
-	const auto expected = GenerateShortUniqueTempPath();
+	const auto expected = NativeFromBoostPath(GetUniqueTempPath());
 	const auto name = expected.GetFilename();
 	const auto relativePath = name + R"(\..\)" + name;
 	test_utility::ScopedWorkingDirectory workingDirectory(expected / "..");
@@ -195,7 +185,7 @@ TEST_F(operationsIntegrationTest, GetAbsolutePath_Success)
 TEST_F(operationsIntegrationTest, GetAbsolutePath_RootSuccess)
 {
 	// Arrange
-	const auto unique = GenerateShortUniqueTempPath();
+	const auto unique = NativeFromBoostPath(GetUniqueTempPath());
 	const auto root = unique.GetIntermediatePaths()[0];
 	test_utility::ScopedWorkingDirectory workingDirectory(root);
 

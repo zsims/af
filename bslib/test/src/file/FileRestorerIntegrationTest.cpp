@@ -151,7 +151,7 @@ TEST_F(FileRestorerIntegrationTest, Restore_Success)
 TEST_F(FileRestorerIntegrationTest, Restore_ToRelativeDirectorySuccess)
 {
 	// Arrange
-	const auto restorePath = fs::GenerateShortUniqueTempPath();
+	const auto restorePath = fs::NativeFromBoostPath(GetUniqueTempPath());
 	fs::CreateDirectories(restorePath);
 	_adder->Add(_sampleBasePath.ToString());
 

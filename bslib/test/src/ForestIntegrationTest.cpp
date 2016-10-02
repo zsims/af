@@ -60,7 +60,7 @@ TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
 	_testForest.CreateWithNullStore();
 	auto& forest = _testForest.GetForest();
 
-	const auto targetPath = file::fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	{
 		auto uow = forest.CreateUnitOfWork();
 		auto adder = uow->CreateFileAdder();
@@ -98,7 +98,7 @@ TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
 	auto& forest = _testForest.GetForest();
 
 	// Act
-	const auto targetPath = file::fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	{
 		auto uow = forest.CreateUnitOfWork();
 		auto adder = uow->CreateFileAdder();
