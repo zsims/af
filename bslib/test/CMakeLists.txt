@@ -10,6 +10,8 @@ add_executable(
     src/bslib_test_main.cpp
     src/EventManagerTest.cpp
     src/ForestIntegrationTest.cpp
+    src/TestBase.cpp
+    src/TestBase.hpp
     src/blob/AddressIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
@@ -25,6 +27,8 @@ add_executable(
     src/unicodeIntegrationTest.cpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp
+    src/utility/TestEnvironment.cpp
+    src/utility/TestEnvironment.hpp
     src/utility/matchers.cpp
     src/utility/matchers.hpp
 )
