@@ -1,6 +1,7 @@
 ﻿#include "bslib/file/fs/operations.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "file/test_utility/ScopedWorkingDirectory.hpp"
+#include "TestBase.hpp"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -14,20 +15,24 @@ namespace file {
 namespace fs {
 namespace test {
 
-TEST(operationsIntegrationTest, GenerateUniqueTempPath_Success)
+class operationsIntegrationTest : public bslib::test::TestBase
+{
+};
+
+TEST_F(operationsIntegrationTest, GetUniqueExtendedTempPath_Success)
 {
 	// Arrange
 	// Act
-	const auto first = GenerateUniqueTempPath();
-	const auto second = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
+	const auto second = GetUniqueExtendedTempPath();
 	// Assert
 	EXPECT_NE(first, second);
 }
 
-TEST(operationsIntegrationTest, IsDirectory_Success)
+TEST_F(operationsIntegrationTest, IsDirectory_Success)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 	const auto parent = first.ParentPathCopy();
 
 	// Act
@@ -37,10 +42,10 @@ TEST(operationsIntegrationTest, IsDirectory_Success)
 	EXPECT_TRUE(isDirectory);
 }
 
-TEST(operationsIntegrationTest, IsDirectory_NotExistSuccess)
+TEST_F(operationsIntegrationTest, IsDirectory_NotExistSuccess)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 
 	// Act
 	boost::system::error_code ec;
@@ -51,10 +56,10 @@ TEST(operationsIntegrationTest, IsDirectory_NotExistSuccess)
 	EXPECT_TRUE(ec);
 }
 
-TEST(operationsIntegrationTest, IsRegularFile_Success)
+TEST_F(operationsIntegrationTest, IsRegularFile_Success)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 	std::ofstream f(UTF8ToWideString(first.ToExtendedString()), std::ofstream::out | std::ofstream::binary);
 
 	// Act
@@ -64,10 +69,10 @@ TEST(operationsIntegrationTest, IsRegularFile_Success)
 	EXPECT_TRUE(isFile);
 }
 
-TEST(operationsIntegrationTest, IsRegularFile_NotExistSuccess)
+TEST_F(operationsIntegrationTest, IsRegularFile_NotExistSuccess)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 
 	// Act
 	boost::system::error_code ec;
@@ -78,10 +83,10 @@ TEST(operationsIntegrationTest, IsRegularFile_NotExistSuccess)
 	EXPECT_TRUE(ec);
 }
 
-TEST(operationsIntegrationTest, IsRegularFile_WithDirectoryFalse)
+TEST_F(operationsIntegrationTest, IsRegularFile_WithDirectoryFalse)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 	const auto parent = first.ParentPathCopy();
 
 	// Act
@@ -93,10 +98,10 @@ TEST(operationsIntegrationTest, IsRegularFile_WithDirectoryFalse)
 	EXPECT_FALSE(ec);
 }
 
-TEST(operationsIntegrationTest, CreateDirectorySexy_Success)
+TEST_F(operationsIntegrationTest, CreateDirectorySexy_Success)
 {
 	// Arrange
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GetUniqueExtendedTempPath();
 
 	// Act
 	ASSERT_TRUE(CreateDirectorySexy(unique));
@@ -106,10 +111,10 @@ TEST(operationsIntegrationTest, CreateDirectorySexy_Success)
 	EXPECT_TRUE(isDirectory);
 }
 
-TEST(operationsIntegrationTest, CreateDirectorySexy_AlreadyExistingSuccess)
+TEST_F(operationsIntegrationTest, CreateDirectorySexy_AlreadyExistingSuccess)
 {
 	// Arrange
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GetUniqueExtendedTempPath();
 	CreateDirectorySexy(unique);
 
 	// Act
@@ -119,10 +124,10 @@ TEST(operationsIntegrationTest, CreateDirectorySexy_AlreadyExistingSuccess)
 	EXPECT_TRUE(ec);
 }
 
-TEST(operationsIntegrationTest, CreateDirectories_Success)
+TEST_F(operationsIntegrationTest, CreateDirectories_Success)
 {
 	// Arrange
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GetUniqueExtendedTempPath();
 	const auto full = unique / "and" / u8"我这样做对吗" / "deeper";
 
 	// Act
@@ -132,10 +137,10 @@ TEST(operationsIntegrationTest, CreateDirectories_Success)
 	EXPECT_TRUE(IsDirectory(full));
 }
 
-TEST(operationsIntegrationTest, CreateDirectories_ExtendedPathSuccess)
+TEST_F(operationsIntegrationTest, CreateDirectories_ExtendedPathSuccess)
 {
 	// Arrange
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GetUniqueExtendedTempPath();
 	const auto full = unique / "and" / UTF8String(150, 'a') / "deeper" / UTF8String(150, 'b') / u8"我";
 
 	// Act
@@ -145,10 +150,10 @@ TEST(operationsIntegrationTest, CreateDirectories_ExtendedPathSuccess)
 	EXPECT_TRUE(IsDirectory(full));
 }
 
-TEST(operationsIntegrationTest, CreateDirectories_AlreadyExistsSuccess)
+TEST_F(operationsIntegrationTest, CreateDirectories_AlreadyExistsSuccess)
 {
 	// Arrange
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GetUniqueExtendedTempPath();
 	ASSERT_TRUE(CreateDirectorySexy(unique));
 
 	// Act
@@ -158,11 +163,11 @@ TEST(operationsIntegrationTest, CreateDirectories_AlreadyExistsSuccess)
 	EXPECT_FALSE(ec);
 }
 
-TEST(operationsIntegrationTest, CreateDirectories_FileExistsFails)
+TEST_F(operationsIntegrationTest, CreateDirectories_FileExistsFails)
 {
 	// Arrange
 	boost::system::error_code ec;
-	const auto unique = GenerateUniqueTempPath();
+	const auto unique = GetUniqueExtendedTempPath();
 	const auto widePath = UTF8ToWideString(unique.ToExtendedString());
 	std::ofstream f(widePath.c_str(), std::ofstream::out | std::ofstream::binary);
 
@@ -172,7 +177,7 @@ TEST(operationsIntegrationTest, CreateDirectories_FileExistsFails)
 	EXPECT_TRUE(ec);
 }
 
-TEST(operationsIntegrationTest, GetAbsolutePath_Success)
+TEST_F(operationsIntegrationTest, GetAbsolutePath_Success)
 {
 	// Arrange
 	const auto expected = GenerateShortUniqueTempPath();
@@ -187,7 +192,7 @@ TEST(operationsIntegrationTest, GetAbsolutePath_Success)
 	EXPECT_EQ(expected, actual);
 }
 
-TEST(operationsIntegrationTest, GetAbsolutePath_RootSuccess)
+TEST_F(operationsIntegrationTest, GetAbsolutePath_RootSuccess)
 {
 	// Arrange
 	const auto unique = GenerateShortUniqueTempPath();
@@ -202,10 +207,10 @@ TEST(operationsIntegrationTest, GetAbsolutePath_RootSuccess)
 	EXPECT_EQ(root, actual);
 }
 
-TEST(operationsIntegrationTest, OpenFileRead_Success)
+TEST_F(operationsIntegrationTest, OpenFileRead_Success)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 	{
 		auto writeStream = OpenFileWrite(first);
 	}
@@ -217,10 +222,10 @@ TEST(operationsIntegrationTest, OpenFileRead_Success)
 	EXPECT_TRUE(stream);
 }
 
-TEST(operationsIntegrationTest, OpenFileRead_FailsIfNotExists)
+TEST_F(operationsIntegrationTest, OpenFileRead_FailsIfNotExists)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 
 	// Act
 	const auto stream = OpenFileRead(first);
@@ -229,10 +234,10 @@ TEST(operationsIntegrationTest, OpenFileRead_FailsIfNotExists)
 	EXPECT_FALSE(stream);
 }
 
-TEST(operationsIntegrationTest, OpenFileWrite_Success)
+TEST_F(operationsIntegrationTest, OpenFileWrite_Success)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 
 	// Act
 	auto writeStream = OpenFileWrite(first);
@@ -241,10 +246,10 @@ TEST(operationsIntegrationTest, OpenFileWrite_Success)
 	EXPECT_TRUE(writeStream);
 }
 
-TEST(operationsIntegrationTest, Exists_Success)
+TEST_F(operationsIntegrationTest, Exists_Success)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 	{
 		auto writeStream = OpenFileWrite(first);
 		ASSERT_TRUE(writeStream);
@@ -255,19 +260,19 @@ TEST(operationsIntegrationTest, Exists_Success)
 	EXPECT_TRUE(Exists(first));
 }
 
-TEST(operationsIntegrationTest, Exists_FalseIfNotExists)
+TEST_F(operationsIntegrationTest, Exists_FalseIfNotExists)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 	// Act
 	// Assert
 	EXPECT_FALSE(Exists(first));
 }
 
-TEST(operationsIntegrationTest, Remove_Success)
+TEST_F(operationsIntegrationTest, Remove_Success)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 	{
 		auto writeStream = OpenFileWrite(first);
 		ASSERT_TRUE(writeStream);
@@ -280,10 +285,10 @@ TEST(operationsIntegrationTest, Remove_Success)
 	EXPECT_FALSE(Exists(first));
 }
 
-TEST(operationsIntegrationTest, RemoveAll_Success)
+TEST_F(operationsIntegrationTest, RemoveAll_Success)
 {
 	// Arrange
-	const auto first = GenerateUniqueTempPath();
+	const auto first = GetUniqueExtendedTempPath();
 	const auto subDirectory = first / "sub";
 	CreateDirectories(subDirectory);
 	const auto filePath = subDirectory / "file.dat";
