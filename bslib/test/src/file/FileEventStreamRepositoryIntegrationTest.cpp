@@ -4,6 +4,7 @@
 #include "bslib/file/FileEventStreamRepository.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
+#include "TestBase.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -16,29 +17,16 @@ namespace bslib {
 namespace file {
 namespace test {
 
-class FileEventStreamRepositoryIntegrationTest : public testing::Test
+class FileEventStreamRepositoryIntegrationTest : public bslib::test::TestBase
 {
 protected:
 	FileEventStreamRepositoryIntegrationTest()
-		: _forestDbPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb"))
 	{
-		Forest forest(_forestDbPath.string(), std::make_unique<blob::NullBlobStore>());
-		forest.Create();
-
-		_connection = std::make_unique<sqlitepp::ScopedSqlite3Object>();
-		sqlitepp::open_database_or_throw(_forestDbPath.string().c_str(), *_connection, SQLITE_OPEN_READWRITE);
-		sqlitepp::exec_or_throw(*_connection, "PRAGMA case_sensitive_like = true;");
-	}
-
-	~FileEventStreamRepositoryIntegrationTest()
-	{
-		_connection.reset();
-		boost::system::error_code ec;
-		boost::filesystem::remove(_forestDbPath, ec);
+		_testForest.Create();
+		_connection = _testForest.ConnectToDatabase();
 	}
 
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
-	const boost::filesystem::path _forestDbPath;
 };
 
 TEST_F(FileEventStreamRepositoryIntegrationTest, GetAllEvents_Success)

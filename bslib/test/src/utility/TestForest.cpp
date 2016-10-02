@@ -46,7 +46,7 @@ void TestForest::CreateWithNullStore()
 	
 std::unique_ptr<sqlitepp::ScopedSqlite3Object> TestForest::ConnectToDatabase() const
 {
-	std::unique_ptr<sqlitepp::ScopedSqlite3Object> connection;
+	std::unique_ptr<sqlitepp::ScopedSqlite3Object> connection(new sqlitepp::ScopedSqlite3Object());
 	sqlitepp::open_database_or_throw(WideToUTF8String(_forestPath.wstring()).c_str(), *connection, SQLITE_OPEN_READWRITE);
 	sqlitepp::exec_or_throw(*connection, "PRAGMA case_sensitive_like = true;");
 	return connection;
