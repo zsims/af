@@ -4,6 +4,7 @@
 #include "bslib/file/fs/operations.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "file/test_utility/ScopedExclusiveFileAccess.hpp"
+#include "TestBase.hpp"
 #include "utility/gtest_boost_filesystem_fix.hpp"
 
 #include <boost/algorithm/string/replace.hpp>
@@ -20,32 +21,15 @@ namespace bslib {
 namespace file {
 namespace test {
 
-class FileAdderIntegrationTest : public testing::Test
+class FileAdderIntegrationTest : public bslib::test::TestBase
 {
 protected:
 	FileAdderIntegrationTest()
-		: _forestDbPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb"))
-		, _targetPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path())
 	{
-		boost::filesystem::create_directories(_targetPath);
-		auto blobStore = std::make_unique<blob::DirectoryBlobStore>(_targetPath);
-		_forest.reset(new Forest(_forestDbPath.string(), std::move(blobStore)));
-		_forest->Create();
-
-		_uow = _forest->CreateUnitOfWork();
+		_testForest.Create();
+		_uow = _testForest.GetForest().CreateUnitOfWork();
 		_adder = _uow->CreateFileAdder();
 		_finder = _uow->CreateFileFinder();
-	}
-
-	~FileAdderIntegrationTest()
-	{
-		_adder.reset();
-		_uow.reset();
-		_forest.reset();
-
-		boost::system::error_code ec;
-		boost::filesystem::remove(_forestDbPath, ec);
-		boost::filesystem::remove_all(_targetPath, ec);
 	}
 
 	blob::Address CreateFile(const fs::NativePath& path, const std::string& content)
@@ -56,9 +40,6 @@ protected:
 		return blob::Address::CalculateFromContent(binaryContent);
 	}
 
-	const boost::filesystem::path _forestDbPath;
-	const boost::filesystem::path _targetPath;
-	std::unique_ptr<Forest> _forest;
 	std::unique_ptr<UnitOfWork> _uow;
 	std::unique_ptr<FileAdder> _adder;
 	std::unique_ptr<FileFinder> _finder;
@@ -67,7 +48,7 @@ protected:
 TEST_F(FileAdderIntegrationTest, Add_SuccessWithFile)
 {
 	// Arrange
-	const auto filePath = fs::GenerateUniqueTempPath();
+	const auto filePath = GetUniqueExtendedTempPath();
 	const auto fileAddress = CreateFile(filePath, "hello");
 
 	std::vector<FileEvent> emittedEvents;
@@ -86,7 +67,7 @@ TEST_F(FileAdderIntegrationTest, Add_SuccessWithFile)
 TEST_F(FileAdderIntegrationTest, Add_ConvertsForwardSlashes)
 {
 	// Arrange
-	const auto filePath = fs::GenerateUniqueTempPath();
+	const auto filePath = GetUniqueExtendedTempPath();
 	const auto fileAddress = CreateFile(filePath, "hello");
 
 	// Act
@@ -103,7 +84,7 @@ TEST_F(FileAdderIntegrationTest, Add_ResolvesFullPath)
 {
 	// Arrange
 	const auto folderName = "folder";
-	const auto workingPath = (fs::GenerateUniqueTempPath() / folderName).EnsureTrailingSlash();
+	const auto workingPath = (GetUniqueExtendedTempPath() / folderName).EnsureTrailingSlash();
 	fs::CreateDirectories(workingPath);
 	const auto fileAddress = CreateFile(workingPath / "hi.dat", "hello");
 	const auto sourcePath = workingPath / ".." / folderName;
@@ -122,7 +103,7 @@ TEST_F(FileAdderIntegrationTest, Add_ResolvesFullPath)
 TEST_F(FileAdderIntegrationTest, Add_SkipsLockedFile)
 {
 	// Arrange
-	const auto filePath = fs::GenerateUniqueTempPath();
+	const auto filePath = GetUniqueExtendedTempPath();
 	CreateFile(filePath, "hello");
 
 	test_utility::ScopedExclusiveFileAccess exclusiveAccess(filePath);
@@ -139,7 +120,7 @@ TEST_F(FileAdderIntegrationTest, Add_SkipsLockedFile)
 TEST_F(FileAdderIntegrationTest, Add_RecordsAllStates)
 {
 	// Arrange
-	const auto directoryPath = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto directoryPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	fs::CreateDirectories(directoryPath);
 
 	const auto lockedFilePath = directoryPath / "locked.dat";
@@ -167,7 +148,7 @@ TEST_F(FileAdderIntegrationTest, Add_RecordsAllStates)
 TEST_F(FileAdderIntegrationTest, Add_FailIfNotExist)
 {
 	// Arrange
-	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto path = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 
 	// Act
 	// Assert
@@ -177,7 +158,7 @@ TEST_F(FileAdderIntegrationTest, Add_FailIfNotExist)
 TEST_F(FileAdderIntegrationTest, Add_EmptyDirectory)
 {
 	// Arrange
-	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto path = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	fs::CreateDirectories(path);
 
 	// Act
@@ -192,7 +173,7 @@ TEST_F(FileAdderIntegrationTest, Add_EmptyDirectory)
 TEST_F(FileAdderIntegrationTest, Add_SuccessWithDirectory)
 {
 	// Arrange
-	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto path = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	fs::CreateDirectories(path);
 	const auto deepDirectory = (path / "deep").EnsureTrailingSlash();
 	fs::CreateDirectories(deepDirectory);
@@ -216,7 +197,7 @@ TEST_F(FileAdderIntegrationTest, Add_SuccessWithDirectory)
 	EXPECT_TRUE(_finder->FindLastChangedEventByPath(filePath));
 
 	{
-		auto uow2 = _forest->CreateUnitOfWork();
+		auto uow2 = _testForest.GetForest().CreateUnitOfWork();
 		auto finder = uow2->CreateFileFinder();
 		EXPECT_TRUE(finder->FindLastChangedEventByPath(path));
 		EXPECT_TRUE(finder->FindLastChangedEventByPath(deepDirectory));
@@ -230,7 +211,7 @@ TEST_F(FileAdderIntegrationTest, Add_SuccessWithDirectory)
 TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
 {
 	// Arrange
-	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto path = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	fs::CreateDirectories(path);
 	const auto deepDirectory = (path / "deep").EnsureTrailingSlash();
 	fs::CreateDirectories(deepDirectory);
@@ -243,7 +224,7 @@ TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
 	_uow->Commit();
 
 	// Act
-	auto uow2 = _forest->CreateUnitOfWork();
+	auto uow2 = _testForest.GetForest().CreateUnitOfWork();
 	auto adder2 = uow2->CreateFileAdder();
 	const auto updatedFileAddress = CreateFile(filePath, "hell");
 	const auto deepFileAddress = CreateFile(deepFilePath, "hello");
@@ -257,7 +238,7 @@ TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
 		RegularFileEvent(deepFilePath, deepFileAddress, FileEventAction::ChangedAdded)
 	};
 	EXPECT_THAT(adder2->GetEmittedEvents(), ::testing::UnorderedElementsAreArray(expectedSecondEmittedEvents));
-	auto uow3 = _forest->CreateUnitOfWork();
+	auto uow3 = _testForest.GetForest().CreateUnitOfWork();
 	auto finder3 = uow3->CreateFileFinder();
 	EXPECT_TRUE(finder3->FindLastChangedEventByPath(path));
 	EXPECT_TRUE(finder3->FindLastChangedEventByPath(deepDirectory));
@@ -282,7 +263,7 @@ TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
 TEST_F(FileAdderIntegrationTest, Add_RespectsCase)
 {
 	// Arrange
-	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto path = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	const auto fooPath = (path / "Foo").EnsureTrailingSlash();
 	fs::CreateDirectories(fooPath);
 	const auto samsonPath = fooPath / "samson.txt";
@@ -307,7 +288,7 @@ TEST_F(FileAdderIntegrationTest, Add_RespectsCase)
 		RegularFileEvent(samsonPath, fileAddress, FileEventAction::ChangedAdded),
 		RegularFileEvent(samsonUpperPath, fileAddress, FileEventAction::ChangedAdded),
 	};
-	auto uow2 = _forest->CreateUnitOfWork();
+	auto uow2 = _testForest.GetForest().CreateUnitOfWork();
 	auto finder2 = uow2->CreateFileFinder();
 	const auto& result = finder2->GetLastChangedEventsStartingWithPath(path);
 	EXPECT_THAT(expectedEvents, ::testing::UnorderedElementsAreArray(result | boost::adaptors::map_values));
@@ -316,7 +297,7 @@ TEST_F(FileAdderIntegrationTest, Add_RespectsCase)
 TEST_F(FileAdderIntegrationTest, Add_DetectsModifications)
 {
 	// Arrange
-	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto path = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	const auto fooPath = (path / "Foo").EnsureTrailingSlash();
 	fs::CreateDirectories(fooPath);
 	const auto barPath = (fooPath / "Bar").EnsureTrailingSlash();
@@ -356,7 +337,7 @@ TEST_F(FileAdderIntegrationTest, Add_DetectsModifications)
 	const auto all = _adder->GetEmittedEvents();
 	std::vector<FileEvent> newEvents(all.begin() + beforeCount, all.end());
 	EXPECT_THAT(newEvents, ::testing::UnorderedElementsAreArray(expectedEmittedEvents));
-	auto uow2 = _forest->CreateUnitOfWork();
+	auto uow2 = _testForest.GetForest().CreateUnitOfWork();
 	auto finder2 = uow2->CreateFileFinder();
 	const auto& result = finder2->GetLastChangedEventsStartingWithPath(path);
 	const std::vector<FileEvent> expectedEvents = {
@@ -373,7 +354,7 @@ TEST_F(FileAdderIntegrationTest, Add_DetectsModifications)
 TEST_F(FileAdderIntegrationTest, Add_HandlesChangeInType)
 {
 	// Arrange
-	const auto path = fs::GenerateUniqueTempPath().EnsureTrailingSlash();
+	const auto path = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	const auto fooDirectoryPath = (path / "Foo").EnsureTrailingSlash();
 	const auto fooFilePath = path / "Foo";
 	fs::CreateDirectories(fooDirectoryPath);
@@ -393,7 +374,7 @@ TEST_F(FileAdderIntegrationTest, Add_HandlesChangeInType)
 		DirectoryEvent(fooDirectoryPath, FileEventAction::ChangedRemoved),
 		RegularFileEvent(fooFilePath, fileAddress, FileEventAction::ChangedAdded)
 	};
-	auto uow2 = _forest->CreateUnitOfWork();
+	auto uow2 = _testForest.GetForest().CreateUnitOfWork();
 	auto finder2 = uow2->CreateFileFinder();
 	const auto& result = finder2->GetLastChangedEventsStartingWithPath(path);
 	EXPECT_THAT(expectedEvents, ::testing::UnorderedElementsAreArray(result | boost::adaptors::map_values));

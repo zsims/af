@@ -13,21 +13,6 @@ namespace file {
 namespace fs {
 
 /**
-* Generates a unique temporary path, e.g. C:\temp\<some guid>
-* \remarks This will be shorter than GenerateUniqueTempPath() on platforms where the distinction between extended and normal paths exists
-* \returns The full path to the unique temporary path
-*/
-NativePath GenerateShortUniqueTempPath(boost::system::error_code& ec) noexcept;
-NativePath GenerateShortUniqueTempPath();
-
-/**
- * Generates a unique temporary path that's beyond 260 characters, e.g. C:\temp\something so very long
- * \returns The full path to the unique temporary path
- */
-NativePath GenerateUniqueTempPath(boost::system::error_code& ec) noexcept;
-NativePath GenerateUniqueTempPath();
-
-/**
  * Determines whether the given path exists and represents a directory
  * \returns true if the given path is a directory, false otherwise
  **/

@@ -4,6 +4,7 @@
 #include "bslib/file/fs/operations.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "file/test_utility/ScopedWorkingDirectory.hpp"
+#include "TestBase.hpp"
 #include "utility/gtest_boost_filesystem_fix.hpp"
 #include "utility/matchers.hpp"
 
@@ -19,25 +20,20 @@ namespace bslib {
 namespace file {
 namespace test {
 
-class FileRestorerIntegrationTest : public testing::Test
+class FileRestorerIntegrationTest : public bslib::test::TestBase
 {
 protected:
 	FileRestorerIntegrationTest()
-		: _forestDbPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb"))
-		, _targetPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path())
-		, _restorePath(fs::GenerateUniqueTempPath())
-		, _sampleBasePath(fs::GenerateUniqueTempPath())
+		: _restorePath(GetUniqueExtendedTempPath())
+		, _sampleBasePath(GetUniqueExtendedTempPath())
 		, _sampleSubDirectory(_sampleBasePath / "sub")
 		, _sampleFilePath(_sampleBasePath / "base.dat")
 		, _sampleSubFilePath(_sampleSubDirectory / "subfile.dat")
 	{
-		boost::filesystem::create_directories(_targetPath);
+		_testForest.Create();
 		fs::CreateDirectories(_restorePath);
-		auto blobStore = std::make_unique<blob::DirectoryBlobStore>(_targetPath);
-		_forest.reset(new Forest(_forestDbPath.string(), std::move(blobStore)));
-		_forest->Create();
 
-		_uow = _forest->CreateUnitOfWork();
+		_uow = _testForest.GetForest().CreateUnitOfWork();
 		_adder = _uow->CreateFileAdder();
 		_restorer = _uow->CreateFileRestorer();
 		_finder = _uow->CreateFileFinder();
@@ -47,18 +43,6 @@ protected:
 		fs::CreateDirectories(_sampleSubDirectory);
 		CreateFile(_sampleFilePath, "hey babe");
 		CreateFile(_sampleSubFilePath, "hey sub babe");
-	}
-
-	~FileRestorerIntegrationTest()
-	{
-		// Reset the UoW before the forest to ensure the transaction is rolled back
-		_uow.reset();
-		_forest.reset();
-		boost::system::error_code ec;
-		boost::filesystem::remove(_forestDbPath, ec);
-		boost::filesystem::remove_all(_targetPath, ec);
-		fs::RemoveAll(_restorePath, ec);
-		fs::RemoveAll(_sampleBasePath, ec);
 	}
 
 	static blob::Address CreateFile(const fs::NativePath& path, const std::string& content)
@@ -73,8 +57,6 @@ protected:
 		return blob::Address::CalculateFromContent(binaryContent);
 	}
 
-	const boost::filesystem::path _forestDbPath;
-	const boost::filesystem::path _targetPath;
 	const fs::NativePath _restorePath;
 	std::unique_ptr<Forest> _forest;
 	std::unique_ptr<UnitOfWork> _uow;
@@ -91,7 +73,7 @@ protected:
 TEST_F(FileRestorerIntegrationTest, Restore_ThrowsIfTargetDoNotExist)
 {
 	// Arrange
-	const auto restorePath = fs::GenerateUniqueTempPath();
+	const auto restorePath = GetUniqueExtendedTempPath();
 	// Act
 	// Assert
 	ASSERT_THROW(_restorer->Restore(std::vector<FileEvent>(), restorePath.ToString()), TargetPathNotSupportedException);
@@ -100,7 +82,7 @@ TEST_F(FileRestorerIntegrationTest, Restore_ThrowsIfTargetDoNotExist)
 TEST_F(FileRestorerIntegrationTest, Restore_ThrowsIfTargetIsFile)
 {
 	// Arrange
-	const auto restorePath = fs::GenerateUniqueTempPath();
+	const auto restorePath = GetUniqueExtendedTempPath();
 	CreateFile(restorePath, "hello");
 	// Act
 	// Assert
@@ -169,7 +151,7 @@ TEST_F(FileRestorerIntegrationTest, Restore_Success)
 TEST_F(FileRestorerIntegrationTest, Restore_ToRelativeDirectorySuccess)
 {
 	// Arrange
-	const auto restorePath = fs::GenerateShortUniqueTempPath();
+	const auto restorePath = fs::NativeFromBoostPath(GetUniqueTempPath());
 	fs::CreateDirectories(restorePath);
 	_adder->Add(_sampleBasePath.ToString());
 

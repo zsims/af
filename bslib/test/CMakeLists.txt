@@ -10,6 +10,8 @@ add_executable(
     src/bslib_test_main.cpp
     src/EventManagerTest.cpp
     src/ForestIntegrationTest.cpp
+    src/TestBase.cpp
+    src/TestBase.hpp
     src/blob/AddressIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
@@ -23,8 +25,12 @@ add_executable(
     src/file/test_utility/ScopedWorkingDirectory.cpp
     src/file/test_utility/ScopedWorkingDirectory.hpp
     src/unicodeIntegrationTest.cpp
+    src/utility/TestForest.cpp
+    src/utility/TestForest.hpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp
+    src/utility/TestEnvironment.cpp
+    src/utility/TestEnvironment.hpp
     src/utility/matchers.cpp
     src/utility/matchers.hpp
 )
@@ -43,11 +49,12 @@ target_link_libraries(
     bslib_test
     PRIVATE bslib
     PRIVATE googletest
+    PRIVATE boost_program_options
 )
 
 add_custom_target(
     bslib_test_verify
-    COMMAND "$<TARGET_FILE:bslib_test>" "--gtest_output=xml:${TEST_RESULTS_DIR}/bslib_test.xml"
+    COMMAND "$<TARGET_FILE:bslib_test>" "--gtest_output=xml:${TEST_RESULTS_DIR}/bslib_test.xml" "--temp" "${CMAKE_CURRENT_BINARY_DIR}/test_temp"
 )
 set_property(TARGET bslib_test_verify PROPERTY FOLDER "bslib")
 add_dependencies(ALL_VERIFY bslib_test_verify)

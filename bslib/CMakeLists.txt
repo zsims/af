@@ -39,9 +39,10 @@ add_library(
     src/bslib/file/FileEventStreamRepository.hpp
     src/bslib/file/FileFinder.cpp
     src/bslib/file/FileRestorer.cpp
-    src/bslib/file/fs/WindowsPath.cpp
     src/bslib/file/fs/operations.cpp
     src/bslib/file/fs/operations.hpp
+    src/bslib/file/fs/path.cpp
+    src/bslib/file/fs/WindowsPath.cpp
     src/bslib/sqlitepp/exceptions.hpp
     src/bslib/sqlitepp/handles.hpp
     src/bslib/sqlitepp/ScopedStatementReset.hpp
