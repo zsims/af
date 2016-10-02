@@ -3,6 +3,7 @@
 #include "bslib/blob/NullBlobStore.hpp"
 #include "bslib/forest.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
+#include "TestBase.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -15,28 +16,16 @@ namespace bslib {
 namespace blob {
 namespace test {
 
-class BlobInfoRepositoryIntegrationTest : public testing::Test
+class BlobInfoRepositoryIntegrationTest : public bslib::test::TestBase
 {
 protected:
 	BlobInfoRepositoryIntegrationTest()
-		: _forestDbPath(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.fdb"))
 	{
-		Forest forest(_forestDbPath.string(), std::make_unique<blob::NullBlobStore>());
-		forest.Create();
-
-		_connection = std::make_unique<sqlitepp::ScopedSqlite3Object>();
-		sqlitepp::open_database_or_throw(_forestDbPath.string().c_str(), *_connection, SQLITE_OPEN_READWRITE);
-	}
-
-	~BlobInfoRepositoryIntegrationTest()
-	{
-		_connection.reset();
-		boost::system::error_code ec;
-		boost::filesystem::remove(_forestDbPath, ec);
+		_testForest.Create();
+		_connection = _testForest.ConnectToDatabase();
 	}
 
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
-	const boost::filesystem::path _forestDbPath;
 };
 
 TEST_F(BlobInfoRepositoryIntegrationTest, GetAllBlobs)
