@@ -33,7 +33,7 @@ file::fs::NativePath TestBase::GetUniqueExtendedTempPath() const
 	// make a path > 260 characters
 	auto result = file::fs::NativeFromBoostPath(GetUniqueTempPath()) / UTF8String(150, 'a') / UTF8String(150, 'b');
 	file::fs::CreateDirectories(result);
-	return result;
+	return result / boost::filesystem::unique_path().string();
 }
 
 }
