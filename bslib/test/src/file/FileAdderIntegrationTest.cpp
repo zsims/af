@@ -25,17 +25,9 @@ protected:
 	FileAdderIntegrationTest()
 	{
 		_testBackupDatabase.Create();
-		_uow = _testBackupDatabase.GetBackupDatabase().CreateUnitOfWork();
+		_uow = _testBackupDatabase.GetBackup().CreateUnitOfWork();
 		_adder = _uow->CreateFileAdder();
 		_finder = _uow->CreateFileFinder();
-	}
-
-	blob::Address CreateFile(const fs::NativePath& path, const std::string& content)
-	{
-		const std::vector<uint8_t> binaryContent(content.begin(), content.end());
-		auto f = fs::OpenFileWrite(path);
-		f.write(reinterpret_cast<const char*>(&binaryContent[0]), binaryContent.size());
-		return blob::Address::CalculateFromContent(binaryContent);
 	}
 
 	std::unique_ptr<UnitOfWork> _uow;
@@ -195,7 +187,7 @@ TEST_F(FileAdderIntegrationTest, Add_SuccessWithDirectory)
 	EXPECT_TRUE(_finder->FindLastChangedEventByPath(filePath));
 
 	{
-		auto uow2 = _testBackupDatabase.GetBackupDatabase().CreateUnitOfWork();
+		auto uow2 = _testBackupDatabase.GetBackup().CreateUnitOfWork();
 		auto finder = uow2->CreateFileFinder();
 		EXPECT_TRUE(finder->FindLastChangedEventByPath(path));
 		EXPECT_TRUE(finder->FindLastChangedEventByPath(deepDirectory));
@@ -222,7 +214,7 @@ TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
 	_uow->Commit();
 
 	// Act
-	auto uow2 = _testBackupDatabase.GetBackupDatabase().CreateUnitOfWork();
+	auto uow2 = _testBackupDatabase.GetBackup().CreateUnitOfWork();
 	auto adder2 = uow2->CreateFileAdder();
 	const auto updatedFileAddress = CreateFile(filePath, "hell");
 	const auto deepFileAddress = CreateFile(deepFilePath, "hello");
@@ -236,7 +228,7 @@ TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
 		RegularFileEvent(deepFilePath, deepFileAddress, FileEventAction::ChangedAdded)
 	};
 	EXPECT_THAT(adder2->GetEmittedEvents(), ::testing::UnorderedElementsAreArray(expectedSecondEmittedEvents));
-	auto uow3 = _testBackupDatabase.GetBackupDatabase().CreateUnitOfWork();
+	auto uow3 = _testBackupDatabase.GetBackup().CreateUnitOfWork();
 	auto finder3 = uow3->CreateFileFinder();
 	EXPECT_TRUE(finder3->FindLastChangedEventByPath(path));
 	EXPECT_TRUE(finder3->FindLastChangedEventByPath(deepDirectory));
@@ -286,7 +278,7 @@ TEST_F(FileAdderIntegrationTest, Add_RespectsCase)
 		RegularFileEvent(samsonPath, fileAddress, FileEventAction::ChangedAdded),
 		RegularFileEvent(samsonUpperPath, fileAddress, FileEventAction::ChangedAdded),
 	};
-	auto uow2 = _testBackupDatabase.GetBackupDatabase().CreateUnitOfWork();
+	auto uow2 = _testBackupDatabase.GetBackup().CreateUnitOfWork();
 	auto finder2 = uow2->CreateFileFinder();
 	const auto& result = finder2->GetLastChangedEventsStartingWithPath(path);
 	EXPECT_THAT(expectedEvents, ::testing::UnorderedElementsAreArray(result | boost::adaptors::map_values));
@@ -335,7 +327,7 @@ TEST_F(FileAdderIntegrationTest, Add_DetectsModifications)
 	const auto all = _adder->GetEmittedEvents();
 	std::vector<FileEvent> newEvents(all.begin() + beforeCount, all.end());
 	EXPECT_THAT(newEvents, ::testing::UnorderedElementsAreArray(expectedEmittedEvents));
-	auto uow2 = _testBackupDatabase.GetBackupDatabase().CreateUnitOfWork();
+	auto uow2 = _testBackupDatabase.GetBackup().CreateUnitOfWork();
 	auto finder2 = uow2->CreateFileFinder();
 	const auto& result = finder2->GetLastChangedEventsStartingWithPath(path);
 	const std::vector<FileEvent> expectedEvents = {
@@ -372,7 +364,7 @@ TEST_F(FileAdderIntegrationTest, Add_HandlesChangeInType)
 		DirectoryEvent(fooDirectoryPath, FileEventAction::ChangedRemoved),
 		RegularFileEvent(fooFilePath, fileAddress, FileEventAction::ChangedAdded)
 	};
-	auto uow2 = _testBackupDatabase.GetBackupDatabase().CreateUnitOfWork();
+	auto uow2 = _testBackupDatabase.GetBackup().CreateUnitOfWork();
 	auto finder2 = uow2->CreateFileFinder();
 	const auto& result = finder2->GetLastChangedEventsStartingWithPath(path);
 	EXPECT_THAT(expectedEvents, ::testing::UnorderedElementsAreArray(result | boost::adaptors::map_values));

@@ -31,7 +31,7 @@ protected:
 		_testBackupDatabase.Create();
 		fs::CreateDirectories(_restorePath);
 
-		_uow = _testBackupDatabase.GetBackupDatabase().CreateUnitOfWork();
+		_uow = _testBackupDatabase.GetBackup().CreateUnitOfWork();
 		_adder = _uow->CreateFileAdder();
 		_restorer = _uow->CreateFileRestorer();
 		_finder = _uow->CreateFileFinder();
@@ -41,18 +41,6 @@ protected:
 		fs::CreateDirectories(_sampleSubDirectory);
 		CreateFile(_sampleFilePath, "hey babe");
 		CreateFile(_sampleSubFilePath, "hey sub babe");
-	}
-
-	static blob::Address CreateFile(const fs::NativePath& path, const std::string& content)
-	{
-		const std::vector<uint8_t> binaryContent(content.begin(), content.end());
-		auto f = fs::OpenFileWrite(path);
-		if (!f)
-		{
-			throw std::runtime_error("Failed to create test file at " + path.ToString());
-		}
-		f.write(reinterpret_cast<const char*>(&binaryContent[0]), binaryContent.size());
-		return blob::Address::CalculateFromContent(binaryContent);
 	}
 
 	const fs::NativePath _restorePath;

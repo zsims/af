@@ -1,7 +1,6 @@
 #include "bslib/BackupDatabase.hpp"
 
 #include "bslib/exceptions.hpp"
-#include "bslib/blob/BlobStore.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "bslib/BackupDatabaseUnitOfWork.hpp"
 
@@ -11,9 +10,8 @@
 namespace af {
 namespace bslib {
 
-BackupDatabase::BackupDatabase(const boost::filesystem::path& forestPath, std::unique_ptr<blob::BlobStore> blobStore)
+BackupDatabase::BackupDatabase(const boost::filesystem::path& forestPath)
 	: _forestPath(forestPath)
-	, _blobStore(std::move(blobStore))
 {
 }
 
@@ -85,11 +83,6 @@ void BackupDatabase::OpenOrCreate()
 		return;
 	}
 	Create();
-}
-
-std::unique_ptr<UnitOfWork> BackupDatabase::CreateUnitOfWork()
-{
-	return std::make_unique<BackupDatabaseUnitOfWork>(*_connection, *_blobStore);
 }
 
 std::unique_ptr<UnitOfWork> BackupDatabase::CreateUnitOfWork(blob::BlobStore& blobStore)

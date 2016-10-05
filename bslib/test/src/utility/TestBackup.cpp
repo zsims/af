@@ -10,56 +10,52 @@ namespace utility {
 
 TestBackup::TestBackup(const boost::filesystem::path& baseDir)
 	: _baseDir(baseDir)
-	, _forestPath(baseDir / "forest.db")
+	, _backupDatabasePath(baseDir / "backup.db")
 {
 }
 
 void TestBackup::Open()
 {
-	_forest = std::make_unique<bslib::BackupDatabase>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
-	_forest->Open();
+	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, "Testing");
+	_backup->AddBlobStore(std::make_unique<blob::DirectoryBlobStore>(_baseDir));
+	_backup->Open();
 }
 
 void TestBackup::Create()
 {
-	_forest = std::make_unique<bslib::BackupDatabase>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
-	_forest->Create();
+	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, "Testing");
+	_backup->AddBlobStore(std::make_unique<blob::DirectoryBlobStore>(_baseDir));
+	_backup->Create();
 }
 
 void TestBackup::OpenOrCreate()
 {
-	_forest = std::make_unique<bslib::BackupDatabase>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
-	_forest->OpenOrCreate();
+	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, "Testing");
+	_backup->AddBlobStore(std::make_unique<blob::DirectoryBlobStore>(_baseDir));
+	_backup->OpenOrCreate();
 }
 
-void TestBackup::OpenWithNullStore()
-{
-	_forest = std::make_unique<bslib::BackupDatabase>(_forestPath, std::make_unique<blob::NullBlobStore>());
-	_forest->Open();
-}
-
-void TestBackup::CreateWithNullStore()
-{
-	_forest = std::make_unique<bslib::BackupDatabase>(_forestPath, std::make_unique<blob::NullBlobStore>());
-	_forest->Create();
-}
-	
 std::unique_ptr<sqlitepp::ScopedSqlite3Object> TestBackup::ConnectToDatabase() const
 {
 	auto connection = std::make_unique<sqlitepp::ScopedSqlite3Object>();
-	sqlitepp::open_database_or_throw(WideToUTF8String(_forestPath.wstring()).c_str(), *connection, SQLITE_OPEN_READWRITE);
+	sqlitepp::open_database_or_throw(WideToUTF8String(_backupDatabasePath.wstring()).c_str(), *connection, SQLITE_OPEN_READWRITE);
 	sqlitepp::exec_or_throw(*connection, "PRAGMA case_sensitive_like = true;");
 	return connection;
 }
 
 af::bslib::BackupDatabase& TestBackup::GetBackupDatabase()
 {
-	return *_forest;
+	return _backup->GetBackupDatabase();
+}
+
+af::bslib::Backup& TestBackup::GetBackup()
+{
+	return *_backup;
 }
 
 void TestBackup::Close()
 {
-	_forest.reset();
+	_backup.reset();
 }
 
 }

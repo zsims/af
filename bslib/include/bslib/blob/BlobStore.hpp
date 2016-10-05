@@ -12,6 +12,8 @@ namespace blob {
 class BlobStore
 {
 public:
+	virtual ~BlobStore() { }
+
 	/**
 	 * Creates a new blob.
 	 */

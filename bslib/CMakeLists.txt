@@ -9,7 +9,7 @@ source_group("include\\file" REGULAR_EXPRESSION "include/bslib/file/.*")
 add_library(
     bslib
     include/bslib/exceptions.hpp
-    include/bslib/BackupDatabase.hpp
+    include/bslib/Backup.hpp
     include/bslib/blob/Address.hpp
     include/bslib/blob/BlobStore.hpp
     include/bslib/blob/DirectoryBlobStore.hpp
@@ -25,6 +25,8 @@ add_library(
     include/bslib/file/fs/WindowsPath.hpp
     include/bslib/UnitOfWork.hpp
     include/bslib/unicode.hpp
+    src/bslib/Backup.cpp
+    src/bslib/BackupDatabase.hpp
     src/bslib/blob/Address.cpp
     src/bslib/blob/BlobInfo.hpp
     src/bslib/blob/BlobInfoRepository.cpp

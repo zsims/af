@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bslib/Backup.hpp"
 #include "bslib/BackupDatabase.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 
@@ -20,17 +21,16 @@ public:
 	void Open();
 	void Create();
 	void OpenOrCreate();
-	void OpenWithNullStore();
-	void CreateWithNullStore();
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> ConnectToDatabase() const;
 	const boost::filesystem::path& GetDirectoryStorePath() const { return _baseDir; }
-	const boost::filesystem::path& GetBackupDatabaseDbPath() const { return _forestPath; }
+	const boost::filesystem::path& GetBackupDatabaseDbPath() const { return _backupDatabasePath; }
 	bslib::BackupDatabase& GetBackupDatabase();
+	bslib::Backup& GetBackup();
 	void Close();
 private:
 	boost::filesystem::path _baseDir;
-	boost::filesystem::path _forestPath;
-	std::unique_ptr<bslib::BackupDatabase> _forest;
+	boost::filesystem::path _backupDatabasePath;
+	std::unique_ptr<bslib::Backup> _backup;
 };
 
 }

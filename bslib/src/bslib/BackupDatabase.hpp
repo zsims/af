@@ -12,7 +12,6 @@ namespace bslib {
 
 namespace blob {
 class BlobInfoRepository;
-class BlobStore;
 }
 
 namespace sqlitepp {
@@ -25,13 +24,12 @@ public:
 	/**
 	 * Initializes forest with the given path for opening or creating.
 	 */
-	explicit BackupDatabase(const boost::filesystem::path& forestPath, std::unique_ptr<blob::BlobStore> blobStore);
+	explicit BackupDatabase(const boost::filesystem::path& forestPath);
 	~BackupDatabase();
 
 	/**
 	 * Creates a new unit of work. Note that the forest must remain open while the unit of work is being used.
 	 */
-	std::unique_ptr<UnitOfWork> CreateUnitOfWork();
 	std::unique_ptr<UnitOfWork> CreateUnitOfWork(blob::BlobStore& blobStore);
 
 	/**
@@ -57,7 +55,6 @@ public:
 private:
 	const boost::filesystem::path _forestPath;
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
-	std::unique_ptr<blob::BlobStore> _blobStore;
 };
 
 }
