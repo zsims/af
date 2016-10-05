@@ -25,8 +25,8 @@ add_executable(
     src/file/test_utility/ScopedWorkingDirectory.cpp
     src/file/test_utility/ScopedWorkingDirectory.hpp
     src/unicodeIntegrationTest.cpp
-    src/utility/TestForest.cpp
-    src/utility/TestForest.hpp
+    src/utility/TestBackup.cpp
+    src/utility/TestBackup.hpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp
     src/utility/TestEnvironment.cpp

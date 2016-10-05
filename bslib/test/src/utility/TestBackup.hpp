@@ -13,10 +13,10 @@ namespace utility {
 /**
  * Wrapper around the forest which supports getting the connection string among other useful test things
  */
-class TestForest
+class TestBackup
 {
 public:
-	TestForest(const boost::filesystem::path& baseDir);
+	TestBackup(const boost::filesystem::path& baseDir);
 	void Open();
 	void Create();
 	void OpenOrCreate();

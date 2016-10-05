@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bslib/file/fs/path.hpp"
-#include "utility/TestForest.hpp"
+#include "utility/TestBackup.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <gmock/gmock.h>
@@ -29,7 +29,7 @@ protected:
 private:
 	const boost::filesystem::path _testTemporaryPath;
 protected:
-	utility::TestForest _testForest;
+	utility::TestBackup _testForest;
 };
 
 }

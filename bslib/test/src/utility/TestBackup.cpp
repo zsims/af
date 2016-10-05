@@ -1,4 +1,4 @@
-#include "utility/TestForest.hpp"
+#include "utility/TestBackup.hpp"
 #include "bslib/blob/NullBlobStore.hpp"
 #include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/unicode.hpp"
@@ -8,43 +8,43 @@ namespace bslib {
 namespace test {
 namespace utility {
 
-TestForest::TestForest(const boost::filesystem::path& baseDir)
+TestBackup::TestBackup(const boost::filesystem::path& baseDir)
 	: _baseDir(baseDir)
 	, _forestPath(baseDir / "forest.db")
 {
 }
 
-void TestForest::Open()
+void TestBackup::Open()
 {
 	_forest = std::make_unique<bslib::Forest>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
 	_forest->Open();
 }
 
-void TestForest::Create()
+void TestBackup::Create()
 {
 	_forest = std::make_unique<bslib::Forest>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
 	_forest->Create();
 }
 
-void TestForest::OpenOrCreate()
+void TestBackup::OpenOrCreate()
 {
 	_forest = std::make_unique<bslib::Forest>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
 	_forest->OpenOrCreate();
 }
 
-void TestForest::OpenWithNullStore()
+void TestBackup::OpenWithNullStore()
 {
 	_forest = std::make_unique<bslib::Forest>(_forestPath, std::make_unique<blob::NullBlobStore>());
 	_forest->Open();
 }
 
-void TestForest::CreateWithNullStore()
+void TestBackup::CreateWithNullStore()
 {
 	_forest = std::make_unique<bslib::Forest>(_forestPath, std::make_unique<blob::NullBlobStore>());
 	_forest->Create();
 }
 	
-std::unique_ptr<sqlitepp::ScopedSqlite3Object> TestForest::ConnectToDatabase() const
+std::unique_ptr<sqlitepp::ScopedSqlite3Object> TestBackup::ConnectToDatabase() const
 {
 	auto connection = std::make_unique<sqlitepp::ScopedSqlite3Object>();
 	sqlitepp::open_database_or_throw(WideToUTF8String(_forestPath.wstring()).c_str(), *connection, SQLITE_OPEN_READWRITE);
@@ -52,12 +52,12 @@ std::unique_ptr<sqlitepp::ScopedSqlite3Object> TestForest::ConnectToDatabase() c
 	return connection;
 }
 
-af::bslib::Forest& TestForest::GetForest()
+af::bslib::Forest& TestBackup::GetForest()
 {
 	return *_forest;
 }
 
-void TestForest::Close()
+void TestBackup::Close()
 {
 	_forest.reset();
 }
