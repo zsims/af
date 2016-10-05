@@ -1,4 +1,4 @@
-#include <bslib/Forest.hpp>
+#include <bslib/BackupDatabase.hpp>
 #include <bslib/exceptions.hpp>
 #include <bslib/file/FileFinder.hpp>
 #include <bslib/file/FileRestorer.hpp>
@@ -22,7 +22,7 @@ int Restore(const af::bslib::UTF8String& pathToRestore, const af::bslib::UTF8Str
 
 	try
 	{
-		af::bslib::Forest forest(forestDb, std::make_unique<af::bslib::blob::DirectoryBlobStore>(backupSource));
+		af::bslib::BackupDatabase forest(forestDb, std::make_unique<af::bslib::blob::DirectoryBlobStore>(backupSource));
 		forest.OpenOrCreate();
 
 		auto uow = forest.CreateUnitOfWork();

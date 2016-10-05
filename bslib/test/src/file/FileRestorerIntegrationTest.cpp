@@ -1,5 +1,3 @@
-#include "bslib/forest.hpp"
-#include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/fs/operations.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
@@ -30,10 +28,10 @@ protected:
 		, _sampleFilePath(_sampleBasePath / "base.dat")
 		, _sampleSubFilePath(_sampleSubDirectory / "subfile.dat")
 	{
-		_testForest.Create();
+		_testBackupDatabase.Create();
 		fs::CreateDirectories(_restorePath);
 
-		_uow = _testForest.GetForest().CreateUnitOfWork();
+		_uow = _testBackupDatabase.GetBackupDatabase().CreateUnitOfWork();
 		_adder = _uow->CreateFileAdder();
 		_restorer = _uow->CreateFileRestorer();
 		_finder = _uow->CreateFileFinder();
@@ -58,7 +56,7 @@ protected:
 	}
 
 	const fs::NativePath _restorePath;
-	std::unique_ptr<Forest> _forest;
+	std::unique_ptr<BackupDatabase> _forest;
 	std::unique_ptr<UnitOfWork> _uow;
 	std::unique_ptr<FileAdder> _adder;
 	std::unique_ptr<FileRestorer> _restorer;

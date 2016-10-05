@@ -16,31 +16,31 @@ TestBackup::TestBackup(const boost::filesystem::path& baseDir)
 
 void TestBackup::Open()
 {
-	_forest = std::make_unique<bslib::Forest>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
+	_forest = std::make_unique<bslib::BackupDatabase>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
 	_forest->Open();
 }
 
 void TestBackup::Create()
 {
-	_forest = std::make_unique<bslib::Forest>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
+	_forest = std::make_unique<bslib::BackupDatabase>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
 	_forest->Create();
 }
 
 void TestBackup::OpenOrCreate()
 {
-	_forest = std::make_unique<bslib::Forest>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
+	_forest = std::make_unique<bslib::BackupDatabase>(_forestPath, std::make_unique<blob::DirectoryBlobStore>(_baseDir));
 	_forest->OpenOrCreate();
 }
 
 void TestBackup::OpenWithNullStore()
 {
-	_forest = std::make_unique<bslib::Forest>(_forestPath, std::make_unique<blob::NullBlobStore>());
+	_forest = std::make_unique<bslib::BackupDatabase>(_forestPath, std::make_unique<blob::NullBlobStore>());
 	_forest->Open();
 }
 
 void TestBackup::CreateWithNullStore()
 {
-	_forest = std::make_unique<bslib::Forest>(_forestPath, std::make_unique<blob::NullBlobStore>());
+	_forest = std::make_unique<bslib::BackupDatabase>(_forestPath, std::make_unique<blob::NullBlobStore>());
 	_forest->Create();
 }
 	
@@ -52,7 +52,7 @@ std::unique_ptr<sqlitepp::ScopedSqlite3Object> TestBackup::ConnectToDatabase() c
 	return connection;
 }
 
-af::bslib::Forest& TestBackup::GetForest()
+af::bslib::BackupDatabase& TestBackup::GetBackupDatabase()
 {
 	return *_forest;
 }

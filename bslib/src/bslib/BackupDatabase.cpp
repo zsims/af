@@ -1,9 +1,9 @@
-#include "bslib/Forest.hpp"
+#include "bslib/BackupDatabase.hpp"
 
 #include "bslib/exceptions.hpp"
 #include "bslib/blob/BlobStore.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
-#include "bslib/ForestUnitOfWork.hpp"
+#include "bslib/BackupDatabaseUnitOfWork.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -11,18 +11,18 @@
 namespace af {
 namespace bslib {
 
-Forest::Forest(const boost::filesystem::path& forestPath, std::unique_ptr<blob::BlobStore> blobStore)
+BackupDatabase::BackupDatabase(const boost::filesystem::path& forestPath, std::unique_ptr<blob::BlobStore> blobStore)
 	: _forestPath(forestPath)
 	, _blobStore(std::move(blobStore))
 {
 }
 
-Forest::~Forest()
+BackupDatabase::~BackupDatabase()
 {
 	// Needed to delete incomplete types
 }
 
-void Forest::Open()
+void BackupDatabase::Open()
 {
 	if (!boost::filesystem::exists(_forestPath))
 	{
@@ -35,7 +35,7 @@ void Forest::Open()
 	sqlitepp::exec_or_throw(*_connection, "PRAGMA case_sensitive_like = true;");
 }
 
-void Forest::Create()
+void BackupDatabase::Create()
 {
 	{
 		if (boost::filesystem::exists(_forestPath))
@@ -77,7 +77,7 @@ void Forest::Create()
 	Open();
 }
 
-void Forest::OpenOrCreate()
+void BackupDatabase::OpenOrCreate()
 {
 	if (boost::filesystem::exists(_forestPath))
 	{
@@ -87,11 +87,15 @@ void Forest::OpenOrCreate()
 	Create();
 }
 
-std::unique_ptr<UnitOfWork> Forest::CreateUnitOfWork()
+std::unique_ptr<UnitOfWork> BackupDatabase::CreateUnitOfWork()
 {
-	return std::make_unique<ForestUnitOfWork>(*_connection, *_blobStore);
+	return std::make_unique<BackupDatabaseUnitOfWork>(*_connection, *_blobStore);
 }
 
+std::unique_ptr<UnitOfWork> BackupDatabase::CreateUnitOfWork(blob::BlobStore& blobStore)
+{
+	return std::make_unique<BackupDatabaseUnitOfWork>(*_connection, blobStore);
+}
 
 }
 }

@@ -1,6 +1,4 @@
-#include "bslib/forest.hpp"
 #include "bslib/blob/BlobInfoRepository.hpp"
-#include "bslib/blob/NullBlobStore.hpp"
 #include "bslib/file/FileEventStreamRepository.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
@@ -22,8 +20,8 @@ class FileEventStreamRepositoryIntegrationTest : public bslib::test::TestBase
 protected:
 	FileEventStreamRepositoryIntegrationTest()
 	{
-		_testForest.Create();
-		_connection = _testForest.ConnectToDatabase();
+		_testBackupDatabase.Create();
+		_connection = _testBackupDatabase.ConnectToDatabase();
 	}
 
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;

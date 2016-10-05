@@ -19,19 +19,20 @@ namespace sqlitepp {
 class ScopedSqlite3Object;
 }
 
-class Forest
+class BackupDatabase
 {
 public:
 	/**
 	 * Initializes forest with the given path for opening or creating.
 	 */
-	explicit Forest(const boost::filesystem::path& forestPath, std::unique_ptr<blob::BlobStore> blobStore);
-	~Forest();
+	explicit BackupDatabase(const boost::filesystem::path& forestPath, std::unique_ptr<blob::BlobStore> blobStore);
+	~BackupDatabase();
 
 	/**
 	 * Creates a new unit of work. Note that the forest must remain open while the unit of work is being used.
 	 */
 	std::unique_ptr<UnitOfWork> CreateUnitOfWork();
+	std::unique_ptr<UnitOfWork> CreateUnitOfWork(blob::BlobStore& blobStore);
 
 	/**
 	 * Opens an existing forest

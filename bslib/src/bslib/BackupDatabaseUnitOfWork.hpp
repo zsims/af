@@ -14,10 +14,10 @@
 namespace af {
 namespace bslib {
 
-class ForestUnitOfWork : public UnitOfWork
+class BackupDatabaseUnitOfWork : public UnitOfWork
 {
 public:
-	ForestUnitOfWork(const sqlitepp::ScopedSqlite3Object& connection, blob::BlobStore& blobStore);
+	BackupDatabaseUnitOfWork(const sqlitepp::ScopedSqlite3Object& connection, blob::BlobStore& blobStore);
 
 	void Commit() override;
 

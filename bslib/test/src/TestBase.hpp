@@ -29,7 +29,7 @@ protected:
 private:
 	const boost::filesystem::path _testTemporaryPath;
 protected:
-	utility::TestBackup _testForest;
+	utility::TestBackup _testBackupDatabase;
 };
 
 }

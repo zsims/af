@@ -1,4 +1,4 @@
-#include <bslib/Forest.hpp>
+#include <bslib/BackupDatabase.hpp>
 #include <bslib/exceptions.hpp>
 #include <bslib/file/FileAdder.hpp>
 #include <bslib/file/exceptions.hpp>
@@ -19,7 +19,7 @@ int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::pat
 
 	try
 	{
-		af::bslib::Forest forest(forestDb, std::make_unique<af::bslib::blob::DirectoryBlobStore>(targetDirectoryPath));
+		af::bslib::BackupDatabase forest(forestDb, std::make_unique<af::bslib::blob::DirectoryBlobStore>(targetDirectoryPath));
 		forest.OpenOrCreate();
 
 		auto uow = forest.CreateUnitOfWork();

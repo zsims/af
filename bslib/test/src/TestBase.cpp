@@ -11,7 +11,7 @@ namespace test {
 
 TestBase::TestBase()
 	: _testTemporaryPath(utility::TestEnvironment::GetTemporaryDirectory() / boost::filesystem::unique_path())
-	, _testForest(_testTemporaryPath)
+	, _testBackupDatabase(_testTemporaryPath)
 {
 	boost::filesystem::create_directories(_testTemporaryPath);
 }

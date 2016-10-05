@@ -1,5 +1,5 @@
 #include "bslib/exceptions.hpp"
-#include "bslib/Forest.hpp"
+#include "bslib/BackupDatabase.hpp"
 #include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/blob/exceptions.hpp"
 #include "bslib/blob/NullBlobStore.hpp"
@@ -18,7 +18,7 @@ namespace af {
 namespace bslib {
 namespace test {
 
-class ForestIntegrationTest : public TestBase
+class BackupDatabaseIntegrationTest : public TestBase
 {
 protected:
 	void CreateFile(const boost::filesystem::path& path)
@@ -27,38 +27,38 @@ protected:
 	}
 };
 
-TEST_F(ForestIntegrationTest, CreateSuccess)
+TEST_F(BackupDatabaseIntegrationTest, CreateSuccess)
 {
 	// Arrange
 	// Act
-	_testForest.CreateWithNullStore();
+	_testBackupDatabase.CreateWithNullStore();
 	// Assert
-	EXPECT_TRUE(boost::filesystem::exists(_testForest.GetForestDbPath()));
+	EXPECT_TRUE(boost::filesystem::exists(_testBackupDatabase.GetBackupDatabaseDbPath()));
 }
 
-TEST_F(ForestIntegrationTest, CreateThrowsIfExists)
+TEST_F(BackupDatabaseIntegrationTest, CreateThrowsIfExists)
 {
 	// Arrange
-	CreateFile(_testForest.GetForestDbPath());
+	CreateFile(_testBackupDatabase.GetBackupDatabaseDbPath());
 
 	// Act
 	// Assert
-	EXPECT_THROW(_testForest.Create(), DatabaseAlreadyExistsException);
+	EXPECT_THROW(_testBackupDatabase.Create(), DatabaseAlreadyExistsException);
 }
 
-TEST_F(ForestIntegrationTest, OpenThrowsIfNotExists)
+TEST_F(BackupDatabaseIntegrationTest, OpenThrowsIfNotExists)
 {
 	// Arrange
 	// Act
 	// Assert
-	EXPECT_THROW(_testForest.Open(), DatabaseNotFoundException);
+	EXPECT_THROW(_testBackupDatabase.Open(), DatabaseNotFoundException);
 }
 
-TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
+TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkCommit)
 {
 	// Arrange
-	_testForest.CreateWithNullStore();
-	auto& forest = _testForest.GetForest();
+	_testBackupDatabase.CreateWithNullStore();
+	auto& forest = _testBackupDatabase.GetBackupDatabase();
 
 	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	{
@@ -78,11 +78,11 @@ TEST_F(ForestIntegrationTest, UnitOfWorkCommit)
 	}
 }
 
-TEST_F(ForestIntegrationTest, CreateUnitOfWorkTwiceFails)
+TEST_F(BackupDatabaseIntegrationTest, CreateUnitOfWorkTwiceFails)
 {
 	// Arrange
-	_testForest.Create();
-	auto& forest = _testForest.GetForest();
+	_testBackupDatabase.Create();
+	auto& forest = _testBackupDatabase.GetBackupDatabase();
 
 	// Act
 	// Assert
@@ -91,11 +91,11 @@ TEST_F(ForestIntegrationTest, CreateUnitOfWorkTwiceFails)
 	EXPECT_THROW(forest.CreateUnitOfWork(), std::runtime_error);
 }
 
-TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
+TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkImplicitRollback)
 {
 	// Arrange
-	_testForest.Create();
-	auto& forest = _testForest.GetForest();
+	_testBackupDatabase.Create();
+	auto& forest = _testBackupDatabase.GetBackupDatabase();
 
 	// Act
 	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
@@ -114,24 +114,24 @@ TEST_F(ForestIntegrationTest, UnitOfWorkImplicitRollback)
 	}
 }
 
-TEST_F(ForestIntegrationTest, OpenOrCreateExisting)
+TEST_F(BackupDatabaseIntegrationTest, OpenOrCreateExisting)
 {
 	// Arrange
-	_testForest.Create();
-	_testForest.Close();
-	Forest secondForest(_testForest.GetForestDbPath(), std::make_unique<blob::NullBlobStore>());
+	_testBackupDatabase.Create();
+	_testBackupDatabase.Close();
+	BackupDatabase secondBackupDatabase(_testBackupDatabase.GetBackupDatabaseDbPath(), std::make_unique<blob::NullBlobStore>());
 
 	// Act
 	// Assert
-	ASSERT_NO_THROW(secondForest.OpenOrCreate());
+	ASSERT_NO_THROW(secondBackupDatabase.OpenOrCreate());
 }
 
-TEST_F(ForestIntegrationTest, OpenOrCreateNew)
+TEST_F(BackupDatabaseIntegrationTest, OpenOrCreateNew)
 {
 	// Arrange
 	// Act
 	// Assert
-	ASSERT_NO_THROW(_testForest.OpenOrCreate());
+	ASSERT_NO_THROW(_testBackupDatabase.OpenOrCreate());
 }
 
 }

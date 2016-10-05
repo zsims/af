@@ -9,7 +9,7 @@ add_executable(
     bslib_test
     src/bslib_test_main.cpp
     src/EventManagerTest.cpp
-    src/ForestIntegrationTest.cpp
+    src/BackupDatabaseIntegrationTest.cpp
     src/TestBase.cpp
     src/TestBase.hpp
     src/blob/AddressIntegrationTest.cpp

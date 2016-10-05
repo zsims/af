@@ -1,7 +1,6 @@
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/blob/exceptions.hpp"
 #include "bslib/blob/NullBlobStore.hpp"
-#include "bslib/forest.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "TestBase.hpp"
 
@@ -21,8 +20,8 @@ class BlobInfoRepositoryIntegrationTest : public bslib::test::TestBase
 protected:
 	BlobInfoRepositoryIntegrationTest()
 	{
-		_testForest.Create();
-		_connection = _testForest.ConnectToDatabase();
+		_testBackupDatabase.Create();
+		_connection = _testBackupDatabase.ConnectToDatabase();
 	}
 
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
