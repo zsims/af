@@ -13,6 +13,10 @@ if(MSVC)
     # Enable warnings as errors
     add_compile_options("/W3" "/WX")
 
+    # Disable specific warnings in VS
+    # C4503 - Disable decorated name length exceeded, https://msdn.microsoft.com/en-us/library/074af4b6.aspx
+    add_definitions("/wd4503")
+    
     # x86 or x64, this makes it easier to deal with config
     # as CMAKE_VS_PLATFORM_NAME is Win32 on x86
     set(PLATFORM_NAME "x86")
@@ -38,3 +42,4 @@ add_dependencies(ALL_VERIFY ALL_BUILD)
 add_subdirectory(third_party)
 add_subdirectory(bslib)
 add_subdirectory(bs_cli)
+add_subdirectory(bs_daemon)

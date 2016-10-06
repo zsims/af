@@ -5,3 +5,6 @@
 	path = third_party/boost/source
 	url = git@github.com:zsims/boost.git
 	branch = 1.60.0
+[submodule "third_party/webserver/src"]
+	path = third_party/webserver/src
+	url = git@github.com:eidheim/Simple-Web-Server.git
