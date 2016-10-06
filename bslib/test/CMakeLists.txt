@@ -9,12 +9,14 @@ add_executable(
     bslib_test
     src/bslib_test_main.cpp
     src/EventManagerTest.cpp
-    src/ForestIntegrationTest.cpp
+    src/BackupIntegrationTest.cpp
+    src/BackupDatabaseIntegrationTest.cpp
     src/TestBase.cpp
     src/TestBase.hpp
     src/blob/AddressIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
+    src/blob/MockBlobStore.hpp
     src/file/FileAdderIntegrationTest.cpp
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRestorerIntegrationTest.cpp
@@ -25,8 +27,8 @@ add_executable(
     src/file/test_utility/ScopedWorkingDirectory.cpp
     src/file/test_utility/ScopedWorkingDirectory.hpp
     src/unicodeIntegrationTest.cpp
-    src/utility/TestForest.cpp
-    src/utility/TestForest.hpp
+    src/utility/TestBackup.cpp
+    src/utility/TestBackup.hpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp
     src/utility/TestEnvironment.cpp

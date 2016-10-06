@@ -1,5 +1,3 @@
-#include "bslib/forest.hpp"
-#include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/fs/operations.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
@@ -30,10 +28,10 @@ protected:
 		, _sampleFilePath(_sampleBasePath / "base.dat")
 		, _sampleSubFilePath(_sampleSubDirectory / "subfile.dat")
 	{
-		_testForest.Create();
+		_testBackup.Create();
 		fs::CreateDirectories(_restorePath);
 
-		_uow = _testForest.GetForest().CreateUnitOfWork();
+		_uow = _testBackup.GetBackup().CreateUnitOfWork();
 		_adder = _uow->CreateFileAdder();
 		_restorer = _uow->CreateFileRestorer();
 		_finder = _uow->CreateFileFinder();
@@ -45,20 +43,7 @@ protected:
 		CreateFile(_sampleSubFilePath, "hey sub babe");
 	}
 
-	static blob::Address CreateFile(const fs::NativePath& path, const std::string& content)
-	{
-		const std::vector<uint8_t> binaryContent(content.begin(), content.end());
-		auto f = fs::OpenFileWrite(path);
-		if (!f)
-		{
-			throw std::runtime_error("Failed to create test file at " + path.ToString());
-		}
-		f.write(reinterpret_cast<const char*>(&binaryContent[0]), binaryContent.size());
-		return blob::Address::CalculateFromContent(binaryContent);
-	}
-
 	const fs::NativePath _restorePath;
-	std::unique_ptr<Forest> _forest;
 	std::unique_ptr<UnitOfWork> _uow;
 	std::unique_ptr<FileAdder> _adder;
 	std::unique_ptr<FileRestorer> _restorer;

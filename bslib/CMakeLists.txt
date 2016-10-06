@@ -9,7 +9,7 @@ source_group("include\\file" REGULAR_EXPRESSION "include/bslib/file/.*")
 add_library(
     bslib
     include/bslib/exceptions.hpp
-    include/bslib/Forest.hpp
+    include/bslib/Backup.hpp
     include/bslib/blob/Address.hpp
     include/bslib/blob/BlobStore.hpp
     include/bslib/blob/DirectoryBlobStore.hpp
@@ -25,15 +25,17 @@ add_library(
     include/bslib/file/fs/WindowsPath.hpp
     include/bslib/UnitOfWork.hpp
     include/bslib/unicode.hpp
+    src/bslib/Backup.cpp
+    src/bslib/BackupDatabase.hpp
     src/bslib/blob/Address.cpp
     src/bslib/blob/BlobInfo.hpp
     src/bslib/blob/BlobInfoRepository.cpp
     src/bslib/blob/BlobInfoRepository.hpp
     src/bslib/blob/DirectoryBlobStore.cpp
     src/bslib/blob/exceptions.hpp
-    src/bslib/Forest.cpp
-    src/bslib/ForestUnitOfWork.cpp
-    src/bslib/ForestUnitOfWork.hpp
+    src/bslib/BackupDatabase.cpp
+    src/bslib/BackupDatabaseUnitOfWork.cpp
+    src/bslib/BackupDatabaseUnitOfWork.hpp
     src/bslib/file/FileAdder.cpp
     src/bslib/file/FileEventStreamRepository.cpp
     src/bslib/file/FileEventStreamRepository.hpp
