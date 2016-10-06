@@ -40,7 +40,7 @@ protected:
 private:
 	const boost::filesystem::path _testTemporaryPath;
 protected:
-	utility::TestBackup _testBackupDatabase;
+	utility::TestBackup _testBackup;
 };
 
 }

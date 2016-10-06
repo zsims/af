@@ -25,15 +25,15 @@ TEST_F(BackupIntegrationTest, Open_ThrowsWithNoDb)
 {
 	// Arrange
 	// Act
-	EXPECT_THROW(_testBackupDatabase.Open(), DatabaseNotFoundException);
+	EXPECT_THROW(_testBackup.Open(), DatabaseNotFoundException);
 }
 
 TEST_F(BackupIntegrationTest, OpenOrCreateExisting)
 {
 	// Arrange
-	_testBackupDatabase.Create();
-	_testBackupDatabase.Close();
-	Backup secondBackup(_testBackupDatabase.GetBackupDatabaseDbPath(), "TEST");
+	_testBackup.Create();
+	_testBackup.Close();
+	Backup secondBackup(_testBackup.GetBackupDatabaseDbPath(), "TEST");
 
 	// Act
 	// Assert
@@ -45,7 +45,7 @@ TEST_F(BackupIntegrationTest, OpenOrCreateNew)
 	// Arrange
 	// Act
 	// Assert
-	ASSERT_NO_THROW(_testBackupDatabase.OpenOrCreate());
+	ASSERT_NO_THROW(_testBackup.OpenOrCreate());
 }
 
 TEST_F(BackupIntegrationTest, AddBlobStore_Success)
@@ -56,7 +56,7 @@ TEST_F(BackupIntegrationTest, AddBlobStore_Success)
 	// Setup expectations before transfering ownership, per https://groups.google.com/forum/#!topic/googlemock/lQ9y9SWzr0A
 	EXPECT_CALL(*mockBlobStore, CreateBlob(::testing::_, ::testing::_)).Times(::testing::AtLeast(1));
 
-	Backup backup(_testBackupDatabase.GetBackupDatabaseDbPath(), "TEST");
+	Backup backup(_testBackup.GetBackupDatabaseDbPath(), "TEST");
 	backup.AddBlobStore(std::move(mockBlobStore));
 	backup.OpenOrCreate();
 

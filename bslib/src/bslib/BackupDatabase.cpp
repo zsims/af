@@ -10,8 +10,8 @@
 namespace af {
 namespace bslib {
 
-BackupDatabase::BackupDatabase(const boost::filesystem::path& forestPath)
-	: _forestPath(forestPath)
+BackupDatabase::BackupDatabase(const boost::filesystem::path& databasePath)
+	: _databasePath(databasePath)
 {
 }
 
@@ -22,30 +22,30 @@ BackupDatabase::~BackupDatabase()
 
 void BackupDatabase::Open()
 {
-	if (!boost::filesystem::exists(_forestPath))
+	if (!boost::filesystem::exists(_databasePath))
 	{
-		throw DatabaseNotFoundException(_forestPath.string());
+		throw DatabaseNotFoundException(_databasePath.string());
 	}
 
 	// Share the connection between the repos, note that the repos should be destroyed before this connection is
 	_connection.reset(new sqlitepp::ScopedSqlite3Object());
-	sqlitepp::open_database_or_throw(_forestPath.string().c_str(), *_connection, SQLITE_OPEN_READWRITE);
+	sqlitepp::open_database_or_throw(_databasePath.string().c_str(), *_connection, SQLITE_OPEN_READWRITE);
 	sqlitepp::exec_or_throw(*_connection, "PRAGMA case_sensitive_like = true;");
 }
 
 void BackupDatabase::Create()
 {
 	{
-		if (boost::filesystem::exists(_forestPath))
+		if (boost::filesystem::exists(_databasePath))
 		{
-			throw DatabaseAlreadyExistsException(_forestPath.string());
+			throw DatabaseAlreadyExistsException(_databasePath.string());
 		}
 
 		sqlitepp::ScopedSqlite3Object db;
-		const auto result = sqlite3_open_v2(_forestPath.string().c_str(), db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
+		const auto result = sqlite3_open_v2(_databasePath.string().c_str(), db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
 		if (result != SQLITE_OK)
 		{
-			throw CreateDatabaseFailedException(_forestPath.string(), result);
+			throw CreateDatabaseFailedException(_databasePath.string(), result);
 		}
 
 		// Create tables
@@ -68,7 +68,7 @@ void BackupDatabase::Create()
 		const auto execResult = sqlite3_exec(db, sql, 0, 0, errorMessage);
 		if (execResult != SQLITE_OK)
 		{
-			throw CreateDatabaseFailedException(_forestPath.string(), execResult, errorMessage);
+			throw CreateDatabaseFailedException(_databasePath.string(), execResult, errorMessage);
 		}
 	}
 
@@ -77,7 +77,7 @@ void BackupDatabase::Create()
 
 void BackupDatabase::OpenOrCreate()
 {
-	if (boost::filesystem::exists(_forestPath))
+	if (boost::filesystem::exists(_databasePath))
 	{
 		Open();
 		return;

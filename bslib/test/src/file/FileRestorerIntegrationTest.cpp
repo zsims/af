@@ -28,10 +28,10 @@ protected:
 		, _sampleFilePath(_sampleBasePath / "base.dat")
 		, _sampleSubFilePath(_sampleSubDirectory / "subfile.dat")
 	{
-		_testBackupDatabase.Create();
+		_testBackup.Create();
 		fs::CreateDirectories(_restorePath);
 
-		_uow = _testBackupDatabase.GetBackup().CreateUnitOfWork();
+		_uow = _testBackup.GetBackup().CreateUnitOfWork();
 		_adder = _uow->CreateFileAdder();
 		_restorer = _uow->CreateFileRestorer();
 		_finder = _uow->CreateFileFinder();
@@ -44,7 +44,6 @@ protected:
 	}
 
 	const fs::NativePath _restorePath;
-	std::unique_ptr<BackupDatabase> _forest;
 	std::unique_ptr<UnitOfWork> _uow;
 	std::unique_ptr<FileAdder> _adder;
 	std::unique_ptr<FileRestorer> _restorer;

@@ -12,7 +12,7 @@ namespace test {
 namespace utility {
 
 /**
- * Wrapper around the forest which supports getting the connection string among other useful test things
+ * Wrapper around the backup which supports getting the connection string among other useful test things
  */
 class TestBackup
 {

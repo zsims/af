@@ -38,21 +38,21 @@ public:
 	void AddBlobStore(std::unique_ptr<blob::BlobStore> blobStore);
 
 	/**
-	 * Opens an existing forest
-	 * \throws DatabaseNotFoundException The forest database couldn't be found
+	 * Opens an existing database
+	 * \throws DatabaseNotFoundException The database couldn't be found
 	 */
 	void Open();
 
 	/**
-	 * Creates a new forest database and opens it.
+	 * Creates a new database and opens it.
 	 * \throws DatabaseAlreadyExistsException A database (or path) already exists at the given path
 	 * \throws CreateDatabaseFailedException Couldn't create the database at the given path
 	 */
 	void Create();
 
 	/**
-	 * Opens the forest if it exists, otherwise creates a new one and opens that.
-	 * \throws DatabaseNotFoundException The forest database couldn't be found
+	 * Opens the database if it exists, otherwise creates a new one and opens that.
+	 * \throws DatabaseNotFoundException The database couldn't be found
 	 * \throws DatabaseAlreadyExistsException A database (or path) already exists at the given path
 	 * \throws CreateDatabaseFailedException Couldn't create the database at the given path
 	 */

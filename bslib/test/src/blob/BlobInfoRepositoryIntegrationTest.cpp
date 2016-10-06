@@ -20,8 +20,8 @@ class BlobInfoRepositoryIntegrationTest : public bslib::test::TestBase
 protected:
 	BlobInfoRepositoryIntegrationTest()
 	{
-		_testBackupDatabase.Create();
-		_connection = _testBackupDatabase.ConnectToDatabase();
+		_testBackup.Create();
+		_connection = _testBackup.ConnectToDatabase();
 	}
 
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;

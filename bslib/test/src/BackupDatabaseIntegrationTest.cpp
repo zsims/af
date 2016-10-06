@@ -25,19 +25,19 @@ TEST_F(BackupDatabaseIntegrationTest, CreateSuccess)
 {
 	// Arrange
 	// Act
-	_testBackupDatabase.Create();
+	_testBackup.Create();
 	// Assert
-	EXPECT_TRUE(boost::filesystem::exists(_testBackupDatabase.GetBackupDatabaseDbPath()));
+	EXPECT_TRUE(boost::filesystem::exists(_testBackup.GetBackupDatabaseDbPath()));
 }
 
 TEST_F(BackupDatabaseIntegrationTest, CreateThrowsIfExists)
 {
 	// Arrange
-	CreateFile(_testBackupDatabase.GetBackupDatabaseDbPath());
+	CreateFile(_testBackup.GetBackupDatabaseDbPath());
 
 	// Act
 	// Assert
-	EXPECT_THROW(_testBackupDatabase.Create(), DatabaseAlreadyExistsException);
+	EXPECT_THROW(_testBackup.Create(), DatabaseAlreadyExistsException);
 }
 
 TEST_F(BackupDatabaseIntegrationTest, OpenThrowsIfNotExists)
@@ -45,14 +45,14 @@ TEST_F(BackupDatabaseIntegrationTest, OpenThrowsIfNotExists)
 	// Arrange
 	// Act
 	// Assert
-	EXPECT_THROW(_testBackupDatabase.Open(), DatabaseNotFoundException);
+	EXPECT_THROW(_testBackup.Open(), DatabaseNotFoundException);
 }
 
 TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkCommit)
 {
 	// Arrange
-	_testBackupDatabase.Create();
-	auto& database = _testBackupDatabase.GetBackupDatabase();
+	_testBackup.Create();
+	auto& database = _testBackup.GetBackupDatabase();
 	blob::NullBlobStore store;
 
 	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
@@ -76,28 +76,28 @@ TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkCommit)
 TEST_F(BackupDatabaseIntegrationTest, CreateUnitOfWorkTwiceFails)
 {
 	// Arrange
-	_testBackupDatabase.Create();
-	auto& forest = _testBackupDatabase.GetBackupDatabase();
+	_testBackup.Create();
+	auto& backup = _testBackup.GetBackupDatabase();
 
 	// Act
 	// Assert
 	// No support for multiple connections yet, so this isn't possible
 	blob::NullBlobStore store;
-	auto uow1 = forest.CreateUnitOfWork(store);
-	EXPECT_THROW(forest.CreateUnitOfWork(store), std::runtime_error);
+	auto uow1 = backup.CreateUnitOfWork(store);
+	EXPECT_THROW(backup.CreateUnitOfWork(store), std::runtime_error);
 }
 
 TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkImplicitRollback)
 {
 	// Arrange
-	_testBackupDatabase.Create();
-	auto& forest = _testBackupDatabase.GetBackupDatabase();
+	_testBackup.Create();
+	auto& backup = _testBackup.GetBackupDatabase();
 	blob::NullBlobStore store;
 
 	// Act
 	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	{
-		auto uow = forest.CreateUnitOfWork(store);
+		auto uow = backup.CreateUnitOfWork(store);
 		auto adder = uow->CreateFileAdder();
 		file::fs::CreateDirectories(targetPath);
 		adder->Add(targetPath.ToString());
@@ -105,7 +105,7 @@ TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkImplicitRollback)
 
 	// Assert
 	{
-		auto uow = forest.CreateUnitOfWork(store);
+		auto uow = backup.CreateUnitOfWork(store);
 		auto finder = uow->CreateFileFinder();
 		EXPECT_FALSE(finder->FindLastChangedEventByPath(targetPath));
 	}
@@ -114,9 +114,9 @@ TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkImplicitRollback)
 TEST_F(BackupDatabaseIntegrationTest, OpenOrCreateExisting)
 {
 	// Arrange
-	_testBackupDatabase.Create();
-	_testBackupDatabase.Close();
-	BackupDatabase secondBackupDatabase(_testBackupDatabase.GetBackupDatabaseDbPath());
+	_testBackup.Create();
+	_testBackup.Close();
+	BackupDatabase secondBackupDatabase(_testBackup.GetBackupDatabaseDbPath());
 
 	// Act
 	// Assert
@@ -128,7 +128,7 @@ TEST_F(BackupDatabaseIntegrationTest, OpenOrCreateNew)
 	// Arrange
 	// Act
 	// Assert
-	ASSERT_NO_THROW(_testBackupDatabase.OpenOrCreate());
+	ASSERT_NO_THROW(_testBackup.OpenOrCreate());
 }
 
 }
