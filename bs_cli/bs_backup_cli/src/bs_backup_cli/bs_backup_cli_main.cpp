@@ -4,7 +4,7 @@
 #include <bslib/file/exceptions.hpp>
 #include <bslib/blob/DirectoryBlobStore.hpp>
 
-#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <iostream>
@@ -15,11 +15,17 @@ namespace {
 
 int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::path& targetDirectoryPath)
 {
-	const auto backupDb = targetDirectoryPath / "backup.fdb";
-
 	try
 	{
-		af::bslib::Backup backup(backupDb, "CLI"); 
+		const auto defaultDbPath = af::bslib::GetDefaultBackupDatabasePath();
+		if (defaultDbPath.empty())
+		{
+			std::cerr << "Failed to determine the location of the backup database" << std::endl;
+			return -1;
+		}
+		std::cout << "Using the backup database from " << defaultDbPath << std::endl;
+		boost::filesystem::create_directories(defaultDbPath.parent_path());
+		af::bslib::Backup backup(defaultDbPath, "CLI");
 		backup.AddBlobStore(std::make_unique<af::bslib::blob::DirectoryBlobStore>(targetDirectoryPath));
 		backup.OpenOrCreate();
 
