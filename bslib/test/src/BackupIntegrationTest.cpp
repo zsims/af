@@ -74,6 +74,15 @@ TEST_F(BackupIntegrationTest, AddBlobStore_Success)
 	// See above EXPECT_CALL
 }
 
+TEST_F(BackupIntegrationTest, GetDefaultBackupDatabasePath_Success)
+{
+	// Arrange
+	// Act
+	const auto path = GetDefaultBackupDatabasePath();
+	// Assert
+	EXPECT_FALSE(path.empty());
+}
+
 }
 }
 }

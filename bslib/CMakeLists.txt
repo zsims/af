@@ -68,6 +68,7 @@ target_link_libraries(
     bslib
     PRIVATE boost_filesystem
     PUBLIC sqlite
+    PUBLIC shlwapi.lib
 )
 
 add_subdirectory(test)
