@@ -1,20 +1,30 @@
-source_group("src" REGULAR_EXPRESSION "src/bs_daemon/.*")
+source_group("src" REGULAR_EXPRESSION "src/bs_daemon_lib/.*")
 
-set(SOURCES
-    src/bs_daemon/bs_daemon_main.cpp
+# Separate main functionality into library so we can link these into a test
+add_library(bs_daemon_lib STATIC
+    src/bs_daemon_lib/Job.hpp
+    src/bs_daemon_lib/JobExecutor.cpp
+    src/bs_daemon_lib/JobExecutor.hpp
 )
 
-add_executable(bs_daemon ${SOURCES})
-set_property(TARGET bs_daemon PROPERTY FOLDER "bs_daemon")
+set_property(TARGET bs_daemon_lib PROPERTY FOLDER "bs_daemon")
 
 target_include_directories(
-    bs_daemon
+    bs_daemon_lib
     PRIVATE src
 )
 
 target_link_libraries(
-    bs_daemon
-    PRIVATE bslib
-    PRIVATE boost_filesystem
-    PRIVATE webserver
+    bs_daemon_lib
+    PUBLIC bslib
+    PUBLIC boost_filesystem
+    PUBLIC webserver
 )
+
+# Simple exe target
+source_group("src" REGULAR_EXPRESSION "src/bs_daemon/.*")
+add_executable(bs_daemon src/bs_daemon/bs_daemon_main.cpp)
+set_property(TARGET bs_daemon PROPERTY FOLDER "bs_daemon")
+target_link_libraries(bs_daemon PRIVATE bs_daemon_lib)
+
+add_subdirectory(test)
