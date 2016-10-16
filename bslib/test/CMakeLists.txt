@@ -31,8 +31,6 @@ add_executable(
     src/utility/TestBackup.hpp
     src/utility/gtest_boost_filesystem_fix.cpp
     src/utility/gtest_boost_filesystem_fix.hpp
-    src/utility/TestEnvironment.cpp
-    src/utility/TestEnvironment.hpp
     src/utility/matchers.cpp
     src/utility/matchers.hpp
 )
@@ -52,6 +50,7 @@ target_link_libraries(
     PRIVATE bslib
     PRIVATE googletest
     PRIVATE boost_program_options
+    PRIVATE test_util
 )
 
 add_custom_target(

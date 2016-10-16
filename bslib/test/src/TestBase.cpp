@@ -1,7 +1,7 @@
 #include "TestBase.hpp"
 
 #include "bslib/file/fs/operations.hpp"
-#include "utility/TestEnvironment.hpp"
+#include "test_util/TestEnvironment.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -12,7 +12,7 @@ namespace bslib {
 namespace test {
 
 TestBase::TestBase()
-	: _testTemporaryPath(utility::TestEnvironment::GetTemporaryDirectory() / boost::filesystem::unique_path())
+	: _testTemporaryPath(test_util::TestEnvironment::GetTemporaryDirectory() / boost::filesystem::unique_path())
 	, _testBackup(_testTemporaryPath)
 {
 	boost::filesystem::create_directories(_testTemporaryPath);
