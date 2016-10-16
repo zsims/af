@@ -1,11 +1,9 @@
-#include "utility/TestEnvironment.hpp"
+#include "test_util/TestEnvironment.hpp"
 
 #include <boost/filesystem.hpp>
 
 namespace af {
-namespace bslib {
-namespace test {
-namespace utility {
+namespace test_util {
 
 boost::filesystem::path TestEnvironment::_temporaryDirectory;
 
@@ -30,7 +28,5 @@ void TestEnvironment::TearDown()
 	boost::filesystem::remove_all(_temporaryDirectory, ec);
 }
 
-}
-}
 }
 }

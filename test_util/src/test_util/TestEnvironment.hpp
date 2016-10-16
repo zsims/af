@@ -5,9 +5,7 @@
 #include <gtest/gtest.h>
 
 namespace af {
-namespace bslib {
-namespace test {
-namespace utility {
+namespace test_util {
 
 class TestEnvironment : public testing::Environment
 {
@@ -20,8 +18,6 @@ private:
 	static boost::filesystem::path _temporaryDirectory;
 };
 
-}
-}
 }
 }
 

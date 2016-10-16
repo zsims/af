@@ -7,9 +7,7 @@
 #include <memory>
 
 namespace af {
-namespace bslib {
-namespace test {
-namespace utility {
+namespace test_util {
 
 /**
  * Wrapper around the backup which supports getting the connection string among other useful test things
@@ -21,7 +19,7 @@ public:
 	void Open();
 	void Create();
 	void OpenOrCreate();
-	std::unique_ptr<sqlitepp::ScopedSqlite3Object> ConnectToDatabase() const;
+	std::unique_ptr<bslib::sqlitepp::ScopedSqlite3Object> ConnectToDatabase() const;
 	const boost::filesystem::path& GetDirectoryStorePath() const { return _baseDir; }
 	const boost::filesystem::path& GetBackupDatabaseDbPath() const { return _backupDatabasePath; }
 	bslib::BackupDatabase& GetBackupDatabase();
@@ -33,8 +31,6 @@ private:
 	std::unique_ptr<bslib::Backup> _backup;
 };
 
-}
-}
 }
 }
 

@@ -1,7 +1,7 @@
 ﻿#include "bslib/file/fs/operations.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "file/test_utility/ScopedWorkingDirectory.hpp"
-#include "TestBase.hpp"
+#include "test_util/TestBase.hpp"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -15,7 +15,7 @@ namespace file {
 namespace fs {
 namespace test {
 
-class operationsIntegrationTest : public bslib::test::TestBase
+class operationsIntegrationTest : public test_util::TestBase
 {
 };
 

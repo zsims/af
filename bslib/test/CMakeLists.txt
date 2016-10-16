@@ -11,8 +11,6 @@ add_executable(
     src/EventManagerTest.cpp
     src/BackupIntegrationTest.cpp
     src/BackupDatabaseIntegrationTest.cpp
-    src/TestBase.cpp
-    src/TestBase.hpp
     src/blob/AddressIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
@@ -27,14 +25,6 @@ add_executable(
     src/file/test_utility/ScopedWorkingDirectory.cpp
     src/file/test_utility/ScopedWorkingDirectory.hpp
     src/unicodeIntegrationTest.cpp
-    src/utility/TestBackup.cpp
-    src/utility/TestBackup.hpp
-    src/utility/gtest_boost_filesystem_fix.cpp
-    src/utility/gtest_boost_filesystem_fix.hpp
-    src/utility/TestEnvironment.cpp
-    src/utility/TestEnvironment.hpp
-    src/utility/matchers.cpp
-    src/utility/matchers.hpp
 )
 
 set_property(TARGET bslib_test PROPERTY FOLDER "bslib")
@@ -52,6 +42,7 @@ target_link_libraries(
     PRIVATE bslib
     PRIVATE googletest
     PRIVATE boost_program_options
+    PRIVATE test_util
 )
 
 add_custom_target(

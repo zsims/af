@@ -2,7 +2,7 @@
 #include "bslib/blob/exceptions.hpp"
 #include "bslib/blob/NullBlobStore.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
-#include "TestBase.hpp"
+#include "test_util/TestBase.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -15,7 +15,7 @@ namespace bslib {
 namespace blob {
 namespace test {
 
-class BlobInfoRepositoryIntegrationTest : public bslib::test::TestBase
+class BlobInfoRepositoryIntegrationTest : public test_util::TestBase
 {
 protected:
 	BlobInfoRepositoryIntegrationTest()
