@@ -1,6 +1,6 @@
 #include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/blob/exceptions.hpp"
-#include "TestBase.hpp"
+#include "test_util/TestBase.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -13,7 +13,7 @@ namespace bslib {
 namespace blob {
 namespace test {
 
-class DirectoryBlobStoreIntegrationTest : public bslib::test::TestBase
+class DirectoryBlobStoreIntegrationTest : public test_util::TestBase
 {
 };
 

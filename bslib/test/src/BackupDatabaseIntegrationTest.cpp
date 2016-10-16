@@ -5,7 +5,7 @@
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileAdder.hpp"
 #include "bslib/file/fs/operations.hpp"
-#include "TestBase.hpp"
+#include "test_util/TestBase.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -17,7 +17,7 @@ namespace af {
 namespace bslib {
 namespace test {
 
-class BackupDatabaseIntegrationTest : public TestBase
+class BackupDatabaseIntegrationTest : public test_util::TestBase
 {
 };
 

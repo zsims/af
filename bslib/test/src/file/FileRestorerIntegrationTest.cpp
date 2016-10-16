@@ -2,9 +2,9 @@
 #include "bslib/file/fs/operations.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "file/test_utility/ScopedWorkingDirectory.hpp"
-#include "TestBase.hpp"
-#include "utility/gtest_boost_filesystem_fix.hpp"
-#include "utility/matchers.hpp"
+#include "test_util/TestBase.hpp"
+#include "test_util/gtest_boost_filesystem_fix.hpp"
+#include "test_util/matchers.hpp"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -18,7 +18,7 @@ namespace bslib {
 namespace file {
 namespace test {
 
-class FileRestorerIntegrationTest : public bslib::test::TestBase
+class FileRestorerIntegrationTest : public test_util::TestBase
 {
 protected:
 	FileRestorerIntegrationTest()

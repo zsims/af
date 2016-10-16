@@ -3,7 +3,7 @@
 #include "bslib/blob/Address.hpp"
 #include "bslib/file/fs/path.hpp"
 #include "bslib/unicode.hpp"
-#include "utility/TestBackup.hpp"
+#include "test_util/TestBackup.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <gmock/gmock.h>
@@ -12,8 +12,7 @@
 #include <vector>
 
 namespace af {
-namespace bslib {
-namespace test {
+namespace test_util {
 
 class TestBase : public testing::Test
 {
@@ -29,20 +28,19 @@ protected:
 	/**
 	 * Generates a unique extended path greater than 260 characters
 	 */
-	file::fs::NativePath GetUniqueExtendedTempPath() const;
+	bslib::file::fs::NativePath GetUniqueExtendedTempPath() const;
 
 	/**
 	 * Creates a a file with the given content at the given path
 	 * \returns The blob address of the content
 	 */
-	blob::Address CreateFile(const boost::filesystem::path& path, const UTF8String& content = "");
-	blob::Address CreateFile(const file::fs::NativePath& path, const UTF8String& content = "");
+	bslib::blob::Address CreateFile(const boost::filesystem::path& path, const bslib::UTF8String& content = "");
+	bslib::blob::Address CreateFile(const bslib::file::fs::NativePath& path, const bslib::UTF8String& content = "");
 private:
 	const boost::filesystem::path _testTemporaryPath;
 protected:
-	utility::TestBackup _testBackup;
+	test_util::TestBackup _testBackup;
 };
 
-}
 }
 }

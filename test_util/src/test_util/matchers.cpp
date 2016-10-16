@@ -1,4 +1,4 @@
-#include "matchers.hpp"
+#include "test_util/matchers.hpp"
 
 #include "bslib/file/fs/operations.hpp"
 
@@ -9,14 +9,12 @@
 #include <algorithm>
 
 namespace af {
-namespace bslib {
-namespace test {
-namespace utility {
+namespace test_util {
 
-bool AreContentsTheSame(const file::fs::NativePath& a, const file::fs::NativePath& b)
+bool AreContentsTheSame(const bslib::file::fs::NativePath& a, const bslib::file::fs::NativePath& b)
 {
-	auto streamA = file::fs::OpenFileRead(a, std::ifstream::in | std::ifstream::ate | std::ios::binary);
-	auto streamB = file::fs::OpenFileRead(b, std::ifstream::in | std::ifstream::ate | std::ios::binary);
+	auto streamA = bslib::file::fs::OpenFileRead(a, std::ifstream::in | std::ifstream::ate | std::ios::binary);
+	auto streamB = bslib::file::fs::OpenFileRead(b, std::ifstream::in | std::ifstream::ate | std::ios::binary);
 
 	if (streamA.fail() || streamB.fail())
 	{
@@ -37,7 +35,5 @@ bool AreContentsTheSame(const file::fs::NativePath& a, const file::fs::NativePat
 	return std::equal(itA, std::istreambuf_iterator<char>(), itB);
 }
 
-}
-}
 }
 }
