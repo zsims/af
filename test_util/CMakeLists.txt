@@ -1,4 +1,5 @@
 source_group("src" REGULAR_EXPRESSION "src/.*")
+source_group("src\\mocks" REGULAR_EXPRESSION "src/mocks/.*")
 
 add_library(test_util STATIC
     src/test_util/TestBackup.cpp
@@ -11,6 +12,8 @@ add_library(test_util STATIC
     src/test_util/gtest_boost_filesystem_fix.hpp
     src/test_util/matchers.cpp
     src/test_util/matchers.hpp
+    src/test_util/mocks/MockBackup.hpp
+    src/test_util/mocks/MockUnitOfWork.hpp
 )
 
 target_include_directories(
