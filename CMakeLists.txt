@@ -16,6 +16,10 @@ if(MSVC)
     # Disable specific warnings in VS
     # C4503 - Disable decorated name length exceeded, https://msdn.microsoft.com/en-us/library/074af4b6.aspx
     add_definitions("/wd4503")
+
+    # Per https://github.com/google/googletest/issues/799 Google Test doesn't correctly detect C++11 support on VS2015
+    # Forcing it ideal, as there's some things missing
+    add_definitions(-DGTEST_LANG_CXX11)
     
     # x86 or x64, this makes it easier to deal with config
     # as CMAKE_VS_PLATFORM_NAME is Win32 on x86
