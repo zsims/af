@@ -1,4 +1,4 @@
-#include "test_util/matchers.hpp"
+#include "bslib_test_util/matchers.hpp"
 
 #include "bslib/file/fs/operations.hpp"
 
@@ -9,7 +9,7 @@
 #include <algorithm>
 
 namespace af {
-namespace test_util {
+namespace bslib_test_util {
 
 bool AreContentsTheSame(const bslib::file::fs::NativePath& a, const bslib::file::fs::NativePath& b)
 {

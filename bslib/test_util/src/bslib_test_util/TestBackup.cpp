@@ -1,11 +1,11 @@
-#include "test_util/TestBackup.hpp"
+#include "bslib_test_util/TestBackup.hpp"
 
 #include "bslib/blob/NullBlobStore.hpp"
 #include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/unicode.hpp"
 
 namespace af {
-namespace test_util {
+namespace bslib_test_util {
 
 TestBackup::TestBackup(const boost::filesystem::path& baseDir)
 	: _baseDir(baseDir)

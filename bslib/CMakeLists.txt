@@ -72,3 +72,4 @@ target_link_libraries(
 )
 
 add_subdirectory(test)
+add_subdirectory(test_util)

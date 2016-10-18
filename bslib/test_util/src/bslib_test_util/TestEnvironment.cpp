@@ -1,9 +1,9 @@
-#include "test_util/TestEnvironment.hpp"
+#include "bslib_test_util/TestEnvironment.hpp"
 
 #include <boost/filesystem.hpp>
 
 namespace af {
-namespace test_util {
+namespace bslib_test_util {
 
 boost::filesystem::path TestEnvironment::_temporaryDirectory;
 

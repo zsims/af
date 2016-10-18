@@ -5,7 +5,7 @@
 #include <gmock/gmock.h>
 
 namespace af {
-namespace test_util {
+namespace bslib_test_util {
 namespace mocks {
 
 class MockBackup : public bslib::Backup
