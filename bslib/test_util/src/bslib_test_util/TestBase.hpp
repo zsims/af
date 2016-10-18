@@ -3,7 +3,7 @@
 #include "bslib/blob/Address.hpp"
 #include "bslib/file/fs/path.hpp"
 #include "bslib/unicode.hpp"
-#include "test_util/TestBackup.hpp"
+#include "bslib_test_util/TestBackup.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <gmock/gmock.h>
@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace af {
-namespace test_util {
+namespace bslib_test_util {
 
 class TestBase : public testing::Test
 {
@@ -39,7 +39,7 @@ protected:
 private:
 	const boost::filesystem::path _testTemporaryPath;
 protected:
-	test_util::TestBackup _testBackup;
+	TestBackup _testBackup;
 };
 
 }

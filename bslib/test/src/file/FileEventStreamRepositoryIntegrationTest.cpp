@@ -2,7 +2,7 @@
 #include "bslib/file/FileEventStreamRepository.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
-#include "test_util/TestBase.hpp"
+#include "bslib_test_util/TestBase.hpp"
 
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
@@ -15,7 +15,7 @@ namespace bslib {
 namespace file {
 namespace test {
 
-class FileEventStreamRepositoryIntegrationTest : public test_util::TestBase
+class FileEventStreamRepositoryIntegrationTest : public bslib_test_util::TestBase
 {
 protected:
 	FileEventStreamRepositoryIntegrationTest()

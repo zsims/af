@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 namespace af {
-namespace test_util {
+namespace bslib_test_util {
 
 class TestEnvironment : public testing::Environment
 {

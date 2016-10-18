@@ -1,17 +1,17 @@
-#include "test_util/TestBase.hpp"
+#include "bslib_test_util/TestBase.hpp"
 
 #include "bslib/file/fs/operations.hpp"
-#include "test_util/TestEnvironment.hpp"
+#include "bslib_test_util/TestEnvironment.hpp"
 
 #include <boost/filesystem.hpp>
 
 #include <stdexcept>
 
 namespace af {
-namespace test_util {
+namespace bslib_test_util {
 
 TestBase::TestBase()
-	: _testTemporaryPath(test_util::TestEnvironment::GetTemporaryDirectory() / boost::filesystem::unique_path())
+	: _testTemporaryPath(TestEnvironment::GetTemporaryDirectory() / boost::filesystem::unique_path())
 	, _testBackup(_testTemporaryPath)
 {
 	boost::filesystem::create_directories(_testTemporaryPath);

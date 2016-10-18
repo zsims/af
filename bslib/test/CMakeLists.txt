@@ -42,7 +42,7 @@ target_link_libraries(
     PRIVATE bslib
     PRIVATE googletest
     PRIVATE boost_program_options
-    PRIVATE test_util
+    PRIVATE bslib_test_util
 )
 
 add_custom_target(

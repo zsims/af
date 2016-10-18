@@ -1,4 +1,4 @@
-#include "test_util/TestEnvironment.hpp"
+#include "bslib_test_util/TestEnvironment.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -31,9 +31,9 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	af::test_util::TestEnvironment::SetTemporaryDirectory(tempPath);
+	af::bslib_test_util::TestEnvironment::SetTemporaryDirectory(tempPath);
 	std::cout << "Using " << tempPath << " for temporary test files" << std::endl;
-	testing::AddGlobalTestEnvironment(new af::test_util::TestEnvironment());
+	testing::AddGlobalTestEnvironment(new af::bslib_test_util::TestEnvironment());
 
 	return RUN_ALL_TESTS();
 }

@@ -2,8 +2,8 @@
 #include "bslib/file/fs/operations.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "file/test_utility/ScopedExclusiveFileAccess.hpp"
-#include "test_util/TestBase.hpp"
-#include "test_util/gtest_boost_filesystem_fix.hpp"
+#include "bslib_test_util/TestBase.hpp"
+#include "bslib_test_util/gtest_boost_filesystem_fix.hpp"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -19,7 +19,7 @@ namespace bslib {
 namespace file {
 namespace test {
 
-class FileAdderIntegrationTest : public test_util::TestBase
+class FileAdderIntegrationTest : public bslib_test_util::TestBase
 {
 protected:
 	FileAdderIntegrationTest()

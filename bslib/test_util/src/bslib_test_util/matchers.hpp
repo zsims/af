@@ -6,11 +6,11 @@
 #include <gtest/gtest.h>
 
 namespace af {
-namespace test_util {
+namespace bslib_test_util {
 
 bool AreContentsTheSame(const bslib::file::fs::NativePath& a, const bslib::file::fs::NativePath& b);
 
 }
 }
 
-MATCHER_P(HasSameFileContents, value, "") { return af::test_util::AreContentsTheSame(arg, value); }
+MATCHER_P(HasSameFileContents, value, "") { return af::bslib_test_util::AreContentsTheSame(arg, value); }

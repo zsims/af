@@ -1,4 +1,4 @@
-#include "test_util/gtest_boost_filesystem_fix.hpp"
+#include "bslib_test_util/gtest_boost_filesystem_fix.hpp"
 
 // googletest has trouble with "recursive containers" per https://github.com/google/googletest/issues/521
 namespace boost {

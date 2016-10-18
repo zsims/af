@@ -7,7 +7,7 @@
 #include <memory>
 
 namespace af {
-namespace test_util {
+namespace bslib_test_util {
 
 /**
  * Wrapper around the backup which supports getting the connection string among other useful test things
