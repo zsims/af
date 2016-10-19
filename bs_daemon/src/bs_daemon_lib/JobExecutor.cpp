@@ -68,9 +68,20 @@ void JobExecutor::Run()
 
 void JobExecutor::ExecuteJob(std::unique_ptr<Job> job)
 {
-	// Execute the job
-	auto uow = _backup.CreateUnitOfWork();
-	job->Run(*uow);
+	try
+	{
+		// Execute the job
+		auto uow = _backup.CreateUnitOfWork();
+		job->Run(*uow);
+	}
+	catch (const std::exception&)
+	{
+		// TODO: log this shiz meng
+	}
+	catch (...)
+	{
+		// TODO: As above :D
+	}
 }
 
 }

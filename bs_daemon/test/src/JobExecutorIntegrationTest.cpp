@@ -62,10 +62,40 @@ TEST_F(JobExecutorIntegrationTest, Success)
 
 	// Act
 	auto job = std::make_unique<TestJob>([&](auto& uow) -> void {
-		mutex.unlock();
 		executed = true;
+		mutex.unlock();
 	});
 	jobExecutor.Queue(std::move(job));
+
+	// Assert
+	std::unique_lock<std::timed_mutex> lock(mutex, std::defer_lock);
+	auto result = lock.try_lock_for(std::chrono::seconds(2));
+	ASSERT_TRUE(result);
+	ASSERT_TRUE(executed);
+}
+
+TEST_F(JobExecutorIntegrationTest, FailedJobsAreContained)
+{
+	// Arrange
+	af::bs_daemon::JobExecutor jobExecutor(_mockBackup);
+
+	EXPECT_CALL(_mockBackup, CreateUnitOfWork()).Times(::testing::Exactly(2));
+
+	std::timed_mutex mutex;
+	mutex.lock();
+	bool executed = false;
+
+	auto job1 = std::make_unique<TestJob>([&](auto& uow) -> void {
+		throw std::runtime_error("boom");
+	});
+	auto job2 = std::make_unique<TestJob>([&](auto& uow) -> void {
+		executed = true;
+		mutex.unlock();
+	});
+
+	// Act
+	jobExecutor.Queue(std::move(job1));
+	jobExecutor.Queue(std::move(job2));
 
 	// Assert
 	std::unique_lock<std::timed_mutex> lock(mutex, std::defer_lock);
