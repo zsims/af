@@ -1,5 +1,6 @@
 #include "bs_daemon_lib/JobExecutor.hpp"
 
+#include "bs_daemon_lib/log.hpp"
 #include "bs_daemon_lib/Job.hpp"
 
 namespace af {
@@ -74,13 +75,13 @@ void JobExecutor::ExecuteJob(std::unique_ptr<Job> job)
 		auto uow = _backup.CreateUnitOfWork();
 		job->Run(*uow);
 	}
-	catch (const std::exception&)
+	catch (const std::exception& e)
 	{
-		// TODO: log this shiz meng
+		BS_DAEMON_LOG_ERROR << "Error while executing job: " << e.what();
 	}
 	catch (...)
 	{
-		// TODO: As above :D
+		BS_DAEMON_LOG_ERROR << "Unknown error while executing job";
 	}
 }
 
