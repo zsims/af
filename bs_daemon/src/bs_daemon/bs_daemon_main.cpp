@@ -1,6 +1,8 @@
 #include "bslib/Backup.hpp"
+#include "bslib/blob/NullBlobStore.hpp"
 #include "bs_daemon_lib/log.hpp"
 #include "bs_daemon_lib/HttpServer.hpp"
+#include "bs_daemon_lib/JobExecutor.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
@@ -12,6 +14,8 @@ namespace {
 
 int Run()
 {
+	using namespace af;
+
 	const auto defaultDbPath = af::bslib::GetDefaultBackupDatabasePath();
 	if (defaultDbPath.empty())
 	{
@@ -21,10 +25,12 @@ int Run()
 	BS_DAEMON_LOG_INFO << "Using the backup database from " << defaultDbPath << std::endl;
 	boost::filesystem::create_directories(defaultDbPath.parent_path());
 
-	af::bslib::Backup backup(defaultDbPath, "CLI");
+	bslib::Backup backup(defaultDbPath, "CLI");
+	backup.AddBlobStore(std::make_unique<bslib::blob::NullBlobStore>());
 	backup.OpenOrCreate();
 
-	af::bs_daemon::HttpServer server(8080);
+	bs_daemon::JobExecutor jobExecutor(backup);
+	bs_daemon::HttpServer server(8080, jobExecutor);
 
 	std::cout << "Press any key to exit" << std::endl;
 	_getch();

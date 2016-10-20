@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bs_daemon_lib/JobExecutor.hpp"
+
 #include <boost/noncopyable.hpp>
 
 // Avoid size_t <-> int64 warnings on Windows x32
@@ -19,13 +21,14 @@ namespace bs_daemon {
 class HttpServer : public boost::noncopyable
 {
 public:
-	HttpServer(int port);
+	HttpServer(int port, JobExecutor& jobExecutor);
 	~HttpServer();
 	void Stop();
 private:
 	typedef SimpleWeb::Server<SimpleWeb::HTTP> SimpleServer;
 	void Run();
 
+	JobExecutor& _jobExecutor;
 	SimpleServer _simpleServer;
 	std::thread _serverThread;
 };
