@@ -17,6 +17,12 @@ if(MSVC)
     # C4503 - Disable decorated name length exceeded, https://msdn.microsoft.com/en-us/library/074af4b6.aspx
     add_definitions("/wd4503")
 
+    # Slim down windows.h includes by default
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
+
+    # Use the Windows 7 SDK per https://msdn.microsoft.com/en-us/library/6sehtctf.aspx
+    add_definitions(-D_WIN32_WINNT=0x0601)
+
     # Per https://github.com/google/googletest/issues/799 Google Test doesn't correctly detect C++11 support on VS2015
     # Forcing it ideal, as there's some things missing
     add_definitions(-DGTEST_LANG_CXX11)
