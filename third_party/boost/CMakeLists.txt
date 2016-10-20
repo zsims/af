@@ -1,8 +1,8 @@
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
 
 BuildCache_Get(
-    # -3 for our build config, add extra things here to control cache sharing
-    KEY "boost-1.60.0-${PLATFORM_NAME}-4"
+    # -6 for our build config, add extra things here to control cache sharing
+    KEY "boost-1.60.0-${PLATFORM_NAME}-6"
     CACHE_DIR_VAR CACHE_DIR
 )
 
@@ -32,6 +32,9 @@ ExternalBuild_Add_Step(
         --with-filesystem
         --with-program_options
         --with-regex
+        --with-log
+        --with-thread
+        --with-date_time
         --build-dir=${BUILD_DIR}
         --prefix=${CACHE_DIR}
         link=static
@@ -105,3 +108,40 @@ set_target_properties(
     IMPORTED_LOCATION_RELEASE "${LIBRARY_DIR}/libboost_regex-mt${CMAKE_STATIC_LIBRARY_SUFFIX}"
 )
 add_dependencies(boost_regex build_boost)
+
+# boost_date_time
+add_library(boost_date_time STATIC IMPORTED GLOBAL)
+set_target_properties(
+    boost_date_time
+    PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${INCLUDE_DIR}"
+    IMPORTED_LOCATION_DEBUG "${LIBRARY_DIR}/libboost_date_time-mt-gd${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    IMPORTED_LOCATION_RELEASE "${LIBRARY_DIR}/libboost_date_time-mt${CMAKE_STATIC_LIBRARY_SUFFIX}"
+)
+target_link_libraries(boost_date_time LINK_INTERFACE_LIBRARIES boost_system)
+add_dependencies(boost_date_time build_boost)
+
+# boost_thread
+add_library(boost_thread STATIC IMPORTED GLOBAL)
+set_target_properties(
+    boost_thread
+    PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${INCLUDE_DIR}"
+    IMPORTED_LOCATION_DEBUG "${LIBRARY_DIR}/libboost_thread-mt-gd${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    IMPORTED_LOCATION_RELEASE "${LIBRARY_DIR}/libboost_thread-mt${CMAKE_STATIC_LIBRARY_SUFFIX}"
+)
+target_link_libraries(boost_thread LINK_INTERFACE_LIBRARIES boost_system boost_date_time)
+add_dependencies(boost_thread build_boost)
+
+# boost_log
+# TODO: this will need to be shared if this is used in multiple modules (dlls, etc) see http://www.boost.org/doc/libs/1_60_0/libs/log/doc/html/log/installation/config.html
+add_library(boost_log STATIC IMPORTED GLOBAL)
+set_target_properties(
+    boost_log
+    PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${INCLUDE_DIR}"
+    IMPORTED_LOCATION_DEBUG "${LIBRARY_DIR}/libboost_log-mt-gd${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    IMPORTED_LOCATION_RELEASE "${LIBRARY_DIR}/libboost_log-mt${CMAKE_STATIC_LIBRARY_SUFFIX}"
+)
+target_link_libraries(boost_log LINK_INTERFACE_LIBRARIES boost_thread)
+add_dependencies(boost_log build_boost)
