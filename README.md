@@ -14,13 +14,12 @@ See [the wiki](https://github.com/zsims/af/wiki) for internal documentation.
  3. Wait for the verifies (Windows 32, Windows 64)
  4. Merge
 
-# Building
+# Building (af services, c++)
 
 You'll need:
  * CMake 3.5+
  * Windows:
   * Visual Studio 2015
-
 
 ## Configure
  * Windows: `configure-vs2015-win64.bat` or `configure-vs2015-win32.bat`
@@ -30,3 +29,15 @@ A verify will compile everything and run all tests. Test results can be found in
 under `test_results`, e.g. `build64/test_results`.
 
 To verify run: `cmake --build build64 --config Release --target ALL_VERIFY`
+
+# Building (web client)
+
+You'll need:
+ * Node
+ * Some form of JS editor (Visual Studio Code is pretty good!)
+
+## Configure
+ * From the web_client directory, run `npm init`
+
+## Start development server
+ * Run `npm start`
