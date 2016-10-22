@@ -18,7 +18,7 @@ public:
 	TestBackup(const boost::filesystem::path& baseDir);
 	void Open();
 	void Create();
-	void OpenOrCreate();
+	bslib::Backup& OpenOrCreate();
 	std::unique_ptr<bslib::sqlitepp::ScopedSqlite3Object> ConnectToDatabase() const;
 	const boost::filesystem::path& GetDirectoryStorePath() const { return _baseDir; }
 	const boost::filesystem::path& GetBackupDatabaseDbPath() const { return _backupDatabasePath; }

@@ -31,11 +31,11 @@ protected:
 	bslib::file::fs::NativePath GetUniqueExtendedTempPath() const;
 
 	/**
-	 * Creates a a file with the given content at the given path
+	 * Creates a file with the given content at the given path
 	 * \returns The blob address of the content
 	 */
-	bslib::blob::Address CreateFile(const boost::filesystem::path& path, const bslib::UTF8String& content = "");
-	bslib::blob::Address CreateFile(const bslib::file::fs::NativePath& path, const bslib::UTF8String& content = "");
+	bslib::blob::Address WriteFile(const boost::filesystem::path& path, const bslib::UTF8String& content = "");
+	bslib::blob::Address WriteFile(const bslib::file::fs::NativePath& path, const bslib::UTF8String& content = "");
 private:
 	const boost::filesystem::path _testTemporaryPath;
 protected:

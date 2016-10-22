@@ -2,6 +2,10 @@ source_group("src" REGULAR_EXPRESSION "src/bs_daemon_lib/.*")
 
 # Separate main functionality into library so we can link these into a test
 add_library(bs_daemon_lib STATIC
+    src/bs_daemon_lib/FileBackupJob.cpp
+    src/bs_daemon_lib/FileBackupJob.hpp
+    src/bs_daemon_lib/HttpServer.cpp
+    src/bs_daemon_lib/HttpServer.hpp
     src/bs_daemon_lib/log.hpp
     src/bs_daemon_lib/Job.hpp
     src/bs_daemon_lib/JobExecutor.cpp

@@ -27,11 +27,12 @@ void TestBackup::Create()
 	_backup->Create();
 }
 
-void TestBackup::OpenOrCreate()
+bslib::Backup& TestBackup::OpenOrCreate()
 {
 	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, "Testing");
 	_backup->AddBlobStore(std::make_unique<bslib::blob::DirectoryBlobStore>(_baseDir));
 	_backup->OpenOrCreate();
+	return *_backup;
 }
 
 std::unique_ptr<bslib::sqlitepp::ScopedSqlite3Object> TestBackup::ConnectToDatabase() const

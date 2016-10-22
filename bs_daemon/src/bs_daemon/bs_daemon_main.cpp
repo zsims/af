@@ -1,43 +1,61 @@
+#include "bslib/Backup.hpp"
+#include "bslib/blob/NullBlobStore.hpp"
 #include "bs_daemon_lib/log.hpp"
+#include "bs_daemon_lib/HttpServer.hpp"
+#include "bs_daemon_lib/JobExecutor.hpp"
 
+#include <boost/filesystem.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
-
-// Avoid size_t <-> int64 warnings on Windows x32
-#pragma warning( push )
-#pragma warning( disable : 4244 )
-#include <server_http.hpp>
-#pragma warning( pop )
 
 #include <iostream>
 #include <conio.h>
 
-typedef SimpleWeb::Server<SimpleWeb::HTTP> HttpServer;
+namespace {
+
+int Run()
+{
+	using namespace af;
+
+	const auto defaultDbPath = af::bslib::GetDefaultBackupDatabasePath();
+	if (defaultDbPath.empty())
+	{
+		BS_DAEMON_LOG_FATAL << "Failed to determine the location of the backup database";
+		return -1;
+	}
+	BS_DAEMON_LOG_INFO << "Using the backup database from " << defaultDbPath << std::endl;
+	boost::filesystem::create_directories(defaultDbPath.parent_path());
+
+	bslib::Backup backup(defaultDbPath, "CLI");
+	backup.AddBlobStore(std::make_unique<bslib::blob::NullBlobStore>());
+	backup.OpenOrCreate();
+
+	bs_daemon::JobExecutor jobExecutor(backup);
+	bs_daemon::HttpServer server(8080, jobExecutor);
+
+	std::cout << "Press any key to exit" << std::endl;
+	_getch();
+	std::cout << "Shutting down..." << std::endl;
+	return 0;
+}
+
+}
 
 int main(int argc, char* argv[])
 {
 	boost::log::add_common_attributes();
 
-	const int PORT = 8080;
-	HttpServer server(PORT, 1);
-
-	server.default_resource["GET"] = [&server](std::shared_ptr<HttpServer::Response> response, std::shared_ptr<HttpServer::Request> request) {
-		const std::string index("<html><head><title>AF Backup Service</title></head><body>Hi there</body></html>");
-		*response << "HTTP/1.1 200 OK\r\nContent-Length:" << index.size() << "\r\n\r\n" << index;
-	};
-
-	std::thread server_thread([&server]() {
-		BS_DAEMON_LOG_INFO << "Listening on " << server.config.address << ":" << server.config.port;
-		server.start();
-	});
-
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-
-	std::cout << "Press any key to exit" << std::endl;
-	_getch();
-	std::cout << "Shutting down..." << std::endl;
-
-	server.stop();
-	server_thread.join();
-
-	return 0;
+	try
+	{
+		return Run();
+	}
+	catch (const std::exception& e)
+	{
+		BS_DAEMON_LOG_FATAL << "Unhandled exception: " << e.what();
+		return 1;
+	}
+	catch (...)
+	{
+		BS_DAEMON_LOG_FATAL << "Unhandled exception";
+		return -1;
+	}
 }

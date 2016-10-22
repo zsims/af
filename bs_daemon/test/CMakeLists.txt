@@ -3,6 +3,7 @@ source_group("src" REGULAR_EXPRESSION "src/.*")
 add_executable(
     bs_daemon_test
     src/bs_daemon_test_main.cpp
+    src/HttpServerIntegrationTest.cpp
     src/JobExecutorIntegrationTest.cpp
 )
 
@@ -20,6 +21,7 @@ target_link_libraries(
     PRIVATE googletest
     PRIVATE boost_program_options
     PRIVATE bslib_test_util
+    PRIVATE webserver
 )
 
 add_custom_target(
