@@ -93,6 +93,23 @@ TEST_F(HttpServerIntegrationTest, Ping_Success)
 	EXPECT_EQ(expectedFancy, value.get());
 }
 
+TEST_F(HttpServerIntegrationTest, Ping_BadRequestOnInvalidJson)
+{
+	// Arrange
+	HttpClient client(_testAddress);
+	const auto rawContent = u8R"({"notvalid})";
+
+	// Act
+	auto response = client.request("POST", "/ping", rawContent);
+
+	// Assert
+	ASSERT_EQ(response->status_code, "400 Bad Request");
+	boost::property_tree::ptree pt;
+	boost::property_tree::read_json(response->content, pt);
+	auto value = pt.get_optional<std::string>("error");
+	EXPECT_TRUE(value);
+}
+
 }
 }
 }

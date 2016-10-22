@@ -12,6 +12,8 @@
 
 #include <thread>
 
+typedef SimpleWeb::Server<SimpleWeb::HTTP> SimpleServer;
+
 namespace af {
 namespace bs_daemon {
 
@@ -25,7 +27,6 @@ public:
 	~HttpServer();
 	void Stop();
 private:
-	typedef SimpleWeb::Server<SimpleWeb::HTTP> SimpleServer;
 	void Run();
 
 	JobExecutor& _jobExecutor;
