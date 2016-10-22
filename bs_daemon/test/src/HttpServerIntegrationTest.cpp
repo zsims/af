@@ -1,8 +1,6 @@
 ﻿#include "bs_daemon_lib/HttpServer.hpp"
 
 #include "bslib_test_util/TestBase.hpp"
-#include "bslib_test_util/mocks/MockBackup.hpp"
-#include "bslib_test_util/mocks/MockUnitOfWork.hpp"
 
 // Work around https://svn.boost.org/trac/boost/ticket/11599
 #pragma warning( push )
@@ -41,23 +39,20 @@ namespace af {
 namespace bs_daemon {
 namespace test {
 
-class HttpServerIntegrationTest : public ::testing::Test
+class HttpServerIntegrationTest : public bslib_test_util::TestBase
 {
 protected:
 	HttpServerIntegrationTest()
 		: _testPort(FindFreePort())
 		, _testAddress("127.0.0.1:" + std::to_string(_testPort))
-		, _jobExecutor(_mockBackup)
+		, _backup(_testBackup.OpenOrCreate())
+		, _jobExecutor(_backup)
 		, _httpServer(_testPort, _jobExecutor)
 	{
-		ON_CALL(_mockBackup, CreateUnitOfWork())
-			.WillByDefault(::testing::Invoke([]() {
-			return std::make_unique<bslib_test_util::mocks::MockUnitOfWork>();
-		}));
 	}
-	bslib_test_util::mocks::MockBackup _mockBackup;
 	const int _testPort;
 	const std::string _testAddress;
+	bslib::Backup& _backup;
 	JobExecutor _jobExecutor;
 	HttpServer _httpServer;
 };
@@ -101,6 +96,44 @@ TEST_F(HttpServerIntegrationTest, Ping_BadRequestOnInvalidJson)
 
 	// Act
 	auto response = client.request("POST", "/ping", rawContent);
+
+	// Assert
+	ASSERT_EQ(response->status_code, "400 Bad Request");
+	boost::property_tree::ptree pt;
+	boost::property_tree::read_json(response->content, pt);
+	auto value = pt.get_optional<std::string>("error");
+	EXPECT_TRUE(value);
+}
+
+TEST_F(HttpServerIntegrationTest, PostFilePath_Success)
+{
+	// Arrange
+	HttpClient client(_testAddress);
+	
+	const auto testPath = GetUniqueTempPath();
+	WriteFile(testPath);
+
+	boost::property_tree::ptree pt;
+	pt.push_back(boost::property_tree::ptree::value_type("path", testPath.string()));
+	std::stringstream ss;
+	boost::property_tree::write_json(ss, pt);
+	const auto rawContent = ss.str();
+
+	// Act
+	auto response = client.request("POST", "/file", rawContent);
+
+	// Assert
+	ASSERT_EQ(response->status_code, "202 Accepted");
+}
+
+TEST_F(HttpServerIntegrationTest, PostFilePath_BadRequestIfMissingPath)
+{
+	// Arrange
+	HttpClient client(_testAddress);
+	const auto rawContent = u8R"({"notpath":"haha"})";
+
+	// Act
+	auto response = client.request("POST", "/file", rawContent);
 
 	// Assert
 	ASSERT_EQ(response->status_code, "400 Bad Request");

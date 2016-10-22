@@ -111,7 +111,7 @@ HttpServer::HttpServer(int port, JobExecutor& jobExecutor)
 			return HttpJsonResponse(400, "Bad Request", "path is required");
 		}
 		_jobExecutor.Queue(std::make_unique<FileBackupJob>(path.get()));
-		return HttpJsonResponse(204, "No Content");
+		return HttpJsonResponse(202, "Accepted");
 	});
 
 	// Test API that takes JSON and deserializes it, then sends it back as JSON
