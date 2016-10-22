@@ -39,7 +39,7 @@ TEST_F(FileAdderIntegrationTest, Add_SuccessWithFile)
 {
 	// Arrange
 	const auto filePath = GetUniqueExtendedTempPath();
-	const auto fileAddress = CreateFile(filePath, "hello");
+	const auto fileAddress = WriteFile(filePath, "hello");
 
 	std::vector<FileEvent> emittedEvents;
 	_adder->GetEventManager().Subscribe([&](const auto& fileEvent) {
@@ -58,7 +58,7 @@ TEST_F(FileAdderIntegrationTest, Add_ConvertsForwardSlashes)
 {
 	// Arrange
 	const auto filePath = GetUniqueExtendedTempPath();
-	const auto fileAddress = CreateFile(filePath, "hello");
+	const auto fileAddress = WriteFile(filePath, "hello");
 
 	// Act
 	const auto forwardSlashFilePath = boost::replace_last_copy(filePath.ToString(), "\\", "/");
@@ -76,7 +76,7 @@ TEST_F(FileAdderIntegrationTest, Add_ResolvesFullPath)
 	const auto folderName = "folder";
 	const auto workingPath = (GetUniqueExtendedTempPath() / folderName).EnsureTrailingSlash();
 	fs::CreateDirectories(workingPath);
-	const auto fileAddress = CreateFile(workingPath / "hi.dat", "hello");
+	const auto fileAddress = WriteFile(workingPath / "hi.dat", "hello");
 	const auto sourcePath = workingPath / ".." / folderName;
 
 	// Act
@@ -94,7 +94,7 @@ TEST_F(FileAdderIntegrationTest, Add_SkipsLockedFile)
 {
 	// Arrange
 	const auto filePath = GetUniqueExtendedTempPath();
-	CreateFile(filePath, "hello");
+	WriteFile(filePath, "hello");
 
 	test_utility::ScopedExclusiveFileAccess exclusiveAccess(filePath);
 
@@ -114,11 +114,11 @@ TEST_F(FileAdderIntegrationTest, Add_RecordsAllStates)
 	fs::CreateDirectories(directoryPath);
 
 	const auto lockedFilePath = directoryPath / "locked.dat";
-	CreateFile(lockedFilePath, "hello");
+	WriteFile(lockedFilePath, "hello");
 	test_utility::ScopedExclusiveFileAccess exclusiveAccess(lockedFilePath);
 
 	const auto preExistingPath = directoryPath / "already-here.dat";
-	const auto preExistingAddress = CreateFile(preExistingPath, "heybby");
+	const auto preExistingAddress = WriteFile(preExistingPath, "heybby");
 	_adder->Add(preExistingPath.ToString());
 
 	// Act
@@ -169,7 +169,7 @@ TEST_F(FileAdderIntegrationTest, Add_SuccessWithDirectory)
 	fs::CreateDirectories(deepDirectory);
 	const auto filePath = path / "file.dat";
 	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
-	const auto fileAddress = CreateFile(filePath, "hello");
+	const auto fileAddress = WriteFile(filePath, "hello");
 
 	// Act
 	_adder->Add(path.ToString());
@@ -209,15 +209,15 @@ TEST_F(FileAdderIntegrationTest, Add_ExistingSuccessWithDirectory)
 	const auto deepFilePath = deepDirectory / "foo.dat";
 	const std::vector<uint8_t> helloBytes = { 104, 101, 108, 108, 111 };
 	const std::vector<uint8_t> hellBytes = { 104, 101, 108, 108 };
-	CreateFile(filePath, "hello");
+	WriteFile(filePath, "hello");
 	_adder->Add(path.ToString());
 	_uow->Commit();
 
 	// Act
 	auto uow2 = _testBackup.GetBackup().CreateUnitOfWork();
 	auto adder2 = uow2->CreateFileAdder();
-	const auto updatedFileAddress = CreateFile(filePath, "hell");
-	const auto deepFileAddress = CreateFile(deepFilePath, "hello");
+	const auto updatedFileAddress = WriteFile(filePath, "hell");
+	const auto deepFileAddress = WriteFile(deepFilePath, "hello");
 	adder2->Add(path.ToString());
 	uow2->Commit();
 
@@ -257,14 +257,14 @@ TEST_F(FileAdderIntegrationTest, Add_RespectsCase)
 	const auto fooPath = (path / "Foo").EnsureTrailingSlash();
 	fs::CreateDirectories(fooPath);
 	const auto samsonPath = fooPath / "samson.txt";
-	const auto fileAddress = CreateFile(samsonPath, "samson was here");
+	const auto fileAddress = WriteFile(samsonPath, "samson was here");
 	const auto samsonUpperPath = fooPath / "Samson.txt";
 
 	_adder->Add(path.ToString());
 
 	// Recreate "Samson.txt", and note this should be tracked as completely new file
 	fs::Remove(samsonPath);
-	CreateFile(samsonUpperPath, "samson was here");
+	WriteFile(samsonUpperPath, "samson was here");
 
 	// Act
 	_adder->Add(path.ToString());
@@ -294,14 +294,14 @@ TEST_F(FileAdderIntegrationTest, Add_DetectsModifications)
 	fs::CreateDirectories(barPath);
 	const auto samsonPath = fooPath / "samson.txt";
 	const auto sakoPath = barPath / "sako.txt";
-	CreateFile(samsonPath, "samson was here");
-	const auto sakoContentAddress = CreateFile(sakoPath, "sako was here");
+	WriteFile(samsonPath, "samson was here");
+	const auto sakoContentAddress = WriteFile(sakoPath, "sako was here");
 
 	_adder->Add(path.ToString());
 
 	// Recreate "samson.txt", and note this should be tracked as completely new file
 	fs::Remove(samsonPath);
-	const auto fileAddress = CreateFile(samsonPath, "samson was here with some new content");
+	const auto fileAddress = WriteFile(samsonPath, "samson was here with some new content");
 
 	// Also delete bar
 	fs::RemoveAll(barPath);
@@ -352,7 +352,7 @@ TEST_F(FileAdderIntegrationTest, Add_HandlesChangeInType)
 
 	// Recreate foo but as a file
 	fs::RemoveAll(fooDirectoryPath);
-	const auto fileAddress = CreateFile(fooFilePath, "samson was here");
+	const auto fileAddress = WriteFile(fooFilePath, "samson was here");
 
 	// Act
 	_adder->Add(path.ToString());

@@ -66,7 +66,7 @@ TEST_F(BackupIntegrationTest, AddBlobStore_Success)
 		auto uow = backup.CreateUnitOfWork();
 		auto adder = uow->CreateFileAdder();
 		file::fs::CreateDirectories(targetPath);
-		CreateFile(targetPath / "file.dat", "bruce");
+		WriteFile(targetPath / "file.dat", "bruce");
 		adder->Add(targetPath.ToString());
 	}
 

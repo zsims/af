@@ -39,8 +39,8 @@ protected:
 		// Test data
 		fs::CreateDirectories(_sampleBasePath);
 		fs::CreateDirectories(_sampleSubDirectory);
-		CreateFile(_sampleFilePath, "hey babe");
-		CreateFile(_sampleSubFilePath, "hey sub babe");
+		WriteFile(_sampleFilePath, "hey babe");
+		WriteFile(_sampleSubFilePath, "hey sub babe");
 	}
 
 	const fs::NativePath _restorePath;
@@ -68,7 +68,7 @@ TEST_F(FileRestorerIntegrationTest, Restore_ThrowsIfTargetIsFile)
 {
 	// Arrange
 	const auto restorePath = GetUniqueExtendedTempPath();
-	CreateFile(restorePath, "hello");
+	WriteFile(restorePath, "hello");
 	// Act
 	// Assert
 	ASSERT_THROW(_restorer->Restore(std::vector<FileEvent>(), restorePath.ToString()), TargetPathNotSupportedException);
@@ -162,7 +162,7 @@ TEST_F(FileRestorerIntegrationTest, Restore_SkipsExistingFiles)
 
 	const auto sampleSubFilePathRestored = _restorePath.AppendFullCopy(_sampleSubFilePath);
 	fs::CreateDirectories(sampleSubFilePathRestored.ParentPathCopy());
-	CreateFile(sampleSubFilePathRestored, "Something else");
+	WriteFile(sampleSubFilePathRestored, "Something else");
 
 	// Act
 	_restorer->Restore(_adder->GetEmittedEvents(), _restorePath.ToString());
@@ -199,7 +199,7 @@ TEST_F(FileRestorerIntegrationTest, Restore_HandlesFileDirectoryClash)
 	// Create a file in the spot of one of the directories being restored
 	const auto sampleSubDirectoryRestored = _restorePath.AppendFullCopy(_sampleSubDirectory);
 	fs::CreateDirectories(sampleSubDirectoryRestored.ParentPathCopy());
-	CreateFile(sampleSubDirectoryRestored, "Uhoh");
+	WriteFile(sampleSubDirectoryRestored, "Uhoh");
 
 	// Act
 	_restorer->Restore(_adder->GetEmittedEvents(), _restorePath.ToString());

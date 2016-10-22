@@ -37,12 +37,12 @@ bslib::file::fs::NativePath TestBase::GetUniqueExtendedTempPath() const
 	return result / boost::filesystem::unique_path().string();
 }
 
-bslib::blob::Address TestBase::CreateFile(const boost::filesystem::path& path, const bslib::UTF8String& content)
+bslib::blob::Address TestBase::WriteFile(const boost::filesystem::path& path, const bslib::UTF8String& content)
 {
-	return CreateFile(bslib::file::fs::NativeFromBoostPath(path), content);
+	return WriteFile(bslib::file::fs::NativeFromBoostPath(path), content);
 }
 
-bslib::blob::Address TestBase::CreateFile(const bslib::file::fs::NativePath& path, const bslib::UTF8String& content)
+bslib::blob::Address TestBase::WriteFile(const bslib::file::fs::NativePath& path, const bslib::UTF8String& content)
 {
 	const std::vector<uint8_t> binaryContent(content.begin(), content.end());
 	auto f = bslib::file::fs::OpenFileWrite(path);

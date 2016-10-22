@@ -33,7 +33,7 @@ TEST_F(BackupDatabaseIntegrationTest, CreateSuccess)
 TEST_F(BackupDatabaseIntegrationTest, CreateThrowsIfExists)
 {
 	// Arrange
-	CreateFile(_testBackup.GetBackupDatabaseDbPath());
+	WriteFile(_testBackup.GetBackupDatabaseDbPath());
 
 	// Act
 	// Assert
