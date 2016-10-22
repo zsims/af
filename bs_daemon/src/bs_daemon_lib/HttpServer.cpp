@@ -55,13 +55,21 @@ typedef std::function<HttpJsonResponse(const HttpJsonRequest&)> JsonRequestHandl
 
 void SendJsonResponse(const HttpJsonResponse& jsonResponse, std::shared_ptr<SimpleServer::Response> response)
 {
-	std::stringstream ss;
-	boost::property_tree::write_json(ss, jsonResponse.content);
-	const auto& content = ss.str();
-	*response << "HTTP/1.1 " << jsonResponse.statusCode << " " << jsonResponse.statusDescription << "\r\n" <<
-		"Content-Length: " << content.length() << "\r\n" <<
-		"Content-Type: application/json; charset=utf-8\r\n\r\n" <<
-		content;
+	std::string content;
+	if (!jsonResponse.content.empty())
+	{
+		std::stringstream ss;
+		boost::property_tree::write_json(ss, jsonResponse.content);
+		content = ss.str();
+	}
+	*response << "HTTP/1.1 " << jsonResponse.statusCode << " " << jsonResponse.statusDescription << "\r\n";
+	if (!content.empty())
+	{
+		*response << "Content-Length: " << content.length() - 1 << "\r\n";
+		*response << "Content-Type: application/json; charset=utf-8\r\n";
+	}
+	*response << "\r\n";
+	*response << content;
 }
 
 /**
@@ -99,6 +107,7 @@ HttpServer::HttpServer(int port, JobExecutor& jobExecutor)
 	, _serverThread(&HttpServer::Run, this)
 {
 	_simpleServer.config.address = "127.0.0.1";
+	_simpleServer.config.reuse_address = true;
 
 	_simpleServer.default_resource["GET"] = [&](std::shared_ptr<SimpleServer::Response> response, std::shared_ptr<SimpleServer::Request> request) {
 		*response << "HTTP/1.1 404 Not Found\r\n\r\n";
