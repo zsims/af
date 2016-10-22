@@ -25,8 +25,8 @@ class HttpServer : public boost::noncopyable
 public:
 	HttpServer(int port, JobExecutor& jobExecutor);
 	~HttpServer();
-	void Stop();
 private:
+	void Stop();
 	void Run();
 
 	JobExecutor& _jobExecutor;

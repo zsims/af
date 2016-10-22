@@ -104,7 +104,6 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 HttpServer::HttpServer(int port, JobExecutor& jobExecutor)
 	: _jobExecutor(jobExecutor)
 	, _simpleServer(port, /* number of threads = */ 1)
-	, _serverThread(&HttpServer::Run, this)
 {
 	_simpleServer.config.address = "127.0.0.1";
 	_simpleServer.config.reuse_address = true;
@@ -127,6 +126,9 @@ HttpServer::HttpServer(int port, JobExecutor& jobExecutor)
 	_simpleServer.resource["^/ping$"]["POST"] = JsonHandler([](const HttpJsonRequest& request) {
 		return HttpJsonResponse(200, "OK", request.content);
 	});
+
+	// Star the server in a background thread, as it blocks while it accepts connections
+	_serverThread = std::thread(&HttpServer::Run, this);
 }
 
 HttpServer::~HttpServer()
