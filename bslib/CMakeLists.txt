@@ -46,6 +46,7 @@ add_library(
     src/bslib/file/fs/operations.hpp
     src/bslib/file/fs/path.cpp
     src/bslib/file/fs/WindowsPath.cpp
+    src/bslib/ObjectPool.hpp
     src/bslib/sqlitepp/exceptions.hpp
     src/bslib/sqlitepp/handles.hpp
     src/bslib/sqlitepp/ScopedStatementReset.hpp
