@@ -36,6 +36,7 @@ add_library(
     src/bslib/BackupDatabase.cpp
     src/bslib/BackupDatabaseUnitOfWork.cpp
     src/bslib/BackupDatabaseUnitOfWork.hpp
+    src/bslib/log.hpp
     src/bslib/file/FileAdder.cpp
     src/bslib/file/FileEventStreamRepository.cpp
     src/bslib/file/FileEventStreamRepository.hpp
@@ -45,6 +46,7 @@ add_library(
     src/bslib/file/fs/operations.hpp
     src/bslib/file/fs/path.cpp
     src/bslib/file/fs/WindowsPath.cpp
+    src/bslib/ObjectPool.hpp
     src/bslib/sqlitepp/exceptions.hpp
     src/bslib/sqlitepp/handles.hpp
     src/bslib/sqlitepp/ScopedStatementReset.hpp
@@ -67,6 +69,7 @@ target_include_directories(
 target_link_libraries(
     bslib
     PRIVATE boost_filesystem
+    PUBLIC boost_log
     PUBLIC sqlite
     PUBLIC shlwapi.lib
 )
