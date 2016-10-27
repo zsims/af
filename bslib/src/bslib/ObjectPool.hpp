@@ -34,6 +34,8 @@ public:
 		ObjectPool& _owner;
 	};
 
+	typedef std::unique_ptr<T, ReturnToPoolDeleter> PointerType;
+
 	ObjectPool(unsigned capacity, std::function<std::unique_ptr<T, D>()> createFn)
 		: _capacity(capacity)
 		, _size(0)

@@ -5,11 +5,10 @@
 namespace af {
 namespace bslib {
 
-BackupDatabaseUnitOfWork::BackupDatabaseUnitOfWork(const sqlitepp::ScopedSqlite3Object& connection, blob::BlobStore& blobStore)
-	: _transaction(connection)
+BackupDatabaseUnitOfWork::BackupDatabaseUnitOfWork(PooledDatabaseConnection connection, blob::BlobStore& blobStore)
+	: _connection(std::move(connection))
+	, _transaction(_connection->GetSqlConnection())
 	, _blobStore(blobStore)
-	, _blobInfoRepository(connection)
-	, _fileEventStreamRepository(connection)
 {
 }
 
@@ -20,17 +19,17 @@ void BackupDatabaseUnitOfWork::Commit()
 
 std::unique_ptr<file::FileAdder> BackupDatabaseUnitOfWork::CreateFileAdder()
 {
-	return std::make_unique<file::FileAdder>(_blobStore, _blobInfoRepository, _fileEventStreamRepository);
+	return std::make_unique<file::FileAdder>(_blobStore, _connection->GetBlobInfoRepository(), _connection->GetFileEventStreamRepository());
 }
 
 std::unique_ptr<file::FileRestorer> BackupDatabaseUnitOfWork::CreateFileRestorer()
 {
-	return std::make_unique<file::FileRestorer>(_blobStore, _blobInfoRepository);
+	return std::make_unique<file::FileRestorer>(_blobStore, _connection->GetBlobInfoRepository());
 }
 
 std::unique_ptr<file::FileFinder> BackupDatabaseUnitOfWork::CreateFileFinder()
 {
-	return std::make_unique<file::FileFinder>(_fileEventStreamRepository);
+	return std::make_unique<file::FileFinder>(_connection->GetFileEventStreamRepository());
 }
 
 std::vector<uint8_t> BackupDatabaseUnitOfWork::GetBlob(const blob::Address& address) const
