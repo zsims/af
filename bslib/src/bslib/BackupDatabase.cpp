@@ -12,12 +12,21 @@ namespace bslib {
 
 BackupDatabase::BackupDatabase(const boost::filesystem::path& databasePath)
 	: _databasePath(databasePath)
+	, _connections(3, [&]() { return Connect(); })
 {
 }
 
 BackupDatabase::~BackupDatabase()
 {
 	// Needed to delete incomplete types
+}
+
+std::unique_ptr<BackupDatabaseConnection> BackupDatabase::Connect()
+{
+	auto connection = std::make_unique<sqlitepp::ScopedSqlite3Object>();
+	sqlitepp::open_database_or_throw(_databasePath.string().c_str(), *connection, SQLITE_OPEN_READWRITE);
+	sqlitepp::exec_or_throw(*connection, "PRAGMA case_sensitive_like = true;");
+	return std::make_unique<BackupDatabaseConnection>(std::move(connection));
 }
 
 void BackupDatabase::Open()
@@ -27,10 +36,7 @@ void BackupDatabase::Open()
 		throw DatabaseNotFoundException(_databasePath.string());
 	}
 
-	// Share the connection between the repos, note that the repos should be destroyed before this connection is
-	_connection.reset(new sqlitepp::ScopedSqlite3Object());
-	sqlitepp::open_database_or_throw(_databasePath.string().c_str(), *_connection, SQLITE_OPEN_READWRITE);
-	sqlitepp::exec_or_throw(*_connection, "PRAGMA case_sensitive_like = true;");
+	_connections.AddOne();
 }
 
 void BackupDatabase::Create()
@@ -87,7 +93,8 @@ void BackupDatabase::OpenOrCreate()
 
 std::unique_ptr<UnitOfWork> BackupDatabase::CreateUnitOfWork(blob::BlobStore& blobStore)
 {
-	return std::make_unique<BackupDatabaseUnitOfWork>(*_connection, blobStore);
+	auto pooledConnection = _connections.Acquire();
+	return std::make_unique<BackupDatabaseUnitOfWork>(std::move(pooledConnection), blobStore);
 }
 
 }

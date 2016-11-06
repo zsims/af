@@ -73,7 +73,7 @@ TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkCommit)
 	}
 }
 
-TEST_F(BackupDatabaseIntegrationTest, CreateUnitOfWorkTwiceFails)
+TEST_F(BackupDatabaseIntegrationTest, CreateUnitOfWork_TwiceSuccess)
 {
 	// Arrange
 	_testBackup.Create();
@@ -81,10 +81,9 @@ TEST_F(BackupDatabaseIntegrationTest, CreateUnitOfWorkTwiceFails)
 
 	// Act
 	// Assert
-	// No support for multiple connections yet, so this isn't possible
 	blob::NullBlobStore store;
 	auto uow1 = backup.CreateUnitOfWork(store);
-	EXPECT_THROW(backup.CreateUnitOfWork(store), std::runtime_error);
+	EXPECT_NO_THROW(backup.CreateUnitOfWork(store));
 }
 
 TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkImplicitRollback)

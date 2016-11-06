@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bslib/BackupDatabaseConnection.hpp"
+#include "bslib/ObjectPool.hpp"
 #include "bslib/UnitOfWork.hpp"
 
 #include <boost/filesystem/path.hpp>
@@ -53,7 +55,10 @@ public:
 	 */
 	void OpenOrCreate();
 private:
+	std::unique_ptr<BackupDatabaseConnection> Connect();
+
 	const boost::filesystem::path _databasePath;
+	ObjectPool<BackupDatabaseConnection> _connections;
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
 };
 

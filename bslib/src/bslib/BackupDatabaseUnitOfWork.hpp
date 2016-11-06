@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bslib/BackupDatabaseConnection.hpp"
 #include "bslib/blob/Address.hpp"
 #include "bslib/blob/BlobInfo.hpp"
 #include "bslib/blob/BlobStore.hpp"
@@ -17,7 +18,7 @@ namespace bslib {
 class BackupDatabaseUnitOfWork : public UnitOfWork
 {
 public:
-	BackupDatabaseUnitOfWork(const sqlitepp::ScopedSqlite3Object& connection, blob::BlobStore& blobStore);
+	BackupDatabaseUnitOfWork(PooledDatabaseConnection connection, blob::BlobStore& blobStore);
 
 	void Commit() override;
 
@@ -26,10 +27,9 @@ public:
 	std::unique_ptr<file::FileFinder> CreateFileFinder() override;
 	std::vector<uint8_t> GetBlob(const blob::Address& address) const override;
 private:
+	PooledDatabaseConnection _connection;
 	sqlitepp::ScopedTransaction _transaction;
 	blob::BlobStore& _blobStore;
-	blob::BlobInfoRepository _blobInfoRepository;
-	file::FileEventStreamRepository _fileEventStreamRepository;
 };
 
 
