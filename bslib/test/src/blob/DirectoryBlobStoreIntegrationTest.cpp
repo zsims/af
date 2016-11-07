@@ -38,6 +38,39 @@ TEST_F(DirectoryBlobStoreIntegrationTest, SaveLoad)
 	EXPECT_EQ(content, actualBlobContent);
 }
 
+TEST_F(DirectoryBlobStoreIntegrationTest, CreateNamedBlob_Success)
+{
+	// Arrange
+	const auto path = GetUniqueTempPath();
+	boost::filesystem::create_directories(path);
+	DirectoryBlobStore store(path);
+	const auto sourcePath = GetUniqueTempPath();
+	WriteFile(sourcePath, "hi");
+
+	// Act
+	store.CreateNamedBlob("backup.db", sourcePath);
+
+	// Assert
+	EXPECT_TRUE(boost::filesystem::exists(path / "backup.db"));
+}
+
+TEST_F(DirectoryBlobStoreIntegrationTest, CreateNamedBlob_OverwriteSuccess)
+{
+	// Arrange
+	const auto path = GetUniqueTempPath();
+	boost::filesystem::create_directories(path);
+	DirectoryBlobStore store(path);
+	const auto sourcePath = GetUniqueTempPath();
+	WriteFile(sourcePath, "hi");
+	store.CreateNamedBlob("backup.db", sourcePath);
+
+	// Act
+	EXPECT_NO_THROW(store.CreateNamedBlob("backup.db", sourcePath));
+
+	// Assert
+	EXPECT_TRUE(boost::filesystem::exists(path / "backup.db"));
+}
+
 TEST_F(DirectoryBlobStoreIntegrationTest, GetBlobThrowsIfNotExist)
 {
 	// Arrange
