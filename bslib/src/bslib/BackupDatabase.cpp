@@ -97,6 +97,45 @@ std::unique_ptr<UnitOfWork> BackupDatabase::CreateUnitOfWork(blob::BlobStore& bl
 	return std::make_unique<BackupDatabaseUnitOfWork>(std::move(pooledConnection), blobStore);
 }
 
+void BackupDatabase::SaveAs(const boost::filesystem::path& databasePath)
+{
+	if (boost::filesystem::exists(databasePath))
+	{
+		throw DatabaseAlreadyExistsException(databasePath.string());
+	}
+
+	auto destinationConnection = std::make_unique<sqlitepp::ScopedSqlite3Object>();
+	sqlitepp::open_database_or_throw(databasePath.string().c_str(), *destinationConnection, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+
+	auto pooledConnection = _connections.Acquire();
+	const auto& sourceConnection = pooledConnection->GetSqlConnection();
+
+	auto backup = sqlite3_backup_init(*destinationConnection, "main", sourceConnection, "main");
+	if (!backup)
+	{
+		throw InitializeBackupFailedException(sqlite3_errcode(*destinationConnection));
+	}
+	sqlitepp::ScopedBackup scopedBackup(backup);
+
+	int result;
+	do {
+		// Per https://www.sqlite.org/c3ref/backup_finish.html this returns SQLITE_OK if there's more pages to copy
+		// And per https://www.sqlite.org/backup.html BUSY and LOCKED should be handled gracefully
+		// This assumes we'll eventually be able to complete the copy
+		result = sqlite3_backup_step(scopedBackup, 5);
+		if (result == SQLITE_OK || result == SQLITE_BUSY || result == SQLITE_LOCKED)
+		{
+			// Sleep to release any mutexes (muticies? mutexeses? mutsex?), as recommended on https://www.sqlite.org/backup.html
+			sqlite3_sleep(250);
+		}
+	} while (result == SQLITE_OK || result == SQLITE_BUSY || result == SQLITE_LOCKED);
+
+	if (result != SQLITE_DONE)
+	{
+		throw BackupStepFailedException(result);
+	}
+}
+
 }
 }
 

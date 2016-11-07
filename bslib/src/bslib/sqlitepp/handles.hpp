@@ -41,6 +41,16 @@ public:
 };
 
 /**
+ * Scoped backup object as returned by sqlite3_backup_init
+ */
+class ScopedBackup : public ScopedHandleBase<sqlite3_backup*>
+{
+public:
+	explicit ScopedBackup(sqlite3_backup* handle) : ScopedHandleBase(handle) { }
+	~ScopedBackup() override { sqlite3_backup_finish(_handle); }
+};
+
+/**
  * Scoped statement as allocated by sqlite3_prepare
  */
 class ScopedStatement : public ScopedHandleBase<sqlite3_stmt*>

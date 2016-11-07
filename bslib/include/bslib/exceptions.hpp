@@ -41,5 +41,14 @@ public:
 	}
 };
 
+class SaveDatabaseAsFailedException : public std::runtime_error
+{
+public:
+	explicit SaveDatabaseAsFailedException(const std::string& path)
+		: std::runtime_error("Database not found at " + path)
+	{
+	}
+};
+
 }
 }
