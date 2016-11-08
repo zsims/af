@@ -12,6 +12,7 @@ add_library(
     include/bslib/Backup.hpp
     include/bslib/blob/Address.hpp
     include/bslib/blob/BlobStore.hpp
+    include/bslib/blob/BlobStoreManager.hpp
     include/bslib/blob/DirectoryBlobStore.hpp
     include/bslib/blob/NullBlobStore.hpp
     include/bslib/EventManager.hpp
@@ -32,6 +33,7 @@ add_library(
     src/bslib/blob/BlobInfo.hpp
     src/bslib/blob/BlobInfoRepository.cpp
     src/bslib/blob/BlobInfoRepository.hpp
+    src/bslib/blob/BlobStoreManager.cpp
     src/bslib/blob/DirectoryBlobStore.cpp
     src/bslib/blob/exceptions.hpp
     src/bslib/BackupDatabase.cpp

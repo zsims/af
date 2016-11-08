@@ -17,9 +17,12 @@ class DirectoryBlobStore : public BlobStore
 {
 public:
 	explicit DirectoryBlobStore(const boost::filesystem::path& rootPath);
+	explicit DirectoryBlobStore(const boost::property_tree::ptree& settings);
+	UTF8String GetTypeString() const override { return "directory"; }
 	void CreateBlob(const Address& address, const std::vector<uint8_t>& content) override;
 	void CreateNamedBlob(const UTF8String& name, const boost::filesystem::path& sourcePath) override;
 	std::vector<uint8_t> GetBlob(const Address& address) const override;
+	void SaveSettings(boost::property_tree::ptree& ptree) const override;
 private:
 	const boost::filesystem::path _rootPath;
 };

@@ -20,6 +20,11 @@ DirectoryBlobStore::DirectoryBlobStore(const boost::filesystem::path& rootPath)
 {
 }
 
+DirectoryBlobStore::DirectoryBlobStore(const boost::property_tree::ptree& settings)
+	: _rootPath(settings.get<std::string>("path"))
+{
+}
+
 void DirectoryBlobStore::CreateBlob(const Address& address, const std::vector<uint8_t>& content)
 {
 	const auto stringAddress = address.ToString();
@@ -60,6 +65,11 @@ std::vector<uint8_t> DirectoryBlobStore::GetBlob(const Address& address) const
 	}
 
 	return result;
+}
+
+void DirectoryBlobStore::SaveSettings(boost::property_tree::ptree& ptree) const
+{
+	ptree.put("path", _rootPath.string());
 }
 
 }
