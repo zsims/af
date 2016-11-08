@@ -29,6 +29,7 @@ public:
 	MOCK_METHOD0(Open, void());
 	MOCK_METHOD0(Create, void());
 	MOCK_METHOD0(OpenOrCreate, void());
+	MOCK_METHOD0(SaveDatabaseCopy, void());
 	MOCK_METHOD0(GetBackupDatabase, bslib::BackupDatabase&());
 };
 

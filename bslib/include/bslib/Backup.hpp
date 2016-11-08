@@ -65,6 +65,12 @@ public:
 	 */
 	virtual void OpenOrCreate();
 
+	/**
+	 * Ensures a copy of the database is saved to the current blob stores.
+	 * This is safe to call while the backup is being used.
+	 */
+	virtual void SaveDatabaseCopy();
+
 	// Useful for testing, but not intenteded for public use
 	virtual BackupDatabase& GetBackupDatabase() { return *_backupDatabase; }
 private:

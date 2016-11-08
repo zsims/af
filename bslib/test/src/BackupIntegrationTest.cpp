@@ -74,6 +74,18 @@ TEST_F(BackupIntegrationTest, AddBlobStore_Success)
 	// See above EXPECT_CALL
 }
 
+TEST_F(BackupIntegrationTest, SaveDatabaseCopy_SavesToBlobStore)
+{
+	// Arrange
+	_testBackup.OpenOrCreate();
+	const auto expectedPath = _testBackup.GetDirectoryStorePath() / (_testBackup.GetName() + ".db");
+
+	// Act
+	_testBackup.GetBackup().SaveDatabaseCopy();
+
+	// Assert
+}
+
 TEST_F(BackupIntegrationTest, GetDefaultBackupDatabasePath_Success)
 {
 	// Arrange

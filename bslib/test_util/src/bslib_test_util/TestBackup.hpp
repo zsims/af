@@ -25,7 +25,9 @@ public:
 	bslib::BackupDatabase& GetBackupDatabase();
 	bslib::Backup& GetBackup();
 	void Close();
+	const bslib::UTF8String& GetName() const { return _name; }
 private:
+	const bslib::UTF8String _name;
 	boost::filesystem::path _baseDir;
 	boost::filesystem::path _backupDatabasePath;
 	std::unique_ptr<bslib::Backup> _backup;

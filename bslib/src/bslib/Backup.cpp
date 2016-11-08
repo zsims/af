@@ -68,6 +68,15 @@ void Backup::AddBlobStore(std::unique_ptr<blob::BlobStore> blobStore)
 	_blobStore = std::move(blobStore);
 }
 
+void Backup::SaveDatabaseCopy()
+{
+	const auto tempPath = boost::filesystem::unique_path();
+	_backupDatabase->SaveAs(tempPath);
+	_blobStore->CreateNamedBlob(_name + ".db", tempPath);
+	boost::system::error_code ec;
+	boost::filesystem::remove(tempPath, ec);
+}
+
 }
 }
 
