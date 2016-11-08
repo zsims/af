@@ -10,26 +10,27 @@ namespace bslib_test_util {
 TestBackup::TestBackup(const boost::filesystem::path& baseDir)
 	: _baseDir(baseDir)
 	, _backupDatabasePath(baseDir / "backup.db")
+	, _name("test")
 {
 }
 
 void TestBackup::Open()
 {
-	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, "Testing");
+	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, _name);
 	_backup->AddBlobStore(std::make_unique<bslib::blob::DirectoryBlobStore>(_baseDir));
 	_backup->Open();
 }
 
 void TestBackup::Create()
 {
-	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, "Testing");
+	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, _name);
 	_backup->AddBlobStore(std::make_unique<bslib::blob::DirectoryBlobStore>(_baseDir));
 	_backup->Create();
 }
 
 bslib::Backup& TestBackup::OpenOrCreate()
 {
-	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, "Testing");
+	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, _name);
 	_backup->AddBlobStore(std::make_unique<bslib::blob::DirectoryBlobStore>(_baseDir));
 	_backup->OpenOrCreate();
 	return *_backup;

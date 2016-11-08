@@ -4,7 +4,7 @@
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/blob/exceptions.hpp"
 
-#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
 
 #include <algorithm>
 #include <fstream>
@@ -28,6 +28,16 @@ void DirectoryBlobStore::CreateBlob(const Address& address, const std::vector<ui
 	const auto blobPath = _rootPath / stringAddress;
 	std::ofstream f(blobPath.string(), std::ios::out | std::ofstream::binary);
 	std::copy(content.begin(), content.end(), std::ostreambuf_iterator<char>(f));
+}
+
+void DirectoryBlobStore::CreateNamedBlob(const UTF8String& name, const boost::filesystem::path& sourcePath)
+{
+	const auto blobPath = _rootPath / boost::filesystem::path(UTF8ToWideString(name));
+	if (boost::filesystem::exists(blobPath))
+	{
+		boost::filesystem::remove(blobPath);
+	}
+	boost::filesystem::copy_file(sourcePath, blobPath);
 }
 
 std::vector<uint8_t> DirectoryBlobStore::GetBlob(const Address& address) const

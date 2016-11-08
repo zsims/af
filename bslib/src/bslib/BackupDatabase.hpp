@@ -54,6 +54,13 @@ public:
 	 * \throws CreateDatabaseFailedException Couldn't create the database at the given path
 	 */
 	void OpenOrCreate();
+
+	/**
+	 * Saves a copy of the database to the given path.
+	 * \remarks This is safe to call while the database is being used, any uncommitted work will not be included
+	 * \throws DatabaseAlreadyExistsException A database (or path) already exists at the given path
+	 */
+	void SaveAs(const boost::filesystem::path& databasePath);
 private:
 	std::unique_ptr<BackupDatabaseConnection> Connect();
 

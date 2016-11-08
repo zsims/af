@@ -130,6 +130,73 @@ TEST_F(BackupDatabaseIntegrationTest, OpenOrCreateNew)
 	ASSERT_NO_THROW(_testBackup.OpenOrCreate());
 }
 
+TEST_F(BackupDatabaseIntegrationTest, SaveAs_Success)
+{
+	// Arrange
+	const auto target = GetUniqueTempPath();
+	_testBackup.OpenOrCreate();
+
+	{
+		const auto uow = _testBackup.GetBackup().CreateUnitOfWork();
+		const auto adder = uow->CreateFileAdder();
+		const auto testFile = GetUniqueExtendedTempPath();
+		WriteFile(testFile, "hi");
+		adder->Add(testFile.ToString());
+		uow->Commit();
+	}
+
+	// Act
+	_testBackup.GetBackupDatabase().SaveAs(target);
+
+	// Assert
+	ASSERT_TRUE(boost::filesystem::exists(target));
+	BackupDatabase copy(target);
+	ASSERT_NO_THROW(copy.Open());
+	blob::NullBlobStore nullBlobStore;
+	const auto uowCopy = copy.CreateUnitOfWork(nullBlobStore);
+	const auto finder = uowCopy->CreateFileFinder();
+	const auto allEvents = finder->GetAllEvents();
+	EXPECT_EQ(1, allEvents.size());
+}
+
+TEST_F(BackupDatabaseIntegrationTest, SaveAs_ExcludesUncommittedWork)
+{
+	// Arrange
+	const auto target = GetUniqueTempPath();
+	_testBackup.OpenOrCreate();
+
+	const auto uow = _testBackup.GetBackup().CreateUnitOfWork();
+	const auto adder = uow->CreateFileAdder();
+	const auto testFile = GetUniqueExtendedTempPath();
+	WriteFile(testFile, "hi");
+	adder->Add(testFile.ToString());
+
+	// Act
+	_testBackup.GetBackupDatabase().SaveAs(target);
+
+	// Assert
+	ASSERT_TRUE(boost::filesystem::exists(target));
+	BackupDatabase copy(target);
+	copy.Open();
+	blob::NullBlobStore nullBlobStore;
+	const auto uowCopy = copy.CreateUnitOfWork(nullBlobStore);
+	const auto finder = uowCopy->CreateFileFinder();
+	const auto allEvents = finder->GetAllEvents();
+	EXPECT_EQ(0, allEvents.size());
+}
+
+TEST_F(BackupDatabaseIntegrationTest, SaveAs_ThrowsIfExists)
+{
+	// Arrange
+	const auto target = GetUniqueTempPath();
+	_testBackup.OpenOrCreate();
+	WriteFile(target);
+
+	// Act
+	// Assert
+	ASSERT_THROW(_testBackup.GetBackupDatabase().SaveAs(target), DatabaseAlreadyExistsException);
+}
+
 }
 }
 }

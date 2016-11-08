@@ -76,7 +76,25 @@ class BindParameterFailedException : public std::runtime_error
 {
 public:
 	BindParameterFailedException(const std::string& name, int sqliteError)
-		: std::runtime_error("Failed to bind paramter " + name + ". SQLite returned " + std::to_string(sqliteError))
+		: std::runtime_error("Failed to bind parameter " + name + ". SQLite returned " + std::to_string(sqliteError))
+	{
+	}
+};
+
+class InitializeBackupFailedException : public std::runtime_error
+{
+public:
+	explicit InitializeBackupFailedException(int sqliteError)
+		: std::runtime_error("Failed initialize backup as part of SQLite online backup. SQLite returned " + std::to_string(sqliteError))
+	{
+	}
+};
+
+class BackupStepFailedException : public std::runtime_error
+{
+public:
+	explicit BackupStepFailedException(int sqliteError)
+		: std::runtime_error("Failed transfer data between two databases as part of SQLite online backup. SQLite returned " + std::to_string(sqliteError))
 	{
 	}
 };
