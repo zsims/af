@@ -1,4 +1,5 @@
 #include <bslib/Backup.hpp>
+#include <bslib/default_locations.hpp>
 #include <bslib/exceptions.hpp>
 #include <bslib/file/FileFinder.hpp>
 #include <bslib/file/FileRestorer.hpp>

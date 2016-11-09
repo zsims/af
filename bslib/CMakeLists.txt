@@ -15,6 +15,7 @@ add_library(
     include/bslib/blob/BlobStoreManager.hpp
     include/bslib/blob/DirectoryBlobStore.hpp
     include/bslib/blob/NullBlobStore.hpp
+    include/bslib/default_locations.hpp
     include/bslib/EventManager.hpp
     include/bslib/file/exceptions.hpp
     include/bslib/file/FileAdder.hpp
@@ -40,6 +41,7 @@ add_library(
     src/bslib/BackupDatabaseConnection.hpp
     src/bslib/BackupDatabaseUnitOfWork.cpp
     src/bslib/BackupDatabaseUnitOfWork.hpp
+    src/bslib/default_locations.cpp
     src/bslib/log.hpp
     src/bslib/file/FileAdder.cpp
     src/bslib/file/FileEventStreamRepository.cpp

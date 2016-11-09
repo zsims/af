@@ -1,4 +1,5 @@
 #include <bslib/Backup.hpp>
+#include <bslib/default_locations.hpp>
 #include <bslib/exceptions.hpp>
 #include <bslib/file/FileAdder.hpp>
 #include <bslib/file/exceptions.hpp>

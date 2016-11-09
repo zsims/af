@@ -1,5 +1,6 @@
 #include "bslib/Backup.hpp"
 #include "bslib/blob/NullBlobStore.hpp"
+#include "bslib/default_locations.hpp"
 #include "bs_daemon_lib/log.hpp"
 #include "bs_daemon_lib/HttpServer.hpp"
 #include "bs_daemon_lib/JobExecutor.hpp"

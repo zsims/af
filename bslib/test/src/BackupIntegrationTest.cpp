@@ -86,15 +86,6 @@ TEST_F(BackupIntegrationTest, SaveDatabaseCopy_SavesToBlobStore)
 	// Assert
 }
 
-TEST_F(BackupIntegrationTest, GetDefaultBackupDatabasePath_Success)
-{
-	// Arrange
-	// Act
-	const auto path = GetDefaultBackupDatabasePath();
-	// Assert
-	EXPECT_FALSE(path.empty());
-}
-
 }
 }
 }

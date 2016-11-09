@@ -7,27 +7,10 @@
 
 #include <boost/filesystem.hpp>
 
-#ifdef WIN32
-#include <shlobj.h>
-#include <shlwapi.h>
-#endif
-
 #include <memory>
 
 namespace af {
 namespace bslib {
-
-boost::filesystem::path GetDefaultBackupDatabasePath()
-{
-	PWSTR buffer = nullptr;
-	const auto result = SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &buffer);
-	const std::unique_ptr<WCHAR, std::function<void(PWSTR)>> autoBuffer(buffer, [](PWSTR value) { CoTaskMemFree(value); });
-	if (result != S_OK)
-	{
-		return boost::filesystem::path();
-	}
-	return boost::filesystem::path(autoBuffer.get()) / "af" / "backup.db";
-}
 
 Backup::Backup(const boost::filesystem::path& databasePath, const UTF8String& name)
 	: _databasePath(databasePath)

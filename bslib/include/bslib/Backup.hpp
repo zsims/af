@@ -18,13 +18,6 @@ class BlobStore;
 class BackupDatabase;
 
 /**
- * Determines where the default backup database lives.
- * \remarks The path may not exist
- * \returns The full path to the database path, otherwise an empty path if the default path cannot be determined
- */
-boost::filesystem::path GetDefaultBackupDatabasePath();
-
-/**
  * Provides management of backup metadata and associated blob stores
  */
 class Backup
