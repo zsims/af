@@ -4,6 +4,7 @@
 
 #include <boost/property_tree/xml_parser.hpp>
 
+#include <algorithm>
 #include <memory>
 
 namespace af {
@@ -45,6 +46,14 @@ BlobStore& BlobStoreManager::AddBlobStore(std::unique_ptr<BlobStore> store)
 {
 	_stores.push_back(std::move(store));
 	return *_stores.back();
+}
+
+void BlobStoreManager::RemoveById(const Uuid& id)
+{
+	auto newEnd = std::remove_if(_stores.begin(), _stores.end(), [&](const auto& s) {
+		return s->GetId() == id;
+	});
+	_stores.erase(newEnd, _stores.end());
 }
 
 }

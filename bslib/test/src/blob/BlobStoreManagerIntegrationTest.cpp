@@ -59,6 +59,36 @@ TEST_F(BlobStoreManagerIntegrationTest, Save_OverwritesExistingSettings)
 	}
 }
 
+TEST_F(BlobStoreManagerIntegrationTest, RemoveById_Success)
+{
+	// Arrange
+	BlobStoreManager manager;
+	const auto& store1 = manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some path"));
+	const auto& store2 = manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some other path"));
+
+	// Act
+	manager.RemoveById(store1.GetId());
+
+	// Assert
+	const auto& stores = manager.GetStores();
+	ASSERT_EQ(1, stores.size());
+}
+
+TEST_F(BlobStoreManagerIntegrationTest, RemoveById_NotExistSuccess)
+{
+	// Arrange
+	BlobStoreManager manager;
+	const auto& store1 = manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some path"));
+	const auto& store2 = manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some other path"));
+
+	// Act
+	manager.RemoveById(Uuid::Create());
+
+	// Assert
+	const auto& stores = manager.GetStores();
+	ASSERT_EQ(2, stores.size());
+}
+
 }
 }
 }

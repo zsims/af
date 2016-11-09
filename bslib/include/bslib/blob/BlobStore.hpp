@@ -2,6 +2,7 @@
 
 #include "bslib/blob/Address.hpp"
 #include "bslib/unicode.hpp"
+#include "bslib/Uuid.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -22,6 +23,11 @@ public:
 	 * Gets a simple string that describes the type of this blob store
 	 */
 	virtual UTF8String GetTypeString() const = 0;
+
+	/**
+	 * Gets the id of this store
+	 */
+	virtual Uuid GetId() const = 0;
 
 	/**
 	 * Creates a new blob.

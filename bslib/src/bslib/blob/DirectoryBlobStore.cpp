@@ -17,11 +17,13 @@ namespace blob {
 
 DirectoryBlobStore::DirectoryBlobStore(const boost::filesystem::path& rootPath)
 	: _rootPath(rootPath)
+	, _id(Uuid::Create())
 {
 }
 
 DirectoryBlobStore::DirectoryBlobStore(const boost::property_tree::ptree& settings)
 	: _rootPath(settings.get<std::string>("path"))
+	, _id(settings.get<std::string>("id"))
 {
 }
 
@@ -70,6 +72,7 @@ std::vector<uint8_t> DirectoryBlobStore::GetBlob(const Address& address) const
 void DirectoryBlobStore::SaveSettings(boost::property_tree::ptree& ptree) const
 {
 	ptree.put("path", _rootPath.string());
+	ptree.put("id", _id.ToString());
 }
 
 }

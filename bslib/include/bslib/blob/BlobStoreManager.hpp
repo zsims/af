@@ -29,6 +29,11 @@ public:
 	 */
 	BlobStore& AddBlobStore(std::unique_ptr<BlobStore> store);
 
+	/**
+	 * Removes the blob store identified by the given id (if any)
+	 */
+	void RemoveById(const Uuid& id);
+
 	const std::vector<std::unique_ptr<BlobStore>>& GetStores() const { return _stores; }
 private:
 	std::vector<std::unique_ptr<BlobStore>> _stores;

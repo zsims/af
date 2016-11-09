@@ -12,6 +12,7 @@ class MockBlobStore : public BlobStore
 public:
 	virtual ~MockBlobStore() { }
 	MOCK_CONST_METHOD0(GetTypeString, UTF8String());
+	MOCK_CONST_METHOD0(GetId, Uuid());
 	MOCK_METHOD2(CreateBlob, void(const Address& address, const std::vector<uint8_t>& content));
 	MOCK_CONST_METHOD1(GetBlob, std::vector<uint8_t>(const Address& address));
 	MOCK_METHOD2(CreateNamedBlob, void(const UTF8String& name, const boost::filesystem::path& sourcePath));
