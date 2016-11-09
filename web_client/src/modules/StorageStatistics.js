@@ -6,6 +6,8 @@ import ActionTrendingUp from 'material-ui/svg-icons/action/trending-up';
 import NavigationExpandMore from 'material-ui/svg-icons/navigation/expand-more';
 import NavigationExpandLess from 'material-ui/svg-icons/navigation/expand-less';
 
+import LineChart from './LineChart';
+
 export default class StorageStatistics extends Component {
   constructor(props) {
     super(props);
@@ -35,7 +37,7 @@ export default class StorageStatistics extends Component {
             onClick={this.toggleExpand}/>
         </CardActions>
         <CardText expandable={true}>
-          <img src="https://www.mathsisfun.com/data/images/bar-graph-fruit.gif"/>
+          <LineChart/>
         </CardText>
       </Card>
     );
