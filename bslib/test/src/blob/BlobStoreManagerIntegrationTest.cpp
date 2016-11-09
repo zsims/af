@@ -23,16 +23,16 @@ TEST_F(BlobStoreManagerIntegrationTest, SaveLoad_Success)
 	// Arrange
 	BlobStoreManager manager;
 	const auto settingsPath = GetUniqueTempPath();
-	manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some path"));
-	manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some other path"));
+	manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some path"));
+	manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some other path"));
 
 	// Act
-	manager.Save(settingsPath);
+	manager.SaveToSettingsFile(settingsPath);
 
 	// Assert
 	{
 		BlobStoreManager other;
-		other.Load(settingsPath);
+		other.LoadFromSettingsFile(settingsPath);
 		const auto& loadedStores = other.GetStores();
 		ASSERT_EQ(2, loadedStores.size());
 	}
@@ -43,17 +43,17 @@ TEST_F(BlobStoreManagerIntegrationTest, Save_OverwritesExistingSettings)
 	// Arrange
 	BlobStoreManager manager;
 	const auto settingsPath = GetUniqueTempPath();
-	manager.Save(settingsPath);
+	manager.SaveToSettingsFile(settingsPath);
 	ASSERT_TRUE(boost::filesystem::exists(settingsPath));
 
 	// Act
-	manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some path"));
-	manager.Save(settingsPath);
+	manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some path"));
+	manager.SaveToSettingsFile(settingsPath);
 
 	// Assert
 	{
 		BlobStoreManager other;
-		other.Load(settingsPath);
+		other.LoadFromSettingsFile(settingsPath);
 		const auto& loadedStores = other.GetStores();
 		ASSERT_EQ(1, loadedStores.size());
 	}
@@ -63,8 +63,8 @@ TEST_F(BlobStoreManagerIntegrationTest, RemoveById_Success)
 {
 	// Arrange
 	BlobStoreManager manager;
-	const auto& store1 = manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some path"));
-	const auto& store2 = manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some other path"));
+	const auto& store1 = manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some path"));
+	const auto& store2 = manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some other path"));
 
 	// Act
 	manager.RemoveById(store1.GetId());
@@ -78,8 +78,8 @@ TEST_F(BlobStoreManagerIntegrationTest, RemoveById_NotExistSuccess)
 {
 	// Arrange
 	BlobStoreManager manager;
-	const auto& store1 = manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some path"));
-	const auto& store2 = manager.AddBlobStore(std::make_unique<DirectoryBlobStore>("some other path"));
+	const auto& store1 = manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some path"));
+	const auto& store2 = manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some other path"));
 
 	// Act
 	manager.RemoveById(Uuid::Create());

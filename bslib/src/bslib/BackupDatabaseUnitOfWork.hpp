@@ -18,7 +18,7 @@ namespace bslib {
 class BackupDatabaseUnitOfWork : public UnitOfWork
 {
 public:
-	BackupDatabaseUnitOfWork(PooledDatabaseConnection connection, blob::BlobStore& blobStore);
+	BackupDatabaseUnitOfWork(PooledDatabaseConnection connection, std::shared_ptr<blob::BlobStore> blobStore);
 
 	void Commit() override;
 
@@ -29,7 +29,7 @@ public:
 private:
 	PooledDatabaseConnection _connection;
 	sqlitepp::ScopedTransaction _transaction;
-	blob::BlobStore& _blobStore;
+	std::shared_ptr<blob::BlobStore> _blobStore;
 };
 
 

@@ -13,6 +13,7 @@ namespace bslib {
 
 namespace blob {
 class BlobStore;
+class BlobStoreManager;
 }
 
 class BackupDatabase;
@@ -23,19 +24,13 @@ class BackupDatabase;
 class Backup
 {
 public:
-	Backup(const boost::filesystem::path& databasePath, const UTF8String& name);
+	Backup(const boost::filesystem::path& databasePath, const UTF8String& name, const blob::BlobStoreManager& blobStoreManager);
 	virtual ~Backup();
 
 	/**
 	 * Creates a new unit of work. Note that the backup must remain open while the unit of work is being used.
 	 */
 	virtual std::unique_ptr<UnitOfWork> CreateUnitOfWork();
-
-	/**
-	 * Adds a new blob store the the backup. This blob store will be used to save blobs plus a copy of the metadata.
-	 * \remarks Currently only one blob store is supported
-	 */
-	virtual void AddBlobStore(std::unique_ptr<blob::BlobStore> blobStore);
 
 	/**
 	 * Opens an existing database
@@ -69,8 +64,8 @@ public:
 private:
 	const boost::filesystem::path _databasePath;
 	const UTF8String _name;
+	const blob::BlobStoreManager& _blobStoreManager;
 	std::unique_ptr<BackupDatabase> _backupDatabase;
-	std::unique_ptr<blob::BlobStore> _blobStore;
 };
 
 }

@@ -1,5 +1,6 @@
 #include "bslib/Backup.hpp"
 #include "bslib/blob/NullBlobStore.hpp"
+#include "bslib/blob/BlobStoreManager.hpp"
 #include "bslib/default_locations.hpp"
 #include "bs_daemon_lib/log.hpp"
 #include "bs_daemon_lib/HttpServer.hpp"
@@ -26,8 +27,9 @@ int Run()
 	BS_DAEMON_LOG_INFO << "Using the backup database from " << defaultDbPath << std::endl;
 	boost::filesystem::create_directories(defaultDbPath.parent_path());
 
-	bslib::Backup backup(defaultDbPath, "CLI");
-	backup.AddBlobStore(std::make_unique<bslib::blob::NullBlobStore>());
+	bslib::blob::BlobStoreManager blobStoreManager;
+	blobStoreManager.AddBlobStore(std::make_shared<bslib::blob::NullBlobStore>());
+	bslib::Backup backup(defaultDbPath, "CLI", blobStoreManager);
 	backup.OpenOrCreate();
 
 	bs_daemon::JobExecutor jobExecutor(backup);

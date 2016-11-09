@@ -1,4 +1,5 @@
 #include <bslib/Backup.hpp>
+#include <bslib/blob/BlobStoreManager.hpp>
 #include <bslib/default_locations.hpp>
 #include <bslib/exceptions.hpp>
 #include <bslib/file/FileAdder.hpp>
@@ -26,8 +27,9 @@ int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::pat
 		}
 		std::cout << "Using the backup database from " << defaultDbPath << std::endl;
 		boost::filesystem::create_directories(defaultDbPath.parent_path());
-		af::bslib::Backup backup(defaultDbPath, "CLI");
-		backup.AddBlobStore(std::make_unique<af::bslib::blob::DirectoryBlobStore>(targetDirectoryPath));
+		af::bslib::blob::BlobStoreManager blobStoreManager;
+		blobStoreManager.AddBlobStore(std::make_shared<af::bslib::blob::DirectoryBlobStore>(targetDirectoryPath));
+		af::bslib::Backup backup(defaultDbPath, "CLI", blobStoreManager);
 		backup.OpenOrCreate();
 
 		auto uow = backup.CreateUnitOfWork();

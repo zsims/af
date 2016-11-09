@@ -32,7 +32,7 @@ public:
 	/**
 	 * Creates a new unit of work. Note that the database must remain open while the unit of work is being used.
 	 */
-	std::unique_ptr<UnitOfWork> CreateUnitOfWork(blob::BlobStore& blobStore);
+	std::unique_ptr<UnitOfWork> CreateUnitOfWork(std::shared_ptr<blob::BlobStore> blobStore);
 
 	/**
 	 * Opens an existing database

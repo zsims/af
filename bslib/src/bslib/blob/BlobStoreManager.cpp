@@ -13,7 +13,7 @@ namespace blob {
 
 namespace bpt = boost::property_tree;
 
-void BlobStoreManager::Load(const boost::filesystem::path& settingsPath)
+void BlobStoreManager::LoadFromSettingsFile(const boost::filesystem::path& settingsPath)
 {
 	std::unique_lock<std::mutex> lock(_mutex);
 	bpt::ptree pt;
@@ -22,12 +22,12 @@ void BlobStoreManager::Load(const boost::filesystem::path& settingsPath)
 	{
 		if (store.first == "directory")
 		{
-			_stores.push_back(std::make_unique<DirectoryBlobStore>(store.second));
+			_stores.push_back(std::make_shared<DirectoryBlobStore>(store.second));
 		}
 	}
 }
 
-void BlobStoreManager::Save(const boost::filesystem::path& settingsPath) const
+void BlobStoreManager::SaveToSettingsFile(const boost::filesystem::path& settingsPath) const
 {
 	std::unique_lock<std::mutex> lock(_mutex);
 	bpt::ptree pt;
@@ -44,7 +44,7 @@ void BlobStoreManager::Save(const boost::filesystem::path& settingsPath) const
 	bpt::write_xml(settingsPath.string(), pt, std::locale(), writerSettings);
 }
 
-BlobStore& BlobStoreManager::AddBlobStore(std::unique_ptr<BlobStore> store)
+BlobStore& BlobStoreManager::AddBlobStore(std::shared_ptr<BlobStore> store)
 {
 	std::unique_lock<std::mutex> lock(_mutex);
 	_stores.push_back(std::move(store));
@@ -58,6 +58,12 @@ void BlobStoreManager::RemoveById(const Uuid& id)
 		return s->GetId() == id;
 	});
 	_stores.erase(newEnd, _stores.end());
+}
+
+const std::vector<std::shared_ptr<BlobStore>> BlobStoreManager::GetStores() const
+{
+	std::unique_lock<std::mutex> lock(_mutex);
+	return _stores;
 }
 
 }

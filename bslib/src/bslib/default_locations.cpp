@@ -36,5 +36,10 @@ boost::filesystem::path GetDefaultBackupDatabasePath()
 	return GetRoot() / "backup.db";
 }
 
+boost::filesystem::path GetDefaultStoreSettingsPath()
+{
+	return GetRoot() / "stores.xml";
+}
+
 }
 }
