@@ -15,6 +15,7 @@ namespace bpt = boost::property_tree;
 
 void BlobStoreManager::Load(const boost::filesystem::path& settingsPath)
 {
+	std::unique_lock<std::mutex> lock(_mutex);
 	bpt::ptree pt;
 	bpt::read_xml(settingsPath.string(), pt);
 	for (const auto& store : pt.get_child("stores"))
@@ -28,6 +29,7 @@ void BlobStoreManager::Load(const boost::filesystem::path& settingsPath)
 
 void BlobStoreManager::Save(const boost::filesystem::path& settingsPath) const
 {
+	std::unique_lock<std::mutex> lock(_mutex);
 	bpt::ptree pt;
 	bpt::ptree stores;
 	for (auto& store : _stores)
@@ -44,12 +46,14 @@ void BlobStoreManager::Save(const boost::filesystem::path& settingsPath) const
 
 BlobStore& BlobStoreManager::AddBlobStore(std::unique_ptr<BlobStore> store)
 {
+	std::unique_lock<std::mutex> lock(_mutex);
 	_stores.push_back(std::move(store));
 	return *_stores.back();
 }
 
 void BlobStoreManager::RemoveById(const Uuid& id)
 {
+	std::unique_lock<std::mutex> lock(_mutex);
 	auto newEnd = std::remove_if(_stores.begin(), _stores.end(), [&](const auto& s) {
 		return s->GetId() == id;
 	});

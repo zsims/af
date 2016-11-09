@@ -6,6 +6,7 @@
 
 #include <string>
 #include <memory>
+#include <mutex>
 
 namespace af {
 namespace bslib {
@@ -36,6 +37,7 @@ public:
 
 	const std::vector<std::unique_ptr<BlobStore>>& GetStores() const { return _stores; }
 private:
+	mutable std::mutex _mutex;
 	std::vector<std::unique_ptr<BlobStore>> _stores;
 };
 
