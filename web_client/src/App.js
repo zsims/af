@@ -13,7 +13,6 @@ import ActionInfo from 'material-ui/svg-icons/action/info';
 import ActionRestore from 'material-ui/svg-icons/action/restore';
 import ActionSettings from 'material-ui/svg-icons/action/settings';
 import AvLibraryBooks from 'material-ui/svg-icons/av/library-books';
-import AlertWarning from 'material-ui/svg-icons/alert/warning';
 
 const muiTheme = getMuiTheme({
   appBar: {
@@ -54,7 +53,9 @@ export default class App extends Component {
             <MenuItem value="/settings" leftIcon={<ActionSettings/>}>Settings</MenuItem>
             <MenuItem value="/systemlogs" leftIcon={<AvLibraryBooks/>}>System Logs</MenuItem>
           </Menu>
+          <div style={{marginLeft: "250px"}}>
           {this.props.children}
+          </div>
         </div>
       </MuiThemeProvider>
     );

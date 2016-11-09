@@ -1,10 +1,16 @@
 import React, {Component} from 'react';
 
+import ActiveBackup from './ActiveBackup';
+import LastBackup from './LastBackup';
+import StorageStatistics from './StorageStatistics';
+
 export default class Summary extends Component {
   render() {
     return (
       <div className="Summary">
-        You probably expect to see some info about the current service status here :D
+        <ActiveBackup/>
+        <LastBackup/>
+        <StorageStatistics/>
       </div>
     );
   }
