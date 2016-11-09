@@ -26,6 +26,7 @@ add_executable(
     src/file/test_utility/ScopedWorkingDirectory.hpp
     src/ObjectPoolIntegrationTest.cpp
     src/unicodeIntegrationTest.cpp
+    src/UuidTest.cpp
 )
 
 set_property(TARGET bslib_test PROPERTY FOLDER "bslib")

@@ -25,6 +25,7 @@ add_library(
     include/bslib/file/fs/WindowsPath.hpp
     include/bslib/UnitOfWork.hpp
     include/bslib/unicode.hpp
+    include/bslib/Uuid.hpp
     src/bslib/Backup.cpp
     src/bslib/BackupDatabase.hpp
     src/bslib/blob/Address.cpp
@@ -56,6 +57,7 @@ add_library(
     src/bslib/sqlitepp/sqlitepp.cpp
     src/bslib/sqlitepp/sqlitepp.hpp
     src/bslib/unicode.cpp
+    src/bslib/Uuid.cpp
 )
 set_property(TARGET bslib PROPERTY FOLDER "bslib")
 

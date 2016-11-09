@@ -26,6 +26,10 @@ if(MSVC)
     # Per https://github.com/google/googletest/issues/799 Google Test doesn't correctly detect C++11 support on VS2015
     # Forcing it ideal, as there's some things missing
     add_definitions(-DGTEST_LANG_CXX11)
+
+    # Disable secure warnings, for example warning C4996: 'std::copy::_Unchecked_iterators::_Deprecate': Call to 'std::copy' with parameters that may be unsafe [...]'
+    # This cannot be done with pragmas, as xutility has its own warning pushes :(
+    add_definitions(-D_SCL_SECURE_NO_WARNINGS)
     
     # x86 or x64, this makes it easier to deal with config
     # as CMAKE_VS_PLATFORM_NAME is Win32 on x86
