@@ -27,7 +27,20 @@ int Run()
 	BS_DAEMON_LOG_INFO << "Using the backup database from " << defaultDbPath << std::endl;
 	boost::filesystem::create_directories(defaultDbPath.parent_path());
 
+	const auto defaultStoreSettingsPath = af::bslib::GetDefaultStoreSettingsPath();
+	if (defaultStoreSettingsPath.empty())
+	{
+		BS_DAEMON_LOG_FATAL << "Failed to determine the location of the store settings";
+		return -1;
+	}
+	BS_DAEMON_LOG_INFO << "Using store settings from " << defaultStoreSettingsPath << std::endl;
+	boost::filesystem::create_directories(defaultStoreSettingsPath.parent_path());
+
 	bslib::blob::BlobStoreManager blobStoreManager;
+	if (boost::filesystem::exists(defaultStoreSettingsPath))
+	{
+		blobStoreManager.LoadFromSettingsFile(defaultStoreSettingsPath);
+	}
 	blobStoreManager.AddBlobStore(std::make_shared<bslib::blob::NullBlobStore>());
 	bslib::Backup backup(defaultDbPath, "CLI", blobStoreManager);
 	backup.OpenOrCreate();
