@@ -89,6 +89,18 @@ TEST_F(BlobStoreManagerIntegrationTest, RemoveById_NotExistSuccess)
 	ASSERT_EQ(2, stores.size());
 }
 
+TEST_F(BlobStoreManagerIntegrationTest, AddBlobStore_ThrowsOnInvalidType)
+{
+	// Arrange
+	BlobStoreManager manager;
+	const auto settingsPath = GetUniqueTempPath();
+	boost::property_tree::ptree pt;
+
+	// Act
+	// Assert
+	EXPECT_THROW(manager.AddBlobStore("not real", pt), InvalidBlobStoreTypeException);
+}
+
 }
 }
 }

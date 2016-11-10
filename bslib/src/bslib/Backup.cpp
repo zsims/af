@@ -47,7 +47,10 @@ std::unique_ptr<UnitOfWork> Backup::CreateUnitOfWork()
 {
 	// TODO: add support for multiple stores
 	const auto stores = _blobStoreManager.GetStores();
-	// TODO: throw if there's no stores
+	if (stores.empty())
+	{
+		throw NoBlobStoresConfiguredException("At least one blob store is required before working with the backup");
+	}
 	return _backupDatabase->CreateUnitOfWork(*(stores.begin()));
 }
 

@@ -27,6 +27,13 @@ DirectoryBlobStore::DirectoryBlobStore(const boost::property_tree::ptree& settin
 {
 }
 
+DirectoryBlobStore::DirectoryBlobStore(const Uuid& id, const boost::property_tree::ptree& settings)
+	: _rootPath(settings.get<std::string>("path"))
+	, _id(id)
+{
+
+}
+
 void DirectoryBlobStore::CreateBlob(const Address& address, const std::vector<uint8_t>& content)
 {
 	const auto stringAddress = address.ToString();

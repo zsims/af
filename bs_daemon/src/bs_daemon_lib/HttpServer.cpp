@@ -80,9 +80,12 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 	return [=](std::shared_ptr<SimpleServer::Response> response, std::shared_ptr<SimpleServer::Request> request) {
 		try
 		{
-			// TODO: Check JSON content type
 			HttpJsonRequest jsonRequest;
-			boost::property_tree::read_json(request->content, jsonRequest.content);
+			if (request->method == "POST" || request->method == "PUT")
+			{
+				// TODO: Check JSON content type
+				boost::property_tree::read_json(request->content, jsonRequest.content);
+			}
 			const auto& jsonResponse = handler(jsonRequest);
 			SendJsonResponse(jsonResponse, response);
 		}
@@ -101,8 +104,9 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 
 }
 
-HttpServer::HttpServer(int port, JobExecutor& jobExecutor)
-	: _jobExecutor(jobExecutor)
+HttpServer::HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager, JobExecutor& jobExecutor)
+	: _blobStoreManager(blobStoreManager)
+	, _jobExecutor(jobExecutor)
 	, _simpleServer(port, /* number of threads = */ 1)
 {
 	_simpleServer.config.address = "127.0.0.1";
@@ -127,7 +131,35 @@ HttpServer::HttpServer(int port, JobExecutor& jobExecutor)
 		return HttpJsonResponse(200, "OK", request.content);
 	});
 
-	// Star the server in a background thread, as it blocks while it accepts connections
+	_simpleServer.resource["^/api/stores$"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+		const auto stores = _blobStoreManager.GetStores();
+		boost::property_tree::ptree storesContent;
+		for (const auto& store : stores)
+		{
+			boost::property_tree::ptree storeContent;
+			storeContent.add("type", store->GetTypeString());
+			store->SaveSettings(storeContent);
+			storesContent.push_back(std::make_pair("", storeContent));
+		}
+		boost::property_tree::ptree content;
+		content.add_child("stores", storesContent);
+		return HttpJsonResponse(200, "OK", content);
+	});
+
+	_simpleServer.resource["^/api/stores$"]["POST"] = JsonHandler([&](const HttpJsonRequest& request) {
+		const auto& typeString = request.content.get_optional<std::string>("type");
+		if (!typeString)
+		{
+			return HttpJsonResponse(400, "Bad Request", "type is required");
+		}
+		const auto& store = _blobStoreManager.AddBlobStore(typeString.value(), request.content);
+		boost::property_tree::ptree content;
+		content.add("type", store.GetTypeString());
+		store.SaveSettings(content);
+		return HttpJsonResponse(201, "Created", content);
+	});
+
+	// Start the server in a background thread, as it blocks while it accepts connections
 	_serverThread = std::thread(&HttpServer::Run, this);
 }
 

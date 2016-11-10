@@ -1,6 +1,7 @@
 #include "bslib/blob/BlobStoreManager.hpp"
 
 #include "bslib/blob/DirectoryBlobStore.hpp"
+#include "bslib/blob/exceptions.hpp"
 
 #include <boost/property_tree/xml_parser.hpp>
 
@@ -16,14 +17,12 @@ namespace bpt = boost::property_tree;
 void BlobStoreManager::LoadFromSettingsFile(const boost::filesystem::path& settingsPath)
 {
 	std::unique_lock<std::mutex> lock(_mutex);
+	_stores.clear();
 	bpt::ptree pt;
 	bpt::read_xml(settingsPath.string(), pt);
 	for (const auto& store : pt.get_child("stores"))
 	{
-		if (store.first == "directory")
-		{
-			_stores.push_back(std::make_shared<DirectoryBlobStore>(store.second));
-		}
+		AddBlobStoreNoLock(store.first, store.second);
 	}
 }
 
@@ -48,6 +47,25 @@ BlobStore& BlobStoreManager::AddBlobStore(std::shared_ptr<BlobStore> store)
 {
 	std::unique_lock<std::mutex> lock(_mutex);
 	_stores.push_back(std::move(store));
+	return *_stores.back();
+}
+
+BlobStore& BlobStoreManager::AddBlobStore(const UTF8String& typeString, const boost::property_tree::ptree& settingsChunk)
+{
+	std::unique_lock<std::mutex> lock(_mutex);
+	return AddBlobStoreNoLock(typeString, settingsChunk);
+}
+
+BlobStore& BlobStoreManager::AddBlobStoreNoLock(const UTF8String& typeString, const boost::property_tree::ptree& settingsChunk)
+{
+	if (typeString == "directory")
+	{
+		_stores.push_back(std::make_shared<DirectoryBlobStore>(Uuid::Create(), settingsChunk));
+	}
+	else
+	{
+		throw InvalidBlobStoreTypeException(typeString + " is not a valid blob store type");
+	}
 	return *_stores.back();
 }
 

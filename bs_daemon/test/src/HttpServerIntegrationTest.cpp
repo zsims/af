@@ -47,7 +47,7 @@ protected:
 		, _testAddress("127.0.0.1:" + std::to_string(_testPort))
 		, _backup(_testBackup.OpenOrCreate())
 		, _jobExecutor(_backup)
-		, _httpServer(_testPort, _jobExecutor)
+		, _httpServer(_testPort, _testBackup.GetBlobStoreManager(), _jobExecutor)
 	{
 	}
 	const int _testPort;
@@ -134,6 +134,48 @@ TEST_F(HttpServerIntegrationTest, PostFilePath_BadRequestIfMissingPath)
 
 	// Act
 	auto response = client.request("POST", "/file", rawContent);
+
+	// Assert
+	ASSERT_EQ(response->status_code, "400 Bad Request");
+	boost::property_tree::ptree pt;
+	boost::property_tree::read_json(response->content, pt);
+	auto value = pt.get_optional<std::string>("error");
+	EXPECT_TRUE(value);
+}
+
+TEST_F(HttpServerIntegrationTest, PostStores_Success)
+{
+	// Arrange
+	HttpClient client(_testAddress);
+	const auto testPath = GetUniqueTempPath().string();
+
+	boost::property_tree::ptree pt;
+	pt.add("type", "directory");
+	pt.add("path", testPath);
+	std::stringstream ss;
+	boost::property_tree::write_json(ss, pt);
+	const auto rawContent = ss.str();
+
+	// Act
+	auto response = client.request("POST", "/api/stores", rawContent);
+
+	// Assert
+	ASSERT_EQ(response->status_code, "201 Created");
+	boost::property_tree::ptree responseContent;
+	boost::property_tree::read_json(response->content, responseContent);
+	EXPECT_EQ("directory", responseContent.get<std::string>("type"));
+	EXPECT_NE(responseContent.find("id"), responseContent.not_found());
+	EXPECT_EQ(testPath, responseContent.get<std::string>("path"));
+}
+
+TEST_F(HttpServerIntegrationTest, PostStores_BadRequestIfMissingType)
+{
+	// Arrange
+	HttpClient client(_testAddress);
+	const auto rawContent = u8R"({"nottype":"haha"})";
+
+	// Act
+	auto response = client.request("POST", "/api/stores", rawContent);
 
 	// Assert
 	ASSERT_EQ(response->status_code, "400 Bad Request");

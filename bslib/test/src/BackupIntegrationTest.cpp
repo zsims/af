@@ -79,6 +79,18 @@ TEST_F(BackupIntegrationTest, ModifyBlobStoresDuringBackup_Success)
 	ASSERT_NO_THROW(uow->GetBlob(blobAddress));
 }
 
+TEST_F(BackupIntegrationTest, CreateUnitOfWork_ThrowsIfNoBlobStores)
+{
+	// Arrange
+	_testBackup.OpenOrCreate();
+	auto& blobStoreManager = _testBackup.GetBlobStoreManager();
+	blobStoreManager.RemoveById((*(blobStoreManager.GetStores().begin()))->GetId());
+
+	// Act
+	// Assert
+	ASSERT_THROW(_testBackup.GetBackup().CreateUnitOfWork(), NoBlobStoresConfiguredException);
+}
+
 }
 }
 }

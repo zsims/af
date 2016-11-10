@@ -18,6 +18,7 @@ class DirectoryBlobStore : public BlobStore
 public:
 	explicit DirectoryBlobStore(const boost::filesystem::path& rootPath);
 	explicit DirectoryBlobStore(const boost::property_tree::ptree& settings);
+	DirectoryBlobStore(const Uuid& id, const boost::property_tree::ptree& settings);
 	Uuid GetId() const override { return _id; }
 	UTF8String GetTypeString() const override { return "directory"; }
 	void CreateBlob(const Address& address, const std::vector<uint8_t>& content) override;

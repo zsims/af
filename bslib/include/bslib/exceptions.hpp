@@ -50,5 +50,14 @@ public:
 	}
 };
 
+class NoBlobStoresConfiguredException : public std::runtime_error
+{
+public:
+	explicit NoBlobStoresConfiguredException(const std::string& msg)
+		: std::runtime_error(msg)
+	{
+	}
+};
+
 }
 }

@@ -31,12 +31,18 @@ public:
 	BlobStore& AddBlobStore(std::shared_ptr<BlobStore> store);
 
 	/**
+	 * Adds a blob store from a given type string and associated settings
+	 */
+	BlobStore& AddBlobStore(const UTF8String& typeString, const boost::property_tree::ptree& settingsChunk);
+
+	/**
 	 * Removes the blob store identified by the given id (if any)
 	 */
 	void RemoveById(const Uuid& id);
 
 	const std::vector<std::shared_ptr<BlobStore>> GetStores() const;
 private:
+	BlobStore& BlobStoreManager::AddBlobStoreNoLock(const UTF8String& typeString, const boost::property_tree::ptree& settingsChunk);
 	mutable std::mutex _mutex;
 	std::vector<std::shared_ptr<BlobStore>> _stores;
 };
