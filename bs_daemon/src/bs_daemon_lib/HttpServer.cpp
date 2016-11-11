@@ -2,7 +2,6 @@
 
 #include "bs_daemon_lib/FileBackupJob.hpp"
 #include "bs_daemon_lib/log.hpp"
-#include "bslib/default_locations.hpp"
 
 // Work around https://svn.boost.org/trac/boost/ticket/11599
 #pragma warning( push )
@@ -157,7 +156,7 @@ HttpServer::HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager
 		boost::property_tree::ptree content;
 		content.add("type", store.GetTypeString());
 		store.SaveSettings(content);
-		blobStoreManager.SaveToSettingsFile(bslib::GetDefaultStoreSettingsPath());
+		blobStoreManager.SaveToSettingsFile();
 		return HttpJsonResponse(201, "Created", content);
 	});
 

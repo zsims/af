@@ -33,7 +33,7 @@ TEST_F(BackupIntegrationTest, OpenOrCreateExisting)
 	// Arrange
 	_testBackup.Create();
 	_testBackup.Close();
-	blob::BlobStoreManager blobStoreManager;
+	blob::BlobStoreManager blobStoreManager(GetUniqueTempPath());
 	Backup secondBackup(_testBackup.GetBackupDatabaseDbPath(), "TEST", blobStoreManager);
 
 	// Act

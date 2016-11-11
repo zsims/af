@@ -36,11 +36,12 @@ private:
 
 }
 
-class JobExecutorIntegrationTest : public ::testing::Test
+class JobExecutorIntegrationTest : public bslib_test_util::TestBase
 {
 protected:
 	JobExecutorIntegrationTest()
-		: _mockBackup(_blobStoreManager)
+		: _blobStoreManager(GetUniqueTempPath())
+		, _mockBackup(_blobStoreManager)
 	{
 		ON_CALL(_mockBackup, CreateUnitOfWork())
 			.WillByDefault(::testing::Invoke([&]() {

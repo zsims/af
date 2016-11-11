@@ -27,7 +27,7 @@ int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::pat
 		}
 		std::cout << "Using the backup database from " << defaultDbPath << std::endl;
 		boost::filesystem::create_directories(defaultDbPath.parent_path());
-		af::bslib::blob::BlobStoreManager blobStoreManager;
+		af::bslib::blob::BlobStoreManager blobStoreManager(af::bslib::GetDefaultStoreSettingsPath());
 		blobStoreManager.AddBlobStore(std::make_shared<af::bslib::blob::DirectoryBlobStore>(targetDirectoryPath));
 		af::bslib::Backup backup(defaultDbPath, "CLI", blobStoreManager);
 		backup.OpenOrCreate();

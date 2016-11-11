@@ -34,12 +34,10 @@ int Run()
 		return -1;
 	}
 	BS_DAEMON_LOG_INFO << "Using store settings from " << defaultStoreSettingsPath << std::endl;
-	boost::filesystem::create_directories(defaultStoreSettingsPath.parent_path());
-
-	bslib::blob::BlobStoreManager blobStoreManager;
+	bslib::blob::BlobStoreManager blobStoreManager(defaultStoreSettingsPath);
 	if (boost::filesystem::exists(defaultStoreSettingsPath))
 	{
-		blobStoreManager.LoadFromSettingsFile(defaultStoreSettingsPath);
+		blobStoreManager.LoadFromSettingsFile();
 	}
 	blobStoreManager.AddBlobStore(std::make_shared<bslib::blob::NullBlobStore>());
 	bslib::Backup backup(defaultDbPath, "CLI", blobStoreManager);

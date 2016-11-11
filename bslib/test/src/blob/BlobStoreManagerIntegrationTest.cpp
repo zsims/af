@@ -21,39 +21,53 @@ class BlobStoreManagerIntegrationTest : public bslib_test_util::TestBase
 TEST_F(BlobStoreManagerIntegrationTest, SaveLoad_Success)
 {
 	// Arrange
-	BlobStoreManager manager;
 	const auto settingsPath = GetUniqueTempPath();
+	BlobStoreManager manager(settingsPath);
 	manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some path"));
 	manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some other path"));
 
 	// Act
-	manager.SaveToSettingsFile(settingsPath);
+	manager.SaveToSettingsFile();
 
 	// Assert
 	{
-		BlobStoreManager other;
-		other.LoadFromSettingsFile(settingsPath);
+		BlobStoreManager other(settingsPath);
+		other.LoadFromSettingsFile();
 		const auto& loadedStores = other.GetStores();
 		ASSERT_EQ(2, loadedStores.size());
 	}
 }
 
+TEST_F(BlobStoreManagerIntegrationTest, SaveToSettingsFile_CreatesPath)
+{
+	// Arrange
+	const auto settingsPath = GetUniqueTempPath() / "deep" / "settings.xml";
+	BlobStoreManager manager(settingsPath);
+	manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some path"));
+
+	// Act
+	manager.SaveToSettingsFile();
+
+	// Assert
+	EXPECT_TRUE(boost::filesystem::exists(settingsPath));
+}
+
 TEST_F(BlobStoreManagerIntegrationTest, Save_OverwritesExistingSettings)
 {
 	// Arrange
-	BlobStoreManager manager;
 	const auto settingsPath = GetUniqueTempPath();
-	manager.SaveToSettingsFile(settingsPath);
+	BlobStoreManager manager(settingsPath);
+	manager.SaveToSettingsFile();
 	ASSERT_TRUE(boost::filesystem::exists(settingsPath));
 
 	// Act
 	manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some path"));
-	manager.SaveToSettingsFile(settingsPath);
+	manager.SaveToSettingsFile();
 
 	// Assert
 	{
-		BlobStoreManager other;
-		other.LoadFromSettingsFile(settingsPath);
+		BlobStoreManager other(settingsPath);
+		other.LoadFromSettingsFile();
 		const auto& loadedStores = other.GetStores();
 		ASSERT_EQ(1, loadedStores.size());
 	}
@@ -62,7 +76,8 @@ TEST_F(BlobStoreManagerIntegrationTest, Save_OverwritesExistingSettings)
 TEST_F(BlobStoreManagerIntegrationTest, RemoveById_Success)
 {
 	// Arrange
-	BlobStoreManager manager;
+	const auto settingsPath = GetUniqueTempPath();
+	BlobStoreManager manager(settingsPath);
 	const auto& store1 = manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some path"));
 	const auto& store2 = manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some other path"));
 
@@ -77,7 +92,8 @@ TEST_F(BlobStoreManagerIntegrationTest, RemoveById_Success)
 TEST_F(BlobStoreManagerIntegrationTest, RemoveById_NotExistSuccess)
 {
 	// Arrange
-	BlobStoreManager manager;
+	const auto settingsPath = GetUniqueTempPath();
+	BlobStoreManager manager(settingsPath);
 	const auto& store1 = manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some path"));
 	const auto& store2 = manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some other path"));
 
@@ -92,8 +108,8 @@ TEST_F(BlobStoreManagerIntegrationTest, RemoveById_NotExistSuccess)
 TEST_F(BlobStoreManagerIntegrationTest, AddBlobStore_ThrowsOnInvalidType)
 {
 	// Arrange
-	BlobStoreManager manager;
 	const auto settingsPath = GetUniqueTempPath();
+	BlobStoreManager manager(settingsPath);
 	boost::property_tree::ptree pt;
 
 	// Act

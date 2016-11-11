@@ -3,6 +3,7 @@
 #include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/blob/exceptions.hpp"
 
+#include <boost/filesystem.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
 #include <algorithm>
@@ -14,21 +15,33 @@ namespace blob {
 
 namespace bpt = boost::property_tree;
 
-void BlobStoreManager::LoadFromSettingsFile(const boost::filesystem::path& settingsPath)
+BlobStoreManager::BlobStoreManager(const boost::filesystem::path& settingsPath)
+	: _settingsPath(settingsPath)
+{
+}
+
+void BlobStoreManager::LoadFromSettingsFile()
 {
 	std::unique_lock<std::mutex> lock(_mutex);
 	_stores.clear();
 	bpt::ptree pt;
-	bpt::read_xml(settingsPath.string(), pt);
+	bpt::read_xml(_settingsPath.string(), pt);
 	for (const auto& store : pt.get_child("stores"))
 	{
 		AddBlobStoreNoLock(store.first, store.second);
 	}
 }
 
-void BlobStoreManager::SaveToSettingsFile(const boost::filesystem::path& settingsPath) const
+void BlobStoreManager::SaveToSettingsFile() const
 {
 	std::unique_lock<std::mutex> lock(_mutex);
+
+	const auto& parentPath = _settingsPath.parent_path();
+	if (!boost::filesystem::exists(parentPath))
+	{
+		boost::filesystem::create_directories(parentPath);
+	}
+
 	bpt::ptree pt;
 	bpt::ptree stores;
 	for (auto& store : _stores)
@@ -40,7 +53,7 @@ void BlobStoreManager::SaveToSettingsFile(const boost::filesystem::path& setting
 	pt.add_child("stores", stores);
 
 	auto writerSettings = boost::property_tree::xml_writer_make_settings<std::string>('\t', 1, "utf-8");
-	bpt::write_xml(settingsPath.string(), pt, std::locale(), writerSettings);
+	bpt::write_xml(_settingsPath.string(), pt, std::locale(), writerSettings);
 }
 
 BlobStore& BlobStoreManager::AddBlobStore(std::shared_ptr<BlobStore> store)

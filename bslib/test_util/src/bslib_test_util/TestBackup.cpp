@@ -11,6 +11,7 @@ TestBackup::TestBackup(const boost::filesystem::path& baseDir)
 	: _baseDir(baseDir)
 	, _backupDatabasePath(baseDir / "backup.db")
 	, _name("test")
+	, _blobStoreManager(baseDir / "stores.xml")
 {
 	_blobStoreManager.AddBlobStore(std::make_shared<bslib::blob::DirectoryBlobStore>(_baseDir));
 }
