@@ -1,5 +1,7 @@
 #include "bslib/Backup.hpp"
 #include "bslib/blob/NullBlobStore.hpp"
+#include "bslib/blob/BlobStoreManager.hpp"
+#include "bslib/default_locations.hpp"
 #include "bs_daemon_lib/log.hpp"
 #include "bs_daemon_lib/HttpServer.hpp"
 #include "bs_daemon_lib/JobExecutor.hpp"
@@ -25,12 +27,24 @@ int Run()
 	BS_DAEMON_LOG_INFO << "Using the backup database from " << defaultDbPath << std::endl;
 	boost::filesystem::create_directories(defaultDbPath.parent_path());
 
-	bslib::Backup backup(defaultDbPath, "CLI");
-	backup.AddBlobStore(std::make_unique<bslib::blob::NullBlobStore>());
+	const auto defaultStoreSettingsPath = af::bslib::GetDefaultStoreSettingsPath();
+	if (defaultStoreSettingsPath.empty())
+	{
+		BS_DAEMON_LOG_FATAL << "Failed to determine the location of the store settings";
+		return -1;
+	}
+	BS_DAEMON_LOG_INFO << "Using store settings from " << defaultStoreSettingsPath << std::endl;
+	bslib::blob::BlobStoreManager blobStoreManager(defaultStoreSettingsPath);
+	if (boost::filesystem::exists(defaultStoreSettingsPath))
+	{
+		blobStoreManager.LoadFromSettingsFile();
+	}
+	blobStoreManager.AddBlobStore(std::make_shared<bslib::blob::NullBlobStore>());
+	bslib::Backup backup(defaultDbPath, "CLI", blobStoreManager);
 	backup.OpenOrCreate();
 
 	bs_daemon::JobExecutor jobExecutor(backup);
-	bs_daemon::HttpServer server(8080, jobExecutor);
+	bs_daemon::HttpServer server(8080, blobStoreManager, jobExecutor);
 
 	std::cout << "Press any key to exit" << std::endl;
 	_getch();

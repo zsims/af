@@ -13,8 +13,10 @@ add_executable(
     src/BackupDatabaseIntegrationTest.cpp
     src/blob/AddressIntegrationTest.cpp
     src/blob/BlobInfoRepositoryIntegrationTest.cpp
+    src/blob/BlobStoreManagerIntegrationTest.cpp
     src/blob/DirectoryBlobStoreIntegrationTest.cpp
     src/blob/MockBlobStore.hpp
+    src/default_locationsIntegrationTest.cpp
     src/file/FileAdderIntegrationTest.cpp
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRestorerIntegrationTest.cpp

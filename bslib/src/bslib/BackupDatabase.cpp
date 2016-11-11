@@ -91,7 +91,7 @@ void BackupDatabase::OpenOrCreate()
 	Create();
 }
 
-std::unique_ptr<UnitOfWork> BackupDatabase::CreateUnitOfWork(blob::BlobStore& blobStore)
+std::unique_ptr<UnitOfWork> BackupDatabase::CreateUnitOfWork(std::shared_ptr<blob::BlobStore> blobStore)
 {
 	auto pooledConnection = _connections.Acquire();
 	return std::make_unique<BackupDatabaseUnitOfWork>(std::move(pooledConnection), blobStore);

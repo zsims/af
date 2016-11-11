@@ -53,7 +53,7 @@ TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkCommit)
 	// Arrange
 	_testBackup.Create();
 	auto& database = _testBackup.GetBackupDatabase();
-	blob::NullBlobStore store;
+	auto store = std::make_shared<blob::NullBlobStore>();
 
 	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	{
@@ -81,7 +81,7 @@ TEST_F(BackupDatabaseIntegrationTest, CreateUnitOfWork_TwiceSuccess)
 
 	// Act
 	// Assert
-	blob::NullBlobStore store;
+	auto store = std::make_shared<blob::NullBlobStore>();
 	auto uow1 = backup.CreateUnitOfWork(store);
 	EXPECT_NO_THROW(backup.CreateUnitOfWork(store));
 }
@@ -91,7 +91,7 @@ TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkImplicitRollback)
 	// Arrange
 	_testBackup.Create();
 	auto& backup = _testBackup.GetBackupDatabase();
-	blob::NullBlobStore store;
+	auto store = std::make_shared<blob::NullBlobStore>();
 
 	// Act
 	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
@@ -152,7 +152,7 @@ TEST_F(BackupDatabaseIntegrationTest, SaveAs_Success)
 	ASSERT_TRUE(boost::filesystem::exists(target));
 	BackupDatabase copy(target);
 	ASSERT_NO_THROW(copy.Open());
-	blob::NullBlobStore nullBlobStore;
+	auto nullBlobStore = std::make_shared<blob::NullBlobStore>();
 	const auto uowCopy = copy.CreateUnitOfWork(nullBlobStore);
 	const auto finder = uowCopy->CreateFileFinder();
 	const auto allEvents = finder->GetAllEvents();
@@ -178,7 +178,7 @@ TEST_F(BackupDatabaseIntegrationTest, SaveAs_ExcludesUncommittedWork)
 	ASSERT_TRUE(boost::filesystem::exists(target));
 	BackupDatabase copy(target);
 	copy.Open();
-	blob::NullBlobStore nullBlobStore;
+	auto nullBlobStore = std::make_shared<blob::NullBlobStore>();
 	const auto uowCopy = copy.CreateUnitOfWork(nullBlobStore);
 	const auto finder = uowCopy->CreateFileFinder();
 	const auto allEvents = finder->GetAllEvents();

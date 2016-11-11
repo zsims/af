@@ -33,7 +33,8 @@ TEST_F(BackupIntegrationTest, OpenOrCreateExisting)
 	// Arrange
 	_testBackup.Create();
 	_testBackup.Close();
-	Backup secondBackup(_testBackup.GetBackupDatabaseDbPath(), "TEST");
+	blob::BlobStoreManager blobStoreManager(GetUniqueTempPath());
+	Backup secondBackup(_testBackup.GetBackupDatabaseDbPath(), "TEST", blobStoreManager);
 
 	// Act
 	// Assert
@@ -48,32 +49,6 @@ TEST_F(BackupIntegrationTest, OpenOrCreateNew)
 	ASSERT_NO_THROW(_testBackup.OpenOrCreate());
 }
 
-TEST_F(BackupIntegrationTest, AddBlobStore_Success)
-{
-	// Arrange
-	auto mockBlobStore = std::make_unique<blob::test::MockBlobStore>();
-
-	// Setup expectations before transfering ownership, per https://groups.google.com/forum/#!topic/googlemock/lQ9y9SWzr0A
-	EXPECT_CALL(*mockBlobStore, CreateBlob(::testing::_, ::testing::_)).Times(::testing::AtLeast(1));
-
-	Backup backup(_testBackup.GetBackupDatabaseDbPath(), "TEST");
-	backup.AddBlobStore(std::move(mockBlobStore));
-	backup.OpenOrCreate();
-
-	// Act
-	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
-	{
-		auto uow = backup.CreateUnitOfWork();
-		auto adder = uow->CreateFileAdder();
-		file::fs::CreateDirectories(targetPath);
-		WriteFile(targetPath / "file.dat", "bruce");
-		adder->Add(targetPath.ToString());
-	}
-
-	// Assert
-	// See above EXPECT_CALL
-}
-
 TEST_F(BackupIntegrationTest, SaveDatabaseCopy_SavesToBlobStore)
 {
 	// Arrange
@@ -86,13 +61,34 @@ TEST_F(BackupIntegrationTest, SaveDatabaseCopy_SavesToBlobStore)
 	// Assert
 }
 
-TEST_F(BackupIntegrationTest, GetDefaultBackupDatabasePath_Success)
+TEST_F(BackupIntegrationTest, ModifyBlobStoresDuringBackup_Success)
 {
 	// Arrange
+	_testBackup.OpenOrCreate();
+	auto& blobStoreManager = _testBackup.GetBlobStoreManager();
+	auto uow = _testBackup.GetBackup().CreateUnitOfWork();
+	auto adder = uow->CreateFileAdder();
+	const auto tempPath = GetUniqueExtendedTempPath();
+	const auto blobAddress = WriteFile(tempPath, "hey");
+	adder->Add(tempPath.ToString());
+
 	// Act
-	const auto path = GetDefaultBackupDatabasePath();
+	blobStoreManager.RemoveById((*(blobStoreManager.GetStores().begin()))->GetId());
+
 	// Assert
-	EXPECT_FALSE(path.empty());
+	ASSERT_NO_THROW(uow->GetBlob(blobAddress));
+}
+
+TEST_F(BackupIntegrationTest, CreateUnitOfWork_ThrowsIfNoBlobStores)
+{
+	// Arrange
+	_testBackup.OpenOrCreate();
+	auto& blobStoreManager = _testBackup.GetBlobStoreManager();
+	blobStoreManager.RemoveById((*(blobStoreManager.GetStores().begin()))->GetId());
+
+	// Act
+	// Assert
+	ASSERT_THROW(_testBackup.GetBackup().CreateUnitOfWork(), NoBlobStoresConfiguredException);
 }
 
 }

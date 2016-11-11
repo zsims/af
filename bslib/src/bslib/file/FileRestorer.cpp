@@ -15,7 +15,7 @@ namespace bslib {
 namespace file {
 
 FileRestorer::FileRestorer(
-	blob::BlobStore& blobStore,
+	std::shared_ptr<blob::BlobStore> blobStore,
 	blob::BlobInfoRepository& blobInfoRepository)
 	: _blobStore(blobStore)
 	, _blobInfoRepository(blobInfoRepository)
@@ -105,7 +105,7 @@ void FileRestorer::RestoreFileEvent(const FileEvent& fileEvent, const fs::Native
 
 bool FileRestorer::RestoreBlobToFile(const blob::Address& blobAddress, const fs::NativePath& targetPath) const
 {
-	const auto content = _blobStore.GetBlob(blobAddress);
+	const auto content = _blobStore->GetBlob(blobAddress);
 	auto file = fs::OpenFileWrite(targetPath);
 	if (!file)
 	{

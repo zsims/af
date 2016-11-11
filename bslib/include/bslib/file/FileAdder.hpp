@@ -10,6 +10,7 @@
 #include <functional>
 #include <vector>
 #include <map>
+#include <memory>
 
 namespace af {
 namespace bslib {
@@ -27,7 +28,7 @@ class FileAdder
 {
 public:
 	FileAdder(
-		blob::BlobStore& blobStore,
+		std::shared_ptr<blob::BlobStore> blobStore,
 		blob::BlobInfoRepository& blobInfoRepository,
 		FileEventStreamRepository& fileEventStreamRepository);
 
@@ -52,7 +53,7 @@ private:
 		const std::map<fs::NativePath, FileEvent>& fileEvents,
 		const fs::NativePath& fullPath);
 
-	blob::BlobStore& _blobStore;
+	std::shared_ptr<blob::BlobStore> _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;
 	FileEventStreamRepository& _fileEventStreamRepository;
 	std::vector<FileEvent> _emittedEvents;

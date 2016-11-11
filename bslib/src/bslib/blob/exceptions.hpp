@@ -49,6 +49,15 @@ public:
 	}
 };
 
+class InvalidBlobStoreTypeException : public std::runtime_error
+{
+public:
+	explicit InvalidBlobStoreTypeException(const std::string& message)
+		: std::runtime_error(message)
+	{
+	}
+};
+
 }
 }
 }

@@ -36,16 +36,19 @@ private:
 
 }
 
-class JobExecutorIntegrationTest : public ::testing::Test
+class JobExecutorIntegrationTest : public bslib_test_util::TestBase
 {
 protected:
 	JobExecutorIntegrationTest()
+		: _blobStoreManager(GetUniqueTempPath())
+		, _mockBackup(_blobStoreManager)
 	{
 		ON_CALL(_mockBackup, CreateUnitOfWork())
-			.WillByDefault(::testing::Invoke([]() {
+			.WillByDefault(::testing::Invoke([&]() {
 			return std::make_unique<bslib_test_util::mocks::MockUnitOfWork>();
 		}));
 	}
+	bslib::blob::BlobStoreManager _blobStoreManager;
 	bslib_test_util::mocks::MockBackup _mockBackup;
 };
 

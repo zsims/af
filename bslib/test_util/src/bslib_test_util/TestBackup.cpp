@@ -11,27 +11,26 @@ TestBackup::TestBackup(const boost::filesystem::path& baseDir)
 	: _baseDir(baseDir)
 	, _backupDatabasePath(baseDir / "backup.db")
 	, _name("test")
+	, _blobStoreManager(baseDir / "stores.xml")
 {
+	_blobStoreManager.AddBlobStore(std::make_shared<bslib::blob::DirectoryBlobStore>(_baseDir));
 }
 
 void TestBackup::Open()
 {
-	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, _name);
-	_backup->AddBlobStore(std::make_unique<bslib::blob::DirectoryBlobStore>(_baseDir));
+	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, _name, _blobStoreManager);
 	_backup->Open();
 }
 
 void TestBackup::Create()
 {
-	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, _name);
-	_backup->AddBlobStore(std::make_unique<bslib::blob::DirectoryBlobStore>(_baseDir));
+	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, _name, _blobStoreManager);
 	_backup->Create();
 }
 
 bslib::Backup& TestBackup::OpenOrCreate()
 {
-	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, _name);
-	_backup->AddBlobStore(std::make_unique<bslib::blob::DirectoryBlobStore>(_baseDir));
+	_backup = std::make_unique<bslib::Backup>(_backupDatabasePath, _name, _blobStoreManager);
 	_backup->OpenOrCreate();
 	return *_backup;
 }
@@ -52,6 +51,11 @@ af::bslib::BackupDatabase& TestBackup::GetBackupDatabase()
 af::bslib::Backup& TestBackup::GetBackup()
 {
 	return *_backup;
+}
+
+bslib::blob::BlobStoreManager& TestBackup::GetBlobStoreManager()
+{
+	return _blobStoreManager;
 }
 
 void TestBackup::Close()

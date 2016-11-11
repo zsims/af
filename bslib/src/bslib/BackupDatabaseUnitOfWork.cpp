@@ -5,7 +5,7 @@
 namespace af {
 namespace bslib {
 
-BackupDatabaseUnitOfWork::BackupDatabaseUnitOfWork(PooledDatabaseConnection connection, blob::BlobStore& blobStore)
+BackupDatabaseUnitOfWork::BackupDatabaseUnitOfWork(PooledDatabaseConnection connection, std::shared_ptr<blob::BlobStore> blobStore)
 	: _connection(std::move(connection))
 	, _transaction(_connection->GetSqlConnection())
 	, _blobStore(blobStore)
@@ -35,7 +35,7 @@ std::unique_ptr<file::FileFinder> BackupDatabaseUnitOfWork::CreateFileFinder()
 std::vector<uint8_t> BackupDatabaseUnitOfWork::GetBlob(const blob::Address& address) const
 {
 	// TODO: does this need to be tracked/looked up?
-	return _blobStore.GetBlob(address);
+	return _blobStore->GetBlob(address);
 }
 
 }

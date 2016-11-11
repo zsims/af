@@ -16,7 +16,7 @@ namespace bslib {
 namespace file {
 
 FileAdder::FileAdder(
-	blob::BlobStore& blobStore,
+	std::shared_ptr<blob::BlobStore> blobStore,
 	blob::BlobInfoRepository& blobInfoRepository,
 	FileEventStreamRepository& fileEventStreamRepository)
 	: _blobStore(blobStore)
@@ -41,7 +41,7 @@ boost::optional<blob::Address> FileAdder::SaveFileContents(const fs::NativePath&
 	const auto existingBlob = _blobInfoRepository.FindBlob(blobAddress);
 	if (!existingBlob)
 	{
-		_blobStore.CreateBlob(blobAddress, content);
+		_blobStore->CreateBlob(blobAddress, content);
 		_blobInfoRepository.AddBlob(blob::BlobInfo(blobAddress, content.size()));
 	}
 	return blobAddress;

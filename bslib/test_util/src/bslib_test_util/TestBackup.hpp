@@ -2,6 +2,7 @@
 
 #include "bslib/Backup.hpp"
 #include "bslib/BackupDatabase.hpp"
+#include "bslib/blob/BlobStoreManager.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
 
 #include <memory>
@@ -23,6 +24,7 @@ public:
 	const boost::filesystem::path& GetDirectoryStorePath() const { return _baseDir; }
 	const boost::filesystem::path& GetBackupDatabaseDbPath() const { return _backupDatabasePath; }
 	bslib::BackupDatabase& GetBackupDatabase();
+	bslib::blob::BlobStoreManager& GetBlobStoreManager();
 	bslib::Backup& GetBackup();
 	void Close();
 	const bslib::UTF8String& GetName() const { return _name; }
@@ -31,6 +33,7 @@ private:
 	boost::filesystem::path _baseDir;
 	boost::filesystem::path _backupDatabasePath;
 	std::unique_ptr<bslib::Backup> _backup;
+	bslib::blob::BlobStoreManager _blobStoreManager;
 };
 
 }

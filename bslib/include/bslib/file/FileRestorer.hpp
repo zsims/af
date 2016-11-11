@@ -9,6 +9,7 @@
 #include <functional>
 #include <vector>
 #include <map>
+#include <memory>
 
 namespace af {
 namespace bslib {
@@ -25,7 +26,7 @@ class FileRestorer
 {
 public:
 	FileRestorer(
-		blob::BlobStore& blobStore,
+		std::shared_ptr<blob::BlobStore> blobStore,
 		blob::BlobInfoRepository& blobInfoRepository);
 
 	/**
@@ -52,7 +53,7 @@ private:
 
 	static bool IsFileEventActionSupported(FileEventAction action);
 
-	const blob::BlobStore& _blobStore;
+	const std::shared_ptr<blob::BlobStore> _blobStore;
 	const blob::BlobInfoRepository& _blobInfoRepository;
 	std::vector<FileRestoreEvent> _emittedEvents;
 	EventManager<FileRestoreEvent> _eventManager;
