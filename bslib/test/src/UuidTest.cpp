@@ -49,6 +49,17 @@ TEST(UuidTest, ToString_Success)
 	EXPECT_EQ(stringValue, result);
 }
 
+TEST(UuidTest, ToArray_Success)
+{
+	// Arrange
+	const auto uuid = Uuid::Create();
+	// Act
+	const auto result = uuid.ToArray();
+	// Assert
+	const Uuid andBack(&result[0], static_cast<int>(result.size()));
+	EXPECT_EQ(uuid, andBack);
+}
+
 }
 }
 }
