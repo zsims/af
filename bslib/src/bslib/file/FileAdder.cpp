@@ -16,10 +16,12 @@ namespace bslib {
 namespace file {
 
 FileAdder::FileAdder(
+	const Uuid& backupRunId,
 	std::shared_ptr<blob::BlobStore> blobStore,
 	blob::BlobInfoRepository& blobInfoRepository,
 	FileEventStreamRepository& fileEventStreamRepository)
-	: _blobStore(blobStore)
+	: _backupRunId(backupRunId)
+	, _blobStore(blobStore)
 	, _blobInfoRepository(blobInfoRepository)
 	, _fileEventStreamRepository(fileEventStreamRepository)
 {
@@ -32,7 +34,7 @@ boost::optional<blob::Address> FileAdder::SaveFileContents(const fs::NativePath&
 
 	if (!file)
 	{
-		EmitEvent(RegularFileEvent(sourcePath, boost::none, FileEventAction::FailedToRead));
+		EmitEvent(RegularFileEvent(_backupRunId, sourcePath, boost::none, FileEventAction::FailedToRead));
 		return boost::none;
 	}
 
@@ -87,7 +89,7 @@ void FileAdder::ScanDirectory(const fs::NativePath& sourcePath)
 	boost::filesystem::recursive_directory_iterator itr(sourcePath.ToExtendedString(), ec);
 	if (ec)
 	{
-		EmitEvent(DirectoryEvent(sourcePath, FileEventAction::FailedToRead));
+		EmitEvent(DirectoryEvent(_backupRunId, sourcePath, FileEventAction::FailedToRead));
 		return;
 	}
 
@@ -124,7 +126,7 @@ void FileAdder::VisitPath(const fs::NativePath& sourcePath, const boost::optiona
 	{
 		if (previousEvent && previousEvent->action != FileEventAction::ChangedRemoved)
 		{
-			EmitEvent(FileEvent(sourcePath, previousEvent->type, previousEvent->contentBlobAddress, FileEventAction::ChangedRemoved));
+			EmitEvent(FileEvent(_backupRunId, sourcePath, previousEvent->type, previousEvent->contentBlobAddress, FileEventAction::ChangedRemoved));
 		}
 		return;
 	}
@@ -139,7 +141,7 @@ void FileAdder::VisitPath(const fs::NativePath& sourcePath, const boost::optiona
 	}
 	else
 	{
-		EmitEvent(FileEvent(sourcePath, FileType::Unsupported, boost::none, FileEventAction::Unsupported));
+		EmitEvent(FileEvent(_backupRunId, sourcePath, FileType::Unsupported, boost::none, FileEventAction::Unsupported));
 	}
 }
 
@@ -161,7 +163,7 @@ void FileAdder::VisitFile(const fs::NativePath& sourcePath, const boost::optiona
 			case FileEventAction::ChangedModified:
 				if (previousEvent->contentBlobAddress == blobAddress)
 				{
-					EmitEvent(RegularFileEvent(sourcePath, previousEvent->contentBlobAddress, FileEventAction::Unchanged));
+					EmitEvent(RegularFileEvent(_backupRunId, sourcePath, previousEvent->contentBlobAddress, FileEventAction::Unchanged));
 					return;
 				}
 				action = FileEventAction::ChangedModified;
@@ -172,14 +174,14 @@ void FileAdder::VisitFile(const fs::NativePath& sourcePath, const boost::optiona
 		}
 	}
 
-	EmitEvent(RegularFileEvent(sourcePath, blobAddress, action));
+	EmitEvent(RegularFileEvent(_backupRunId, sourcePath, blobAddress, action));
 }
 
 void FileAdder::VisitDirectory(const fs::NativePath& sourcePath, const boost::optional<FileEvent>& previousEvent)
 {
 	if (!previousEvent)
 	{
-		EmitEvent(DirectoryEvent(sourcePath.EnsureTrailingSlashCopy(), FileEventAction::ChangedAdded));
+		EmitEvent(DirectoryEvent(_backupRunId, sourcePath.EnsureTrailingSlashCopy(), FileEventAction::ChangedAdded));
 	}
 }
 

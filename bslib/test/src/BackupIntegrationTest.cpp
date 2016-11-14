@@ -67,7 +67,7 @@ TEST_F(BackupIntegrationTest, ModifyBlobStoresDuringBackup_Success)
 	_testBackup.OpenOrCreate();
 	auto& blobStoreManager = _testBackup.GetBlobStoreManager();
 	auto uow = _testBackup.GetBackup().CreateUnitOfWork();
-	auto adder = uow->CreateFileAdder();
+	auto adder = uow->CreateFileAdder(Uuid::Empty);
 	const auto tempPath = GetUniqueExtendedTempPath();
 	const auto blobAddress = WriteFile(tempPath, "hey");
 	adder->Add(tempPath.ToString());

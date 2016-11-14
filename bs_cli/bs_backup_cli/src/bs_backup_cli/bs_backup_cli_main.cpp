@@ -33,13 +33,16 @@ int Backup(const af::bslib::UTF8String& sourcePath, const boost::filesystem::pat
 		backup.OpenOrCreate();
 
 		auto uow = backup.CreateUnitOfWork();
-		auto adder = uow->CreateFileAdder();
+		auto runRecorder = uow->CreateFileBackupRunRecorder();
+		const auto runId = runRecorder->Start();
+		auto adder = uow->CreateFileAdder(runId);
 
 		adder->GetEventManager().Subscribe([](const auto& fileEvent) {
 			std::cout << fileEvent.action << " " << fileEvent.fullPath.ToString() << std::endl;
 		});
 
 		adder->Add(sourcePath);
+		runRecorder->Stop(runId);
 		uow->Commit();
 		return 0;
 	}

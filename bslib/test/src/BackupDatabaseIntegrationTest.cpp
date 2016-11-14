@@ -58,7 +58,7 @@ TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkCommit)
 	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	{
 		auto uow = database.CreateUnitOfWork(store);
-		auto adder = uow->CreateFileAdder();
+		auto adder = uow->CreateFileAdder(Uuid::Empty);
 		file::fs::CreateDirectories(targetPath);
 		adder->Add(targetPath.ToString());
 		// Act
@@ -97,7 +97,7 @@ TEST_F(BackupDatabaseIntegrationTest, UnitOfWorkImplicitRollback)
 	const auto targetPath = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	{
 		auto uow = backup.CreateUnitOfWork(store);
-		auto adder = uow->CreateFileAdder();
+		auto adder = uow->CreateFileAdder(Uuid::Empty);
 		file::fs::CreateDirectories(targetPath);
 		adder->Add(targetPath.ToString());
 	}
@@ -138,7 +138,7 @@ TEST_F(BackupDatabaseIntegrationTest, SaveAs_Success)
 
 	{
 		const auto uow = _testBackup.GetBackup().CreateUnitOfWork();
-		const auto adder = uow->CreateFileAdder();
+		auto adder = uow->CreateFileAdder(Uuid::Empty);
 		const auto testFile = GetUniqueExtendedTempPath();
 		WriteFile(testFile, "hi");
 		adder->Add(testFile.ToString());
@@ -166,7 +166,7 @@ TEST_F(BackupDatabaseIntegrationTest, SaveAs_ExcludesUncommittedWork)
 	_testBackup.OpenOrCreate();
 
 	const auto uow = _testBackup.GetBackup().CreateUnitOfWork();
-	const auto adder = uow->CreateFileAdder();
+	auto adder = uow->CreateFileAdder(Uuid::Empty);
 	const auto testFile = GetUniqueExtendedTempPath();
 	WriteFile(testFile, "hi");
 	adder->Add(testFile.ToString());

@@ -5,6 +5,7 @@
 #include "bslib/file/FileAdder.hpp"
 #include "bslib/file/FileFinder.hpp"
 #include "bslib/file/FileRestorer.hpp"
+#include "bslib/Uuid.hpp"
 
 #include <boost/core/noncopyable.hpp>
 
@@ -33,7 +34,7 @@ public:
 	/**
 	 * Creates a file adder for backing up files and directories.
 	 */
-	virtual std::unique_ptr<file::FileAdder> CreateFileAdder() = 0;
+	virtual std::unique_ptr<file::FileAdder> CreateFileAdder(const Uuid& backupRunId) = 0;
 
 	/**
 	 * Creates a file restorer for restoring files and directories.

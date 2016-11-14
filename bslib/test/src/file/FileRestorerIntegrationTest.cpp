@@ -22,7 +22,8 @@ class FileRestorerIntegrationTest : public bslib_test_util::TestBase
 {
 protected:
 	FileRestorerIntegrationTest()
-		: _restorePath(GetUniqueExtendedTempPath())
+		: _backupRunId(Uuid::Create())
+		, _restorePath(GetUniqueExtendedTempPath())
 		, _sampleBasePath(GetUniqueExtendedTempPath())
 		, _sampleSubDirectory(_sampleBasePath / "sub")
 		, _sampleFilePath(_sampleBasePath / "base.dat")
@@ -32,7 +33,7 @@ protected:
 		fs::CreateDirectories(_restorePath);
 
 		_uow = _testBackup.GetBackup().CreateUnitOfWork();
-		_adder = _uow->CreateFileAdder();
+		_adder = _uow->CreateFileAdder(_backupRunId);
 		_restorer = _uow->CreateFileRestorer();
 		_finder = _uow->CreateFileFinder();
 
@@ -43,6 +44,7 @@ protected:
 		WriteFile(_sampleSubFilePath, "hey sub babe");
 	}
 
+	const Uuid _backupRunId;
 	const fs::NativePath _restorePath;
 	std::unique_ptr<UnitOfWork> _uow;
 	std::unique_ptr<FileAdder> _adder;
@@ -99,8 +101,8 @@ TEST_F(FileRestorerIntegrationTest, Restore_IgnoresUnsupportedEvents)
 {
 	// Arrange
 	std::vector<FileEvent> eventsToRestore = {
-		DirectoryEvent(fs::NativePath(R"(C:\hey baby)"), FileEventAction::ChangedRemoved),
-		RegularFileEvent(fs::NativePath(R"(C:\hey other)"), boost::none, FileEventAction::Unsupported)
+		DirectoryEvent(_backupRunId, fs::NativePath(R"(C:\hey baby)"), FileEventAction::ChangedRemoved),
+		RegularFileEvent(_backupRunId, fs::NativePath(R"(C:\hey other)"), boost::none, FileEventAction::Unsupported)
 	};
 
 	// Act
