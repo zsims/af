@@ -17,6 +17,11 @@ void BackupDatabaseUnitOfWork::Commit()
 	_transaction.Commit();
 }
 
+std::unique_ptr<file::FileBackupRunRecorder> BackupDatabaseUnitOfWork::CreateFileBackupRunRecorder()
+{
+	return std::make_unique<file::FileBackupRunRecorder>(_connection->GetFileBackupRunEventStreamRepository());
+}
+
 std::unique_ptr<file::FileAdder> BackupDatabaseUnitOfWork::CreateFileAdder()
 {
 	return std::make_unique<file::FileAdder>(_blobStore, _connection->GetBlobInfoRepository(), _connection->GetFileEventStreamRepository());

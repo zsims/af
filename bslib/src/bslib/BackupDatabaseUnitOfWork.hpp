@@ -22,6 +22,7 @@ public:
 
 	void Commit() override;
 
+	std::unique_ptr<file::FileBackupRunRecorder> CreateFileBackupRunRecorder() override;
 	std::unique_ptr<file::FileAdder> CreateFileAdder() override;
 	std::unique_ptr<file::FileRestorer> CreateFileRestorer() override;
 	std::unique_ptr<file::FileFinder> CreateFileFinder() override;

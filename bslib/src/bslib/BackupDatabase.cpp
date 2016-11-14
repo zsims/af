@@ -68,6 +68,12 @@ void BackupDatabase::Create()
 				Action INTEGER NOT NULL,
 				FileType INTEGER NOT NULL
 			);
+			CREATE TABLE FileBackupRunEvent (
+				Id INTEGER PRIMARY KEY AUTOINCREMENT,
+				BackupRunId BLOB(16) NOT NULL,
+				DateTimeUtc INTEGER NOT NULL,
+				Action INTEGER NOT NULL
+			);
 		)";
 
 		sqlitepp::ScopedErrorMessage errorMessage;
