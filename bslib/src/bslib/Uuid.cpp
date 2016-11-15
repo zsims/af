@@ -3,11 +3,14 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 
+#include <algorithm>
 #include <sstream>
 #include <mutex>
 
 namespace af {
 namespace bslib {
+
+const Uuid Uuid::Empty("00000000-0000-0000-0000-000000000000");
 
 Uuid::Uuid(const boost::uuids::uuid& value)
 	: _value(value)
@@ -18,11 +21,31 @@ Uuid::Uuid(const UTF8String& value)
 {
 	std::istringstream iss(value);
 	iss >> _value;
+	if (iss.fail())
+	{
+		throw UuidInvalidException("Given UUID " + value + " is invalid");
+	}
+}
+
+Uuid::Uuid(const void* rawBuffer, int bufferLength)
+{
+	if (bufferLength != 16)
+	{
+		throw UuidInvalidException("UUID is invalid, needs to be " + std::to_string(bufferLength) + " bytes");
+	}
+	std::copy_n(static_cast<const uint8_t*>(rawBuffer), bufferLength, _value.begin());
 }
 
 UTF8String Uuid::ToString() const
 {
 	return boost::uuids::to_string(_value);
+}
+
+Uuid::BinaryType Uuid::ToArray() const
+{
+	BinaryType result;
+	std::copy(_value.begin(), _value.end(), result.begin());
+	return result;
 }
 
 Uuid Uuid::Create()
