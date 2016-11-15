@@ -2,7 +2,6 @@
 
 #include "bslib/unicode.hpp"
 
-#include <boost/operators.hpp>
 #include <boost/uuid/uuid.hpp>
 
 #include <array>

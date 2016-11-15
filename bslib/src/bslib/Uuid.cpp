@@ -21,6 +21,10 @@ Uuid::Uuid(const UTF8String& value)
 {
 	std::istringstream iss(value);
 	iss >> _value;
+	if (iss.fail())
+	{
+		throw UuidInvalidException("Given UUID " + value + " is invalid");
+	}
 }
 
 Uuid::Uuid(const void* rawBuffer, int bufferLength)
