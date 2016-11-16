@@ -47,11 +47,7 @@ void DirectoryBlobStore::CreateBlob(const Address& address, const std::vector<ui
 void DirectoryBlobStore::CreateNamedBlob(const UTF8String& name, const boost::filesystem::path& sourcePath)
 {
 	const auto blobPath = _rootPath / boost::filesystem::path(UTF8ToWideString(name));
-	if (boost::filesystem::exists(blobPath))
-	{
-		boost::filesystem::remove(blobPath);
-	}
-	boost::filesystem::copy_file(sourcePath, blobPath);
+	boost::filesystem::copy_file(sourcePath, blobPath, boost::filesystem::copy_option::overwrite_if_exists);
 }
 
 std::vector<uint8_t> DirectoryBlobStore::GetBlob(const Address& address) const
