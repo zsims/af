@@ -17,7 +17,7 @@ public:
 	void CreateBlob(const Address& address, const std::vector<uint8_t>& content) override { }
 	void CreateNamedBlob(const UTF8String& name, const boost::filesystem::path& sourcePath) override { }
 	std::vector<uint8_t> GetBlob(const Address& address) const override { return std::vector<uint8_t>(); }
-	void SaveSettings(boost::property_tree::ptree& ptree) const override { }
+	boost::property_tree::ptree ConvertToPropertyTree() const override { return boost::property_tree::ptree(); }
 };
 
 }

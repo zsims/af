@@ -46,8 +46,7 @@ void BlobStoreManager::SaveToSettingsFile() const
 	bpt::ptree stores;
 	for (auto& store : _stores)
 	{
-		bpt::ptree storeSettings;
-		store->SaveSettings(storeSettings);
+		auto storeSettings = store->ConvertToPropertyTree();
 		stores.add_child(store->GetTypeString(), storeSettings);
 	}
 	pt.add_child("stores", stores);

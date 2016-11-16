@@ -72,10 +72,12 @@ std::vector<uint8_t> DirectoryBlobStore::GetBlob(const Address& address) const
 	return result;
 }
 
-void DirectoryBlobStore::SaveSettings(boost::property_tree::ptree& ptree) const
+boost::property_tree::ptree DirectoryBlobStore::ConvertToPropertyTree() const
 {
+	boost::property_tree::ptree ptree;
 	ptree.put("path", _rootPath.string());
 	ptree.put("id", _id.ToString());
+	return ptree;
 }
 
 }

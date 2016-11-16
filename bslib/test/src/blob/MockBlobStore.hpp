@@ -16,7 +16,7 @@ public:
 	MOCK_METHOD2(CreateBlob, void(const Address& address, const std::vector<uint8_t>& content));
 	MOCK_CONST_METHOD1(GetBlob, std::vector<uint8_t>(const Address& address));
 	MOCK_METHOD2(CreateNamedBlob, void(const UTF8String& name, const boost::filesystem::path& sourcePath));
-	MOCK_CONST_METHOD1(SaveSettings, void(boost::property_tree::ptree& ptree));
+	MOCK_CONST_METHOD0(ConvertToPropertyTree, boost::property_tree::ptree());
 };
 
 }
