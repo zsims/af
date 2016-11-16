@@ -77,7 +77,7 @@ TEST_F(HttpServerIntegrationTest, Ping_Success)
 	const auto expectedFancy = u8"Сука Блять";
 
 	// Act
-	auto response = client.request("POST", "/ping", rawContent);
+	auto response = client.request("POST", "/api/ping?foo=bar&fizz=buzz", rawContent);
 
 	// Assert
 	ASSERT_EQ(response->status_code, "200 OK");
@@ -86,6 +86,12 @@ TEST_F(HttpServerIntegrationTest, Ping_Success)
 	auto value = pt.get_optional<std::string>("fancy");
 	ASSERT_TRUE(value);
 	EXPECT_EQ(expectedFancy, value.get());
+	// TODO: the HttpClient doesn't sent he port in the Host: header
+	// EXPECT_EQ(_testAddress, pt.get<std::string>("_url.authority"));
+	// EXPECT_EQ(std::to_string(_testPort), pt.get<std::string>("_url.port"));
+	EXPECT_EQ("127.0.0.1", pt.get<std::string>("_url.host"));
+	EXPECT_EQ("/api/ping", pt.get<std::string>("_url.path"));
+	EXPECT_EQ("foo=bar&fizz=buzz", pt.get<std::string>("_url.query"));
 }
 
 TEST_F(HttpServerIntegrationTest, Ping_BadRequestOnInvalidJson)
@@ -95,7 +101,7 @@ TEST_F(HttpServerIntegrationTest, Ping_BadRequestOnInvalidJson)
 	const auto rawContent = u8R"({"notvalid})";
 
 	// Act
-	auto response = client.request("POST", "/ping", rawContent);
+	auto response = client.request("POST", "/api/ping", rawContent);
 
 	// Assert
 	ASSERT_EQ(response->status_code, "400 Bad Request");
