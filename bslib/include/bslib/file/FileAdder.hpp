@@ -28,6 +28,7 @@ class FileAdder
 {
 public:
 	FileAdder(
+		const Uuid& backupRunId,
 		std::shared_ptr<blob::BlobStore> blobStore,
 		blob::BlobInfoRepository& blobInfoRepository,
 		FileEventStreamRepository& fileEventStreamRepository);
@@ -53,6 +54,7 @@ private:
 		const std::map<fs::NativePath, FileEvent>& fileEvents,
 		const fs::NativePath& fullPath);
 
+	const Uuid _backupRunId;
 	std::shared_ptr<blob::BlobStore> _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;
 	FileEventStreamRepository& _fileEventStreamRepository;

@@ -66,7 +66,14 @@ void BackupDatabase::Create()
 				FullPath TEXT NOT NULL COLLATE BINARY,
 				ContentBlobAddress BLOB(20) REFERENCES Blob (Address),
 				Action INTEGER NOT NULL,
-				FileType INTEGER NOT NULL
+				FileType INTEGER NOT NULL,
+				BackupRunId BLOB(16) NOT NULL
+			);
+			CREATE TABLE FileBackupRunEvent (
+				Id INTEGER PRIMARY KEY AUTOINCREMENT,
+				BackupRunId BLOB(16) NOT NULL,
+				DateTimeUtc INTEGER NOT NULL,
+				Action INTEGER NOT NULL
 			);
 		)";
 

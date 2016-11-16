@@ -2,6 +2,7 @@
 
 #include "bslib/blob/Address.hpp"
 #include "bslib/file/fs/path.hpp"
+#include "bslib/Uuid.hpp"
 
 #include <boost/optional.hpp>
 
@@ -35,11 +36,13 @@ enum class FileEventAction : int
 struct FileEvent
 {
 	FileEvent(
+		const Uuid& backupRunId,
 		const fs::NativePath& fullPath,
 		FileType type,
 		const boost::optional<blob::Address>& contentBlobAddress, 
 		FileEventAction action)
-		: fullPath(fullPath)
+		: backupRunId(backupRunId)
+		, fullPath(fullPath)
 		, type(type)
 		, contentBlobAddress(contentBlobAddress)
 		, action(action)
@@ -53,6 +56,7 @@ struct FileEvent
 		return *this;
 	}
 
+	const Uuid backupRunId;
 	const fs::NativePath fullPath;
 	const FileType type;
 	const boost::optional<blob::Address> contentBlobAddress;
@@ -60,7 +64,8 @@ struct FileEvent
 
 	bool operator==(const FileEvent& rhs) const
 	{
-		return fullPath == rhs.fullPath &&
+		return backupRunId == rhs.backupRunId &&
+			fullPath == rhs.fullPath &&
 			type == rhs.type &&
 			contentBlobAddress == rhs.contentBlobAddress &&
 			action == rhs.action;
@@ -70,9 +75,10 @@ struct FileEvent
 struct DirectoryEvent : public FileEvent
 {
 	DirectoryEvent(
+		const Uuid& backupRunId,
 		const fs::NativePath& fullPath,
 		FileEventAction action)
-		: FileEvent(fullPath, FileType::Directory, boost::none, action)
+		: FileEvent(backupRunId, fullPath, FileType::Directory, boost::none, action)
 	{
 	}
 };
@@ -80,10 +86,11 @@ struct DirectoryEvent : public FileEvent
 struct RegularFileEvent : public FileEvent
 {
 	RegularFileEvent(
+		const Uuid& backupRunId,
 		const fs::NativePath& fullPath,
 		const boost::optional<blob::Address>& contentBlobAddress, 
 		FileEventAction action)
-		: FileEvent(fullPath, FileType::RegularFile, contentBlobAddress, action)
+		: FileEvent(backupRunId, fullPath, FileType::RegularFile, contentBlobAddress, action)
 	{
 	}
 };

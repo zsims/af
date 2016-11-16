@@ -19,11 +19,13 @@ class FileEventStreamRepositoryIntegrationTest : public bslib_test_util::TestBas
 {
 protected:
 	FileEventStreamRepositoryIntegrationTest()
+		: _backupRunId(Uuid::Create())
 	{
 		_testBackup.Create();
 		_connection = _testBackup.ConnectToDatabase();
 	}
 
+	const Uuid _backupRunId;
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
 };
 
@@ -39,11 +41,11 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetAllEvents_Success)
 	blobRepo.AddBlob(blobInfo2);
 
 	const std::vector<FileEvent> expectedEvents = {
-		FileEvent(fs::NativePath("/foo"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(fs::NativePath("/foo"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath("/foo"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath("/bar"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedAdded),
-		FileEvent(fs::NativePath("/foo"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved)
+		FileEvent(_backupRunId, fs::NativePath("/foo"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(_backupRunId, fs::NativePath("/foo"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath("/foo"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath("/bar"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedAdded),
+		FileEvent(_backupRunId, fs::NativePath("/foo"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved)
 	};
 	repo.AddEvents(expectedEvents);
 
@@ -65,15 +67,15 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, FindLastGoodEvent_Success)
 	blobRepo.AddBlob(blobInfo1);
 	blobRepo.AddBlob(blobInfo2);
 
-	const FileEvent expectedEvent(fs::NativePath("/then that"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedAdded);
+	const FileEvent expectedEvent(_backupRunId, fs::NativePath("/then that"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedAdded);
 	const std::vector<FileEvent> events = {
-		FileEvent(fs::NativePath("/something complex"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(fs::NativePath("/then that"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath("/and this"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath("/something complex"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(_backupRunId, fs::NativePath("/then that"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath("/and this"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
 		expectedEvent,
-		FileEvent(fs::NativePath("/Then that"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath("/then that"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::Unchanged),
-		FileEvent(fs::NativePath("/something"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved)
+		FileEvent(_backupRunId, fs::NativePath("/Then that"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath("/then that"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::Unchanged),
+		FileEvent(_backupRunId, fs::NativePath("/something"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved)
 	};
 	repo.AddEvents(events);
 
@@ -90,11 +92,11 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, FindLastGoodEvent_CaseSensitive
 	// Arrange
 	FileEventStreamRepository repo(*_connection);
 
-	const FileEvent expectedEvent(fs::NativePath(R"(C:\Foo\bar.txt)"), FileType::RegularFile, boost::none, FileEventAction::ChangedModified);
+	const FileEvent expectedEvent(_backupRunId, fs::NativePath(R"(C:\Foo\bar.txt)"), FileType::RegularFile, boost::none, FileEventAction::ChangedModified);
 	const std::vector<FileEvent> events = {
-		FileEvent(fs::NativePath(R"(C:\oTher root\bar.txt)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\oTher root\bar.txt)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded),
 		expectedEvent,
-		FileEvent(fs::NativePath(R"(C:\other root\bar.txt)"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\other root\bar.txt)"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved),
 	};
 	repo.AddEvents(events);
 
@@ -117,18 +119,18 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastGoodEventsUnderPath_Succ
 	blobRepo.AddBlob(blobInfo2);
 
 	const std::vector<FileEvent> events = {
-		FileEvent(fs::NativePath("/root folder"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(fs::NativePath(R"(C:\other root\)"), FileType::Directory, blobInfo1.GetAddress(), FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath(R"(C:\other root\something\baz.txt)"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath(R"(C:\other something\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(fs::NativePath("/root folder/home"), FileType::Directory, boost::none, FileEventAction::ChangedRemoved),
-		FileEvent(fs::NativePath(R"(C:\other root\something\baz.txt)"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath(R"(C:\other root\single.txt)"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath("/root folder"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\other root\)"), FileType::Directory, blobInfo1.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\other root\something\baz.txt)"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\other something\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(_backupRunId, fs::NativePath("/root folder/home"), FileType::Directory, boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\other root\something\baz.txt)"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\other root\single.txt)"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedModified),
 		// Note the change in case, so shouldn't be included
-		FileEvent(fs::NativePath(R"(C:\Other root\single.txt)"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath(R"(C:\other root\)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath(R"(C:\other root\)"), FileType::Directory, boost::none, FileEventAction::FailedToRead),
-		FileEvent(fs::NativePath(R"(C:\other root hehehe\)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\Other root\single.txt)"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\other root\)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\other root\)"), FileType::Directory, boost::none, FileEventAction::FailedToRead),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\other root hehehe\)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
 	};
 	repo.AddEvents(events);
 
@@ -156,10 +158,10 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastGoodEventsUnderPath_Hand
 	FileEventStreamRepository repo(*_connection);
 
 	const std::vector<FileEvent> events = {
-		FileEvent(fs::NativePath(R"(C:\Itsa\)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath(R"(C:\Its_\)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath(R"(C:\Its_\Here)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
-		FileEvent(fs::NativePath(R"(C:\Its \)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\Itsa\)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\Its_\)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\Its_\Here)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath(R"(C:\Its \)"), FileType::Directory, boost::none, FileEventAction::ChangedModified),
 	};
 	repo.AddEvents(events);
 
@@ -186,7 +188,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, AddEvent_NoBlobSuccess)
 	FileEventStreamRepository repo(*_connection);
 
 	const std::vector<FileEvent> events = {
-		FileEvent(fs::NativePath("/look/phil/no/hands"), FileType::RegularFile, boost::none, FileEventAction::ChangedModified),
+		FileEvent(_backupRunId, fs::NativePath("/look/phil/no/hands"), FileType::RegularFile, boost::none, FileEventAction::ChangedModified),
 	};
 
 	// Act
@@ -205,7 +207,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, AddEvent_MissingBlobThrows)
 
 	// Act
 	// Assert
-	ASSERT_THROW(repo.AddEvent(FileEvent(fs::NativePath("/look/phil/no/hands"), FileType::RegularFile, madeUpBlobAddress, FileEventAction::ChangedAdded)), AddFileEventFailedException);
+	ASSERT_THROW(repo.AddEvent(FileEvent(_backupRunId, fs::NativePath("/look/phil/no/hands"), FileType::RegularFile, madeUpBlobAddress, FileEventAction::ChangedAdded)), AddFileEventFailedException);
 }
 
 }

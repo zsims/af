@@ -30,6 +30,15 @@ public:
 	}
 };
 
+class AddFileBackupRunEventFailedException : public std::runtime_error
+{
+public:
+	explicit AddFileBackupRunEventFailedException(int sqlError)
+		: std::runtime_error("Failed to insert file backup run event object, SQL error " + std::to_string(sqlError))
+	{
+	}
+};
+
 /**
 * Given path couldn't be found.
 */

@@ -24,7 +24,8 @@ enum GetObjectColumnIndex
 	GetFileEvent_ColumnIndex_FullPath,
 	GetFileEvent_ColumnIndex_ContentBlobAddress,
 	GetFileEvent_ColumnIndex_Action,
-	GetFileEvent_ColumnIndex_FileType
+	GetFileEvent_ColumnIndex_FileType,
+	GetFileEvent_ColumnIndex_BackupRunId
 };
 }
 
@@ -32,19 +33,19 @@ FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlit
 	: _db(connection)
 {
 	sqlitepp::prepare_or_throw(_db, R"(
-		INSERT INTO FileEvent (FullPath, ContentBlobAddress, Action, FileType) VALUES (:FullPath, :ContentBlobAddress, :Action, :FileType)
+		INSERT INTO FileEvent (FullPath, ContentBlobAddress, Action, FileType, BackupRunId) VALUES (:FullPath, :ContentBlobAddress, :Action, :FileType, :BackupRunId)
 	)", _insertEventStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Id, FullPath, ContentBlobAddress, Action, FileType FROM FileEvent
+		SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId FROM FileEvent
 		ORDER BY Id ASC
 	)", _getAllEventsStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Id, FullPath, ContentBlobAddress, Action, FileType FROM FileEvent
+		SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId FROM FileEvent
 		WHERE FullPath LIKE :Needle ESCAPE '"' AND Action IN (0, 1, 2)
 		GROUP BY FullPath HAVING Id = max(Id)
 	)", _getLastChangedEventsUnderPathStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Id, FullPath, ContentBlobAddress, Action, FileType FROM FileEvent
+		SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId FROM FileEvent
 		WHERE FullPath = :FullPath AND Action IN (0, 1, 2)
 		ORDER BY Id DESC LIMIT 1
 	)", _getLastChangedEventByPathStatement);
@@ -107,6 +108,8 @@ void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent)
 		sqlitepp::BindByParameterNameNull(_insertEventStatement, ":ContentBlobAddress");
 	}
 
+	auto byteUuid = fileEvent.backupRunId.ToArray();
+	sqlitepp::BindByParameterNameBlob(_insertEventStatement, ":BackupRunId", &byteUuid[0], byteUuid.size());
 	sqlitepp::BindByParameterNameInt64(_insertEventStatement, ":Action", static_cast<int64_t>(fileEvent.action));
 	sqlitepp::BindByParameterNameInt64(_insertEventStatement, ":FileType", static_cast<int64_t>(fileEvent.type));
 
@@ -145,9 +148,13 @@ FileEvent FileEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStateme
 		contentBlobAddress = blob::Address(contentBlobAddressBytes, contentBlobAddressBytesCount);
 	}
 
+	const auto runIdBytesCount = sqlite3_column_bytes(statement, GetFileEvent_ColumnIndex_BackupRunId);
+	const auto runIdBytes = sqlite3_column_blob(statement, GetFileEvent_ColumnIndex_BackupRunId);
+	const Uuid runId(runIdBytes, runIdBytesCount);
+
 	const FileEventAction action = static_cast<FileEventAction>(sqlite3_column_int(statement, GetFileEvent_ColumnIndex_Action));
 	const FileType type = static_cast<FileType>(sqlite3_column_int(statement, GetFileEvent_ColumnIndex_FileType));
-	return FileEvent(fullPath, type, contentBlobAddress, action);
+	return FileEvent(runId, fullPath, type, contentBlobAddress, action);
 }
 
 }

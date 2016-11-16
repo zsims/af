@@ -19,6 +19,8 @@ add_library(
     include/bslib/EventManager.hpp
     include/bslib/file/exceptions.hpp
     include/bslib/file/FileAdder.hpp
+    include/bslib/file/FileBackupRunEvent.hpp
+    include/bslib/file/FileBackupRunRecorder.hpp
     include/bslib/file/FileEvent.hpp
     include/bslib/file/FileRestoreEvent.hpp
     include/bslib/file/FileFinder.hpp
@@ -44,6 +46,9 @@ add_library(
     src/bslib/default_locations.cpp
     src/bslib/log.hpp
     src/bslib/file/FileAdder.cpp
+    src/bslib/file/FileBackupRunEventStreamRepository.cpp
+    src/bslib/file/FileBackupRunEventStreamRepository.hpp
+    src/bslib/file/FileBackupRunRecorder.cpp
     src/bslib/file/FileEventStreamRepository.cpp
     src/bslib/file/FileEventStreamRepository.hpp
     src/bslib/file/FileFinder.cpp
@@ -77,6 +82,7 @@ target_link_libraries(
     bslib
     PRIVATE boost_filesystem
     PUBLIC boost_log
+    PUBLIC boost_date_time
     PUBLIC sqlite
     PUBLIC shlwapi.lib
 )
