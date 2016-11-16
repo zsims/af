@@ -15,6 +15,8 @@ namespace af {
 namespace bslib {
 namespace blob {
 
+const std::string DirectoryBlobStore::TYPE = "directory";
+
 DirectoryBlobStore::DirectoryBlobStore(const boost::filesystem::path& rootPath)
 	: _rootPath(rootPath)
 	, _id(Uuid::Create())

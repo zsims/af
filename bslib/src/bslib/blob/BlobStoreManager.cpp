@@ -1,6 +1,7 @@
 #include "bslib/blob/BlobStoreManager.hpp"
 
 #include "bslib/blob/DirectoryBlobStore.hpp"
+#include "bslib/blob/NullBlobStore.hpp"
 #include "bslib/blob/exceptions.hpp"
 
 #include <boost/filesystem.hpp>
@@ -70,9 +71,13 @@ BlobStore& BlobStoreManager::AddBlobStore(const UTF8String& typeString, const bo
 
 BlobStore& BlobStoreManager::AddBlobStoreNoLock(const UTF8String& typeString, const boost::property_tree::ptree& settingsChunk)
 {
-	if (typeString == "directory")
+	if (typeString == DirectoryBlobStore::TYPE)
 	{
 		_stores.push_back(std::make_shared<DirectoryBlobStore>(Uuid::Create(), settingsChunk));
+	}
+	else if (typeString == NullBlobStore::TYPE)
+	{
+		_stores.push_back(std::make_shared<NullBlobStore>(Uuid::Create()));
 	}
 	else
 	{
