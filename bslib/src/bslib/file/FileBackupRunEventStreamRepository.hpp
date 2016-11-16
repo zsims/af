@@ -3,11 +3,7 @@
 #include "bslib/file/FileBackupRunEvent.hpp"
 #include "bslib/sqlitepp/handles.hpp"
 
-#include <cstdint>
-#include <map>
 #include <vector>
-
-#include <boost/optional.hpp>
 
 namespace af {
 namespace bslib {
