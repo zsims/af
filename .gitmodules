@@ -8,3 +8,6 @@
 [submodule "third_party/webserver/src"]
 	path = third_party/webserver/src
 	url = git@github.com:eidheim/Simple-Web-Server.git
+[submodule "third_party/cpp-netlib-uri/source"]
+	path = third_party/cpp-netlib-uri/source
+	url = git@github.com:zsims/uri.git

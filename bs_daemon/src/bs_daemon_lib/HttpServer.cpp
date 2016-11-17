@@ -3,12 +3,16 @@
 #include "bs_daemon_lib/FileBackupJob.hpp"
 #include "bs_daemon_lib/log.hpp"
 
+#include <boost/algorithm/string/split.hpp>
+
 // Work around https://svn.boost.org/trac/boost/ticket/11599
 #pragma warning( push )
 #pragma warning( disable : 4715)
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #pragma warning( pop )
+
+#include <network/uri.hpp>
 
 #include <memory>
 
@@ -21,6 +25,45 @@ namespace {
 
 struct HttpJsonRequest
 {
+	explicit HttpJsonRequest(const network::uri& requestUri)
+		: uri(requestUri)
+	{
+	}
+
+	/**
+	 * Returns query string parameters, duplicate keys are resolved non-deterministically 
+	 */
+	const std::map<bslib::UTF8String, bslib::UTF8String> GetQueryParameters() const
+	{
+		std::map<bslib::UTF8String, bslib::UTF8String> result;
+
+		// find key=value separated by '&'
+		const auto queryString = uri.query().to_string();
+		for (
+			auto it = boost::split_iterator<std::string::const_iterator>(queryString, boost::first_finder("&", boost::is_equal()));
+			it != boost::split_iterator<std::string::const_iterator>();
+			++it)
+		{
+			const auto equalIt = std::find(it->begin(), it->end(), '=');
+			std::string decodedKey;
+			network::uri::decode(it->begin(), equalIt, std::back_inserter(decodedKey));
+
+			if (equalIt != it->end())
+			{
+				std::string decodedValue;
+				network::uri::decode(equalIt + 1, it->end(), std::back_inserter(decodedValue));
+				result.insert(std::make_pair(decodedKey, decodedValue));
+			}
+			else
+			{
+				result.insert(std::make_pair(decodedKey, ""));
+			}
+		}
+
+		return result;
+	}
+
+	const network::uri uri;
 	boost::property_tree::ptree content;
 };
 
@@ -72,6 +115,18 @@ void SendJsonResponse(const HttpJsonResponse& jsonResponse, std::shared_ptr<Simp
 	*response << content;
 }
 
+network::uri BuildRequestUri(const SimpleServer::Request& request)
+{
+	// Per HTTP/1.1 the host header is required, and should be used to build the request URL
+	auto hostIt = request.header.find("Host");
+	if (hostIt == request.header.end())
+	{
+		throw std::runtime_error("Missing required Host header");
+	}
+	// TODO: use network::uri::decode() to decode % encoding, note that this can only be done on raw strings coming out of the uri
+	return network::uri("http://" + hostIt->second + request.path);
+}
+
 /**
  * Returns a request handler from the given JsonRequest -> JsonResponse handler that will correctly handle JSON requests
 */
@@ -80,7 +135,7 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 	return [=](std::shared_ptr<SimpleServer::Response> response, std::shared_ptr<SimpleServer::Request> request) {
 		try
 		{
-			HttpJsonRequest jsonRequest;
+			HttpJsonRequest jsonRequest(BuildRequestUri(*request));
 			if (request->method == "POST" || request->method == "PUT")
 			{
 				// TODO: Check JSON content type
@@ -127,8 +182,29 @@ HttpServer::HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager
 	});
 
 	// Test API that takes JSON and deserializes it, then sends it back as JSON
-	_simpleServer.resource["^/ping$"]["POST"] = JsonHandler([](const HttpJsonRequest& request) {
-		return HttpJsonResponse(200, "OK", request.content);
+	_simpleServer.resource["^/api/ping.*"]["POST"] = JsonHandler([](const HttpJsonRequest& request) {
+		boost::property_tree::ptree responseContent(request.content);
+		// expand the API
+		boost::property_tree::ptree uriContent;
+		uriContent.add("authority", request.uri.authority().to_string());
+		uriContent.add("host", request.uri.host().to_string());
+		uriContent.add("port", request.uri.port().to_string());
+		uriContent.add("path", request.uri.path().to_string());
+		uriContent.add("query", request.uri.query().to_string());
+
+		// Work around shitty ptree not supporting empty children :@
+		if (!request.uri.query().empty())
+		{
+			boost::property_tree::ptree queryParameters;
+			for (const auto& qp : request.GetQueryParameters())
+			{
+				queryParameters.add(qp.first, qp.second);
+			}
+			uriContent.add_child("queryParameters", queryParameters);
+		}
+
+		responseContent.add_child("_url", uriContent);
+		return HttpJsonResponse(200, "OK", responseContent);
 	});
 
 	_simpleServer.resource["^/api/stores$"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {

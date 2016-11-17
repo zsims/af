@@ -25,6 +25,7 @@ target_link_libraries(
     PUBLIC boost_filesystem
     PUBLIC boost_log
     PUBLIC webserver
+    PRIVATE cpp-netlib-uri
 )
 
 # Simple exe target

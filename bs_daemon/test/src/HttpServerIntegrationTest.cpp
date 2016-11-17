@@ -75,9 +75,10 @@ TEST_F(HttpServerIntegrationTest, Ping_Success)
 	HttpClient client(_testAddress);
 	const auto rawContent = u8R"({"fancy":"Сука Блять"})";
 	const auto expectedFancy = u8"Сука Блять";
+	const std::string queryString("foo=bar&sayHi&something%20with%20spaces%20=yes%20baby&special%3D=%3D");
 
 	// Act
-	auto response = client.request("POST", "/ping", rawContent);
+	auto response = client.request("POST", "/api/ping?" + queryString, rawContent);
 
 	// Assert
 	ASSERT_EQ(response->status_code, "200 OK");
@@ -86,6 +87,16 @@ TEST_F(HttpServerIntegrationTest, Ping_Success)
 	auto value = pt.get_optional<std::string>("fancy");
 	ASSERT_TRUE(value);
 	EXPECT_EQ(expectedFancy, value.get());
+	// TODO: the HttpClient doesn't sent he port in the Host: header
+	// EXPECT_EQ(_testAddress, pt.get<std::string>("_url.authority"));
+	// EXPECT_EQ(std::to_string(_testPort), pt.get<std::string>("_url.port"));
+	EXPECT_EQ("127.0.0.1", pt.get<std::string>("_url.host"));
+	EXPECT_EQ("/api/ping", pt.get<std::string>("_url.path"));
+	EXPECT_EQ(queryString, pt.get<std::string>("_url.query"));
+	EXPECT_EQ("bar", pt.get<std::string>("_url.queryParameters.foo"));
+	EXPECT_EQ("", pt.get<std::string>("_url.queryParameters.sayHi"));
+	EXPECT_EQ("yes baby", pt.get<std::string>("_url.queryParameters.something with spaces "));
+	EXPECT_EQ("=", pt.get<std::string>("_url.queryParameters.special="));
 }
 
 TEST_F(HttpServerIntegrationTest, Ping_BadRequestOnInvalidJson)
@@ -95,7 +106,7 @@ TEST_F(HttpServerIntegrationTest, Ping_BadRequestOnInvalidJson)
 	const auto rawContent = u8R"({"notvalid})";
 
 	// Act
-	auto response = client.request("POST", "/ping", rawContent);
+	auto response = client.request("POST", "/api/ping", rawContent);
 
 	// Assert
 	ASSERT_EQ(response->status_code, "400 Bad Request");
