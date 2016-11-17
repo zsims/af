@@ -8,11 +8,37 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 namespace af {
 namespace bslib {
 namespace blob {
+
+class BlobStoreError : public std::runtime_error
+{
+public:
+	explicit BlobStoreError(const std::string& msg)
+		: std::runtime_error(msg)
+	{
+	}
+};
+
+class CreateBlobFailed : public BlobStoreError
+{
+public:
+	explicit CreateBlobFailed(
+		const std::string& msg,
+		const boost::filesystem::path& path,
+		boost::system::error_code ec = {})
+		: BlobStoreError(msg)
+		, path(path)
+	{
+	}
+
+	const boost::filesystem::path path;
+	const boost::system::error_code ec;
+};
 
 class BlobStore
 {
@@ -38,7 +64,7 @@ public:
 	 * Creates a new named blob. If the blob already exists, it's overwritten.
 	 */
 	virtual void CreateNamedBlob(const UTF8String& name, const boost::filesystem::path& sourcePath) = 0;
-	
+
 	/**
 	 * Gets a blob by address.
 	 * \exception BlobReadException The blob with the given address couldn't be read, e.g. it doesn't exist or a permissions failure.

@@ -4,11 +4,29 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include <stdexcept>
 #include <string>
 
 namespace af {
 namespace bslib {
 namespace blob {
+
+class DirectoryBlobCreationFailed : public BlobStoreError
+{
+public:
+	explicit DirectoryBlobCreationFailed(
+		const std::string& msg,
+		const boost::filesystem::path& rootPath,
+		boost::system::error_code ec)
+		: BlobStoreError(msg)
+		, path(rootPath)
+		, ec(ec)
+	{
+	}
+
+	const boost::filesystem::path path;
+	const boost::system::error_code ec;
+};
 
 /**
  * Manages blobs with-in a directory
@@ -27,6 +45,8 @@ public:
 	std::vector<uint8_t> GetBlob(const Address& address) const override;
 	boost::property_tree::ptree ConvertToPropertyTree() const override;
 private:
+	explicit DirectoryBlobStore(const Uuid& id, const boost::filesystem::path& rootPath);
+
 	const boost::filesystem::path _rootPath;
 	const Uuid _id;
 };
