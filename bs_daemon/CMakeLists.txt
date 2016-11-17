@@ -26,6 +26,7 @@ target_link_libraries(
     PUBLIC boost_log
     PUBLIC webserver
     PRIVATE cpp-netlib-uri
+    PRIVATE nlohmann_json
 )
 
 # Simple exe target

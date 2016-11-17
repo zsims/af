@@ -36,7 +36,7 @@ public:
 	/**
 	 * Adds a blob store from a given type string and associated settings
 	 */
-	BlobStore& AddBlobStore(const UTF8String& typeString, const boost::property_tree::ptree& settingsChunk);
+	BlobStore& AddBlobStore(const UTF8String& typeString, const nlohmann::json& settings);
 
 	/**
 	 * Removes the blob store identified by the given id (if any)
@@ -45,7 +45,7 @@ public:
 
 	const std::vector<std::shared_ptr<BlobStore>> GetStores() const;
 private:
-	BlobStore& BlobStoreManager::AddBlobStoreNoLock(const UTF8String& typeString, const boost::property_tree::ptree& settingsChunk);
+	BlobStore& BlobStoreManager::AddBlobStoreNoLock(const UTF8String& typeString, const nlohmann::json& settings);
 	const boost::filesystem::path _settingsPath;
 	mutable std::mutex _mutex;
 	std::vector<std::shared_ptr<BlobStore>> _stores;

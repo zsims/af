@@ -28,12 +28,7 @@ public:
 	void CreateBlob(const Address& address, const std::vector<uint8_t>& content) override { }
 	void CreateNamedBlob(const UTF8String& name, const boost::filesystem::path& sourcePath) override { }
 	std::vector<uint8_t> GetBlob(const Address& address) const override { return std::vector<uint8_t>(); }
-	boost::property_tree::ptree ConvertToPropertyTree() const override
-	{
-		boost::property_tree::ptree result;
-		result.add("id", _id.ToString());
-		return result;
-	}
+	nlohmann::json ConvertToJson() const override { return nlohmann::json::object(); }
 private:
 	const Uuid _id;
 };

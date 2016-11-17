@@ -5,13 +5,7 @@
 
 #include <boost/algorithm/string/split.hpp>
 
-// Work around https://svn.boost.org/trac/boost/ticket/11599
-#pragma warning( push )
-#pragma warning( disable : 4715)
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#pragma warning( pop )
-
+#include <json.hpp>
 #include <network/uri.hpp>
 
 #include <memory>
@@ -64,7 +58,7 @@ struct HttpJsonRequest
 	}
 
 	const network::uri uri;
-	boost::property_tree::ptree content;
+	nlohmann::json content;
 };
 
 struct HttpJsonResponse
@@ -75,22 +69,23 @@ struct HttpJsonResponse
 	{
 	}
 
-	HttpJsonResponse(int statusCode, const std::string& statusDescription, const std::string& errorMessage)
-		: statusDescription(statusDescription)
-		, statusCode(statusCode)
-	{
-		content.push_back(boost::property_tree::ptree::value_type("error", errorMessage));
-	}
-
-	HttpJsonResponse(int statusCode, const std::string& statusDescription, const boost::property_tree::ptree& content)
+	HttpJsonResponse(int statusCode, const std::string& statusDescription, const nlohmann::json& content)
 		: statusDescription(statusDescription)
 		, statusCode(statusCode)
 		, content(content)
 	{
 	}
+
+	static HttpJsonResponse Error(int statusCode, const std::string& statusDescription, const std::string& message)
+	{
+		nlohmann::json errorContent;
+		errorContent["error"] = message;
+		return HttpJsonResponse(statusCode, statusDescription, errorContent);
+	}
+
 	std::string statusDescription;
 	int statusCode;
-	boost::property_tree::ptree content;
+	nlohmann::json content;
 };
 
 typedef std::function<HttpJsonResponse(const HttpJsonRequest&)> JsonRequestHandler;
@@ -101,14 +96,12 @@ void SendJsonResponse(const HttpJsonResponse& jsonResponse, std::shared_ptr<Simp
 	std::string content;
 	if (!jsonResponse.content.empty())
 	{
-		std::stringstream ss;
-		boost::property_tree::write_json(ss, jsonResponse.content);
-		content = ss.str();
+		content = jsonResponse.content.dump(1);
 	}
 	*response << "HTTP/1.1 " << jsonResponse.statusCode << " " << jsonResponse.statusDescription << "\r\n";
 	if (!content.empty())
 	{
-		*response << "Content-Length: " << content.length() - 1 << "\r\n";
+		*response << "Content-Length: " << content.length() << "\r\n";
 		*response << "Content-Type: application/json; charset=utf-8\r\n";
 	}
 	*response << "\r\n";
@@ -139,19 +132,29 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 			if (request->method == "POST" || request->method == "PUT")
 			{
 				// TODO: Check JSON content type
-				boost::property_tree::read_json(request->content, jsonRequest.content);
+				// See also https://github.com/nlohmann/json/issues/244 as more specific exception types are coming
+				try
+				{
+					jsonRequest.content = nlohmann::json::parse(request->content);
+				}
+				catch (std::exception& e)
+				{
+					const auto error = HttpJsonResponse::Error(400, "Bad Request", e.what());
+					SendJsonResponse(error, response);
+					return;
+				}
 			}
 			const auto& jsonResponse = handler(jsonRequest);
 			SendJsonResponse(jsonResponse, response);
 		}
-		catch (const boost::property_tree::json_parser_error& e)
-		{
-			const HttpJsonResponse error(400, "Bad Request", "Invalid JSON: " + e.message());
-			SendJsonResponse(error, response);
-		}
 		catch (std::exception& e)
 		{
-			const HttpJsonResponse error(500, "Internal Server Error", std::string(e.what()));
+			const auto error = HttpJsonResponse::Error(500, "Internal Server Error", e.what());
+			SendJsonResponse(error, response);
+		}
+		catch (...)
+		{
+			const auto error = HttpJsonResponse::Error(500, "Internal Server Error", "Unknown Error");
 			SendJsonResponse(error, response);
 		}
 	};
@@ -172,66 +175,67 @@ HttpServer::HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager
 	};
 
 	_simpleServer.resource["^/file$"]["POST"] = JsonHandler([&](const HttpJsonRequest& request) {
-		const auto& path = request.content.get_optional<std::string>("path");
-		if (!path)
+		const auto inputPath = request.content.find("path");
+		if (inputPath == request.content.end() || !inputPath->is_string())
 		{
-			return HttpJsonResponse(400, "Bad Request", "path is required");
+			return HttpJsonResponse::Error(400, "Bad Request", "path is required");
 		}
-		_jobExecutor.Queue(std::make_unique<FileBackupJob>(path.get()));
+		_jobExecutor.Queue(std::make_unique<FileBackupJob>(inputPath->get<std::string>()));
 		return HttpJsonResponse(202, "Accepted");
 	});
 
 	// Test API that takes JSON and deserializes it, then sends it back as JSON
 	_simpleServer.resource["^/api/ping.*"]["POST"] = JsonHandler([](const HttpJsonRequest& request) {
-		boost::property_tree::ptree responseContent(request.content);
-		// expand the API
-		boost::property_tree::ptree uriContent;
-		uriContent.add("authority", request.uri.authority().to_string());
-		uriContent.add("host", request.uri.host().to_string());
-		uriContent.add("port", request.uri.port().to_string());
-		uriContent.add("path", request.uri.path().to_string());
-		uriContent.add("query", request.uri.query().to_string());
+		nlohmann::json responseContent(request.content);
 
-		// Work around shitty ptree not supporting empty children :@
-		if (!request.uri.query().empty())
+		// expand the API
+		responseContent["_url"]["authority"] = request.uri.authority().to_string();
+		responseContent["_url"]["host"] = request.uri.host().to_string();
+		responseContent["_url"]["port"] = request.uri.port().to_string();
+		responseContent["_url"]["path"] = request.uri.path().to_string();
+		responseContent["_url"]["query"] = request.uri.query().to_string();
+		responseContent["_url"]["queryParameters"] = nlohmann::json::object();
+
+		for (const auto& qp : request.GetQueryParameters())
 		{
-			boost::property_tree::ptree queryParameters;
-			for (const auto& qp : request.GetQueryParameters())
-			{
-				queryParameters.add(qp.first, qp.second);
-			}
-			uriContent.add_child("queryParameters", queryParameters);
+			responseContent["_url"]["queryParameters"][qp.first] = qp.second;
 		}
 
-		responseContent.add_child("_url", uriContent);
 		return HttpJsonResponse(200, "OK", responseContent);
 	});
 
 	_simpleServer.resource["^/api/stores$"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
 		const auto stores = _blobStoreManager.GetStores();
-		boost::property_tree::ptree storesContent;
+		nlohmann::json storesResult;
 		for (const auto& store : stores)
 		{
-			auto storeContent = store->ConvertToPropertyTree();
-			storeContent.add("type", store->GetTypeString());
-			storesContent.push_back(std::make_pair("", storeContent));
+			nlohmann::json storeResult;
+			storeResult["id"] = store->GetId().ToString();
+			storeResult["type"] = store->GetTypeString();
+			storeResult["settings"] = store->ConvertToJson();
+			storesResult.push_back(storeResult);
 		}
-		boost::property_tree::ptree content;
-		content.add_child("stores", storesContent);
-		return HttpJsonResponse(200, "OK", content);
+		return HttpJsonResponse(200, "OK", storesResult);
 	});
 
 	_simpleServer.resource["^/api/stores$"]["POST"] = JsonHandler([&](const HttpJsonRequest& request) {
-		const auto& typeString = request.content.get_optional<std::string>("type");
-		if (!typeString)
+		const auto inputType = request.content.find("type");
+		const auto inputSettings = request.content.find("settings");
+		if (inputType == request.content.end() || !inputType->is_string())
 		{
-			return HttpJsonResponse(400, "Bad Request", "type is required");
+			return HttpJsonResponse::Error(400, "Bad Request", std::string("type is required"));
 		}
-		const auto& store = _blobStoreManager.AddBlobStore(typeString.value(), request.content);
-		auto content = store.ConvertToPropertyTree();
-		content.add("type", store.GetTypeString());
+		if (inputSettings == request.content.end() || !inputSettings->is_object())
+		{
+			return HttpJsonResponse::Error(400, "Bad Request", std::string("settings are required"));
+		}
+		const auto& store = _blobStoreManager.AddBlobStore(inputType->get<std::string>(), *inputSettings);
 		blobStoreManager.SaveToSettingsFile();
-		return HttpJsonResponse(201, "Created", content);
+		nlohmann::json created;
+		created["id"] = store.GetId().ToString();
+		created["type"] = store.GetTypeString();
+		created["settings"] = store.ConvertToJson();
+		return HttpJsonResponse(201, "Created", created);
 	});
 
 	// Start the server in a background thread, as it blocks while it accepts connections

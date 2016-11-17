@@ -2,18 +2,13 @@
 
 #include "bslib_test_util/TestBase.hpp"
 
-// Work around https://svn.boost.org/trac/boost/ticket/11599
-#pragma warning( push )
-#pragma warning( disable : 4715)
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#pragma warning( pop )
-
 // Avoid size_t <-> int64 warnings on Windows x32
 #pragma warning( push )
 #pragma warning( disable : 4244 )
 #include <client_http.hpp>
 #pragma warning( pop )
+
+#include <json.hpp>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -82,21 +77,22 @@ TEST_F(HttpServerIntegrationTest, Ping_Success)
 
 	// Assert
 	ASSERT_EQ(response->status_code, "200 OK");
-	boost::property_tree::ptree pt;
-	boost::property_tree::read_json(response->content, pt);
-	auto value = pt.get_optional<std::string>("fancy");
-	ASSERT_TRUE(value);
-	EXPECT_EQ(expectedFancy, value.get());
+	const auto json = nlohmann::json::parse(response->content);
+	EXPECT_EQ(expectedFancy, json.at("fancy").get<std::string>());
 	// TODO: the HttpClient doesn't sent he port in the Host: header
 	// EXPECT_EQ(_testAddress, pt.get<std::string>("_url.authority"));
 	// EXPECT_EQ(std::to_string(_testPort), pt.get<std::string>("_url.port"));
-	EXPECT_EQ("127.0.0.1", pt.get<std::string>("_url.host"));
-	EXPECT_EQ("/api/ping", pt.get<std::string>("_url.path"));
-	EXPECT_EQ(queryString, pt.get<std::string>("_url.query"));
-	EXPECT_EQ("bar", pt.get<std::string>("_url.queryParameters.foo"));
-	EXPECT_EQ("", pt.get<std::string>("_url.queryParameters.sayHi"));
-	EXPECT_EQ("yes baby", pt.get<std::string>("_url.queryParameters.something with spaces "));
-	EXPECT_EQ("=", pt.get<std::string>("_url.queryParameters.special="));
+	const auto url = json.at("_url");
+	ASSERT_TRUE(url.is_object());
+	EXPECT_EQ("127.0.0.1", url.at("host").get<std::string>());
+	EXPECT_EQ("/api/ping", url.at("path").get<std::string>());
+	EXPECT_EQ(queryString, url.at("query").get<std::string>());
+	const auto queryParameters = url.at("queryParameters");
+	ASSERT_TRUE(queryParameters.is_object());
+	EXPECT_EQ("bar", queryParameters.at("foo").get<std::string>());
+	EXPECT_EQ("", queryParameters.at("sayHi").get<std::string>());
+	EXPECT_EQ("yes baby", queryParameters.at("something with spaces ").get<std::string>());
+	EXPECT_EQ("=", queryParameters.at("special=").get<std::string>());
 }
 
 TEST_F(HttpServerIntegrationTest, Ping_BadRequestOnInvalidJson)
@@ -110,10 +106,8 @@ TEST_F(HttpServerIntegrationTest, Ping_BadRequestOnInvalidJson)
 
 	// Assert
 	ASSERT_EQ(response->status_code, "400 Bad Request");
-	boost::property_tree::ptree pt;
-	boost::property_tree::read_json(response->content, pt);
-	auto value = pt.get_optional<std::string>("error");
-	EXPECT_TRUE(value);
+	const auto json = nlohmann::json::parse(response->content);
+	EXPECT_TRUE(json.at("error").is_string());
 }
 
 TEST_F(HttpServerIntegrationTest, PostFilePath_Success)
@@ -124,11 +118,9 @@ TEST_F(HttpServerIntegrationTest, PostFilePath_Success)
 	const auto testPath = GetUniqueTempPath();
 	WriteFile(testPath);
 
-	boost::property_tree::ptree pt;
-	pt.push_back(boost::property_tree::ptree::value_type("path", testPath.string()));
-	std::stringstream ss;
-	boost::property_tree::write_json(ss, pt);
-	const auto rawContent = ss.str();
+	nlohmann::json requestContent;
+	requestContent["path"] = testPath.string();
+	const auto rawContent = requestContent.dump();
 
 	// Act
 	auto response = client.request("POST", "/file", rawContent);
@@ -148,10 +140,8 @@ TEST_F(HttpServerIntegrationTest, PostFilePath_BadRequestIfMissingPath)
 
 	// Assert
 	ASSERT_EQ(response->status_code, "400 Bad Request");
-	boost::property_tree::ptree pt;
-	boost::property_tree::read_json(response->content, pt);
-	auto value = pt.get_optional<std::string>("error");
-	EXPECT_TRUE(value);
+	const auto json = nlohmann::json::parse(response->content);
+	EXPECT_TRUE(json.at("error").is_string());
 }
 
 TEST_F(HttpServerIntegrationTest, PostStores_Success)
@@ -160,23 +150,20 @@ TEST_F(HttpServerIntegrationTest, PostStores_Success)
 	HttpClient client(_testAddress);
 	const auto testPath = GetUniqueTempPath().string();
 
-	boost::property_tree::ptree pt;
-	pt.add("type", "directory");
-	pt.add("path", testPath);
-	std::stringstream ss;
-	boost::property_tree::write_json(ss, pt);
-	const auto rawContent = ss.str();
+	nlohmann::json requestContent;
+	requestContent["type"] = "directory";
+	requestContent["settings"]["path"] = testPath;
+	const auto rawContent = requestContent.dump();
 
 	// Act
 	auto response = client.request("POST", "/api/stores", rawContent);
 
 	// Assert
 	ASSERT_EQ(response->status_code, "201 Created");
-	boost::property_tree::ptree responseContent;
-	boost::property_tree::read_json(response->content, responseContent);
-	EXPECT_EQ("directory", responseContent.get<std::string>("type"));
-	EXPECT_NE(responseContent.find("id"), responseContent.not_found());
-	EXPECT_EQ(testPath, responseContent.get<std::string>("path"));
+	const auto responseContent = nlohmann::json::parse(response->content);
+	EXPECT_EQ("directory", responseContent.at("type").get<std::string>());
+	EXPECT_TRUE(responseContent.at("id").is_string());
+	EXPECT_EQ(testPath, responseContent.at("settings").at("path").get<std::string>());
 }
 
 TEST_F(HttpServerIntegrationTest, PostStores_BadRequestIfMissingType)
@@ -190,10 +177,8 @@ TEST_F(HttpServerIntegrationTest, PostStores_BadRequestIfMissingType)
 
 	// Assert
 	ASSERT_EQ(response->status_code, "400 Bad Request");
-	boost::property_tree::ptree pt;
-	boost::property_tree::read_json(response->content, pt);
-	auto value = pt.get_optional<std::string>("error");
-	EXPECT_TRUE(value);
+	const auto responseContent = nlohmann::json::parse(response->content);
+	EXPECT_TRUE(responseContent.at("error").is_string());
 }
 
 }
