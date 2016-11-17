@@ -18,22 +18,31 @@ namespace blob {
 const std::string DirectoryBlobStore::TYPE = "directory";
 
 DirectoryBlobStore::DirectoryBlobStore(const boost::filesystem::path& rootPath)
-	: _rootPath(rootPath)
-	, _id(Uuid::Create())
+	: DirectoryBlobStore(Uuid::Create(), rootPath)
 {
 }
 
 DirectoryBlobStore::DirectoryBlobStore(const boost::property_tree::ptree& settings)
-	: _rootPath(settings.get<std::string>("path"))
-	, _id(settings.get<std::string>("id"))
+	: DirectoryBlobStore(Uuid(settings.get<std::string>("id")),
+		boost::filesystem::path(settings.get<std::string>("path")))
 {
 }
 
 DirectoryBlobStore::DirectoryBlobStore(const Uuid& id, const boost::property_tree::ptree& settings)
-	: _rootPath(settings.get<std::string>("path"))
+	: DirectoryBlobStore(id, boost::filesystem::path(settings.get<std::string>("path")))
+{
+}
+
+DirectoryBlobStore::DirectoryBlobStore(const Uuid& id, const boost::filesystem::path& rootPath)
+	: _rootPath(rootPath)
 	, _id(id)
 {
-
+	boost::system::error_code ec;
+	boost::filesystem::create_directories(_rootPath, ec);
+	if (ec)
+	{
+		throw DirectoryBlobCreationFailed("Failed to create root path", _rootPath, ec);
+	}
 }
 
 void DirectoryBlobStore::CreateBlob(const Address& address, const std::vector<uint8_t>& content)
@@ -43,13 +52,22 @@ void DirectoryBlobStore::CreateBlob(const Address& address, const std::vector<ui
 	// Save the blob
 	const auto blobPath = _rootPath / stringAddress;
 	std::ofstream f(blobPath.string(), std::ios::out | std::ofstream::binary);
+	if (!f)
+	{
+		throw CreateBlobFailed("Failed to write blob file", blobPath);
+	}
 	std::copy(content.begin(), content.end(), std::ostreambuf_iterator<char>(f));
 }
 
 void DirectoryBlobStore::CreateNamedBlob(const UTF8String& name, const boost::filesystem::path& sourcePath)
 {
 	const auto blobPath = _rootPath / boost::filesystem::path(UTF8ToWideString(name));
-	boost::filesystem::copy_file(sourcePath, blobPath, boost::filesystem::copy_option::overwrite_if_exists);
+	boost::system::error_code ec;
+	boost::filesystem::copy_file(sourcePath, blobPath, boost::filesystem::copy_option::overwrite_if_exists, ec);
+	if (ec)
+	{
+		throw CreateBlobFailed("Failed to write named blob file", blobPath, ec);
+	}
 }
 
 std::vector<uint8_t> DirectoryBlobStore::GetBlob(const Address& address) const
