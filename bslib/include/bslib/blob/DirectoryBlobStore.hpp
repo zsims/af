@@ -16,15 +16,16 @@ namespace blob {
 class DirectoryBlobStore : public BlobStore
 {
 public:
+	static const std::string TYPE;
 	explicit DirectoryBlobStore(const boost::filesystem::path& rootPath);
 	explicit DirectoryBlobStore(const boost::property_tree::ptree& settings);
 	DirectoryBlobStore(const Uuid& id, const boost::property_tree::ptree& settings);
 	Uuid GetId() const override { return _id; }
-	UTF8String GetTypeString() const override { return "directory"; }
+	UTF8String GetTypeString() const override { return TYPE; }
 	void CreateBlob(const Address& address, const std::vector<uint8_t>& content) override;
 	void CreateNamedBlob(const UTF8String& name, const boost::filesystem::path& sourcePath) override;
 	std::vector<uint8_t> GetBlob(const Address& address) const override;
-	void SaveSettings(boost::property_tree::ptree& ptree) const override;
+	boost::property_tree::ptree ConvertToPropertyTree() const override;
 private:
 	const boost::filesystem::path _rootPath;
 	const Uuid _id;

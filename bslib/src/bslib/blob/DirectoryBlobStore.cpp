@@ -15,6 +15,8 @@ namespace af {
 namespace bslib {
 namespace blob {
 
+const std::string DirectoryBlobStore::TYPE = "directory";
+
 DirectoryBlobStore::DirectoryBlobStore(const boost::filesystem::path& rootPath)
 	: _rootPath(rootPath)
 	, _id(Uuid::Create())
@@ -47,11 +49,7 @@ void DirectoryBlobStore::CreateBlob(const Address& address, const std::vector<ui
 void DirectoryBlobStore::CreateNamedBlob(const UTF8String& name, const boost::filesystem::path& sourcePath)
 {
 	const auto blobPath = _rootPath / boost::filesystem::path(UTF8ToWideString(name));
-	if (boost::filesystem::exists(blobPath))
-	{
-		boost::filesystem::remove(blobPath);
-	}
-	boost::filesystem::copy_file(sourcePath, blobPath);
+	boost::filesystem::copy_file(sourcePath, blobPath, boost::filesystem::copy_option::overwrite_if_exists);
 }
 
 std::vector<uint8_t> DirectoryBlobStore::GetBlob(const Address& address) const
@@ -76,10 +74,12 @@ std::vector<uint8_t> DirectoryBlobStore::GetBlob(const Address& address) const
 	return result;
 }
 
-void DirectoryBlobStore::SaveSettings(boost::property_tree::ptree& ptree) const
+boost::property_tree::ptree DirectoryBlobStore::ConvertToPropertyTree() const
 {
+	boost::property_tree::ptree ptree;
 	ptree.put("path", _rootPath.string());
 	ptree.put("id", _id.ToString());
+	return ptree;
 }
 
 }

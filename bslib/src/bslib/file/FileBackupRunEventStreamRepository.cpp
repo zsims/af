@@ -9,7 +9,6 @@
 #include <sqlite3.h>
 
 #include <memory>
-#include <utility>
 
 namespace af {
 namespace bslib {
@@ -18,10 +17,10 @@ namespace file {
 namespace {
 enum GetObjectColumnIndex
 {
-	GetFileEvent_ColumnIndex_Id = 0,
-	GetFileEvent_ColumnIndex_DateUtc,
-	GetFileEvent_ColumnIndex_BackupRunId,
-	GetFileEvent_ColumnIndex_Action
+	GetFileBackupRunEvent_ColumnIndex_Id = 0,
+	GetFileBackupRunEvent_ColumnIndex_DateUtc,
+	GetFileBackupRunEvent_ColumnIndex_BackupRunId,
+	GetFileBackupRunEvent_ColumnIndex_Action
 };
 }
 
@@ -72,11 +71,11 @@ void FileBackupRunEventStreamRepository::AddEvent(const FileBackupRunEvent& back
 
 FileBackupRunEvent FileBackupRunEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStatement& statement) const
 {
-	const auto runIdBytesCount = sqlite3_column_bytes(statement, GetFileEvent_ColumnIndex_BackupRunId);
-	const auto runIdBytes = sqlite3_column_blob(statement, GetFileEvent_ColumnIndex_BackupRunId);
+	const auto runIdBytesCount = sqlite3_column_bytes(statement, GetFileBackupRunEvent_ColumnIndex_BackupRunId);
+	const auto runIdBytes = sqlite3_column_blob(statement, GetFileBackupRunEvent_ColumnIndex_BackupRunId);
 	const Uuid runId(runIdBytes, runIdBytesCount);
-	const FileBackupRunEventAction action = static_cast<FileBackupRunEventAction>(sqlite3_column_int(statement, GetFileEvent_ColumnIndex_Action));
-	const auto unixDate = static_cast<time_t>(sqlite3_column_int(statement, GetFileEvent_ColumnIndex_DateUtc));
+	const FileBackupRunEventAction action = static_cast<FileBackupRunEventAction>(sqlite3_column_int(statement, GetFileBackupRunEvent_ColumnIndex_Action));
+	const auto unixDate = static_cast<time_t>(sqlite3_column_int(statement, GetFileBackupRunEvent_ColumnIndex_DateUtc));
 	const auto pt = boost::posix_time::from_time_t(unixDate);
 	return FileBackupRunEvent(runId, pt, action);
 }

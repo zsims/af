@@ -4,13 +4,6 @@
 #include "bslib/file/FileBackupRunEvent.hpp"
 #include "bslib/Uuid.hpp"
 
-#include <boost/optional.hpp>
-
-#include <functional>
-#include <vector>
-#include <map>
-#include <memory>
-
 namespace af {
 namespace bslib {
 namespace file {

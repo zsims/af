@@ -39,6 +39,7 @@ add_library(
     src/bslib/blob/BlobStoreManager.cpp
     src/bslib/blob/DirectoryBlobStore.cpp
     src/bslib/blob/exceptions.hpp
+    src/bslib/blob/NullBlobStore.cpp
     src/bslib/BackupDatabase.cpp
     src/bslib/BackupDatabaseConnection.hpp
     src/bslib/BackupDatabaseUnitOfWork.cpp

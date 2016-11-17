@@ -136,9 +136,8 @@ HttpServer::HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager
 		boost::property_tree::ptree storesContent;
 		for (const auto& store : stores)
 		{
-			boost::property_tree::ptree storeContent;
+			auto storeContent = store->ConvertToPropertyTree();
 			storeContent.add("type", store->GetTypeString());
-			store->SaveSettings(storeContent);
 			storesContent.push_back(std::make_pair("", storeContent));
 		}
 		boost::property_tree::ptree content;
@@ -153,9 +152,8 @@ HttpServer::HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager
 			return HttpJsonResponse(400, "Bad Request", "type is required");
 		}
 		const auto& store = _blobStoreManager.AddBlobStore(typeString.value(), request.content);
-		boost::property_tree::ptree content;
+		auto content = store.ConvertToPropertyTree();
 		content.add("type", store.GetTypeString());
-		store.SaveSettings(content);
 		blobStoreManager.SaveToSettingsFile();
 		return HttpJsonResponse(201, "Created", content);
 	});

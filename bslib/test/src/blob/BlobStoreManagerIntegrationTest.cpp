@@ -1,6 +1,7 @@
 #include "bslib/blob/BlobStoreManager.hpp"
 #include "bslib/blob/DirectoryBlobStore.hpp"
 #include "bslib/blob/exceptions.hpp"
+#include "bslib/blob/NullBlobStore.hpp"
 #include "bslib_test_util/TestBase.hpp"
 
 #include <boost/filesystem.hpp>
@@ -25,6 +26,7 @@ TEST_F(BlobStoreManagerIntegrationTest, SaveLoad_Success)
 	BlobStoreManager manager(settingsPath);
 	manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some path"));
 	manager.AddBlobStore(std::make_shared<DirectoryBlobStore>("some other path"));
+	manager.AddBlobStore(std::make_shared<NullBlobStore>());
 
 	// Act
 	manager.SaveToSettingsFile();
@@ -34,7 +36,7 @@ TEST_F(BlobStoreManagerIntegrationTest, SaveLoad_Success)
 		BlobStoreManager other(settingsPath);
 		other.LoadFromSettingsFile();
 		const auto& loadedStores = other.GetStores();
-		ASSERT_EQ(2, loadedStores.size());
+		ASSERT_EQ(3, loadedStores.size());
 	}
 }
 

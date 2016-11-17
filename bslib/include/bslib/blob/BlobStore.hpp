@@ -46,11 +46,9 @@ public:
 	virtual std::vector<uint8_t> GetBlob(const Address& address) const = 0;
 
 	/**
-	 * Saves the blob store settings to the given property tree
+	 * Returns the blob store settings as a property tree
 	 */
-	virtual void SaveSettings(boost::property_tree::ptree& ptree) const = 0;
-private:
-	
+	virtual boost::property_tree::ptree ConvertToPropertyTree() const = 0;
 };
 
 }
