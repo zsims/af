@@ -38,7 +38,7 @@ boost::filesystem::path GetDefaultBackupDatabasePath()
 
 boost::filesystem::path GetDefaultStoreSettingsPath()
 {
-	return GetRoot() / "stores.xml";
+	return GetRoot() / "stores.json";
 }
 
 }

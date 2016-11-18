@@ -5,7 +5,7 @@
 #include "bslib/Uuid.hpp"
 
 #include <boost/filesystem/path.hpp>
-#include <boost/property_tree/ptree.hpp>
+#include <json.hpp>
 
 #include <memory>
 #include <stdexcept>
@@ -74,7 +74,7 @@ public:
 	/**
 	 * Returns the blob store settings as a property tree
 	 */
-	virtual boost::property_tree::ptree ConvertToPropertyTree() const = 0;
+	virtual nlohmann::json ConvertToJson() const = 0;
 };
 
 }

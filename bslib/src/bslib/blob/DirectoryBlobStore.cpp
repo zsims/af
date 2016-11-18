@@ -22,14 +22,8 @@ DirectoryBlobStore::DirectoryBlobStore(const boost::filesystem::path& rootPath)
 {
 }
 
-DirectoryBlobStore::DirectoryBlobStore(const boost::property_tree::ptree& settings)
-	: DirectoryBlobStore(Uuid(settings.get<std::string>("id")),
-		boost::filesystem::path(settings.get<std::string>("path")))
-{
-}
-
-DirectoryBlobStore::DirectoryBlobStore(const Uuid& id, const boost::property_tree::ptree& settings)
-	: DirectoryBlobStore(id, boost::filesystem::path(settings.get<std::string>("path")))
+DirectoryBlobStore::DirectoryBlobStore(const Uuid& id, const nlohmann::json& settings)
+	: DirectoryBlobStore(id, boost::filesystem::path(settings.at("path")))
 {
 }
 
@@ -92,12 +86,11 @@ std::vector<uint8_t> DirectoryBlobStore::GetBlob(const Address& address) const
 	return result;
 }
 
-boost::property_tree::ptree DirectoryBlobStore::ConvertToPropertyTree() const
+nlohmann::json DirectoryBlobStore::ConvertToJson() const
 {
-	boost::property_tree::ptree ptree;
-	ptree.put("path", _rootPath.string());
-	ptree.put("id", _id.ToString());
-	return ptree;
+	nlohmann::json result;
+	result["path"] = _rootPath.string();
+	return result;
 }
 
 }

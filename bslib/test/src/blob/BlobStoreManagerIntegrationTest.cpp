@@ -112,11 +112,11 @@ TEST_F(BlobStoreManagerIntegrationTest, AddBlobStore_ThrowsOnInvalidType)
 	// Arrange
 	const auto settingsPath = GetUniqueTempPath();
 	BlobStoreManager manager(settingsPath);
-	boost::property_tree::ptree pt;
+	nlohmann::json json;
 
 	// Act
 	// Assert
-	EXPECT_THROW(manager.AddBlobStore("not real", pt), InvalidBlobStoreTypeException);
+	EXPECT_THROW(manager.AddBlobStore("not real", json), InvalidBlobStoreTypeException);
 }
 
 }

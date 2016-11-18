@@ -85,6 +85,7 @@ target_link_libraries(
     PUBLIC boost_log
     PUBLIC boost_date_time
     PUBLIC sqlite
+    PUBLIC nlohmann_json
     PUBLIC shlwapi.lib
 )
 

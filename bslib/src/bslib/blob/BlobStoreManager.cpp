@@ -5,16 +5,15 @@
 #include "bslib/blob/exceptions.hpp"
 
 #include <boost/filesystem.hpp>
-#include <boost/property_tree/xml_parser.hpp>
+#include <json.hpp>
 
 #include <algorithm>
+#include <fstream>
 #include <memory>
 
 namespace af {
 namespace bslib {
 namespace blob {
-
-namespace bpt = boost::property_tree;
 
 BlobStoreManager::BlobStoreManager(const boost::filesystem::path& settingsPath)
 	: _settingsPath(settingsPath)
@@ -25,11 +24,17 @@ void BlobStoreManager::LoadFromSettingsFile()
 {
 	std::unique_lock<std::mutex> lock(_mutex);
 	_stores.clear();
-	bpt::ptree pt;
-	bpt::read_xml(_settingsPath.string(), pt);
-	for (const auto& store : pt.get_child("stores"))
+
+	std::ifstream f;
+	f.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	f.open(_settingsPath.string(), std::ios::in | std::ifstream::binary);
+	const auto settings = nlohmann::json::parse(f);
+	if (settings.at("stores").is_array())
 	{
-		AddBlobStoreNoLock(store.first, store.second);
+		for (const auto& store : settings["stores"])
+		{
+			AddBlobStoreNoLock(store.at("type").get<std::string>(), store.at("settings"));
+		}
 	}
 }
 
@@ -43,17 +48,22 @@ void BlobStoreManager::SaveToSettingsFile() const
 		boost::filesystem::create_directories(parentPath);
 	}
 
-	bpt::ptree pt;
-	bpt::ptree stores;
+	nlohmann::json stores;
 	for (auto& store : _stores)
 	{
-		auto storeSettings = store->ConvertToPropertyTree();
-		stores.add_child(store->GetTypeString(), storeSettings);
+		nlohmann::json storeEntry;
+		storeEntry["id"] = store->GetId().ToString();
+		storeEntry["type"] = store->GetTypeString();
+		storeEntry["settings"] = store->ConvertToJson();
+		stores.push_back(storeEntry);
 	}
-	pt.add_child("stores", stores);
 
-	auto writerSettings = boost::property_tree::xml_writer_make_settings<std::string>('\t', 1, "utf-8");
-	bpt::write_xml(_settingsPath.string(), pt, std::locale(), writerSettings);
+	std::ofstream f;
+	f.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+	f.open(_settingsPath.string(), std::ios::out | std::ofstream::binary);
+	nlohmann::json settings;
+	settings["stores"] = stores;
+	f << std::setw(2) << settings;
 }
 
 BlobStore& BlobStoreManager::AddBlobStore(std::shared_ptr<BlobStore> store)
@@ -63,17 +73,17 @@ BlobStore& BlobStoreManager::AddBlobStore(std::shared_ptr<BlobStore> store)
 	return *_stores.back();
 }
 
-BlobStore& BlobStoreManager::AddBlobStore(const UTF8String& typeString, const boost::property_tree::ptree& settingsChunk)
+BlobStore& BlobStoreManager::AddBlobStore(const UTF8String& typeString, const nlohmann::json& settings)
 {
 	std::unique_lock<std::mutex> lock(_mutex);
-	return AddBlobStoreNoLock(typeString, settingsChunk);
+	return AddBlobStoreNoLock(typeString, settings);
 }
 
-BlobStore& BlobStoreManager::AddBlobStoreNoLock(const UTF8String& typeString, const boost::property_tree::ptree& settingsChunk)
+BlobStore& BlobStoreManager::AddBlobStoreNoLock(const UTF8String& typeString, const nlohmann::json& settings)
 {
 	if (typeString == DirectoryBlobStore::TYPE)
 	{
-		_stores.push_back(std::make_shared<DirectoryBlobStore>(Uuid::Create(), settingsChunk));
+		_stores.push_back(std::make_shared<DirectoryBlobStore>(Uuid::Create(), settings));
 	}
 	else if (typeString == NullBlobStore::TYPE)
 	{
