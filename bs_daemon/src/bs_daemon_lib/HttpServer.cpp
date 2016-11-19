@@ -162,8 +162,13 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 
 }
 
-HttpServer::HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager, JobExecutor& jobExecutor)
-	: _blobStoreManager(blobStoreManager)
+HttpServer::HttpServer(
+	int port,
+	bslib::Backup& backup,
+	bslib::blob::BlobStoreManager& blobStoreManager,
+	JobExecutor& jobExecutor)
+	: _backup(backup)
+	, _blobStoreManager(blobStoreManager)
 	, _jobExecutor(jobExecutor)
 	, _simpleServer(port, /* number of threads = */ 1)
 {
@@ -236,6 +241,33 @@ HttpServer::HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager
 		created["type"] = store.GetTypeString();
 		created["settings"] = store.ConvertToJson();
 		return HttpJsonResponse(201, "Created", created);
+	});
+
+	_simpleServer.resource["^/api/files/backups$"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+		auto uow = _backup.CreateUnitOfWork();
+		const auto reader = uow->CreateFileBackupRunReader();
+		const auto PAGE_SIZE = 30;
+		const auto page = reader->GetBackups(0, PAGE_SIZE);
+		auto backupsResult = nlohmann::json::array();
+		for (const auto& backup : page.backups)
+		{
+			nlohmann::json backupResult;
+			backupResult["id"] = backup.runId.ToString();
+			backupResult["started_on_utc"] = boost::posix_time::to_iso_extended_string(backup.startedUtc);
+			if (backup.finishedUtc)
+			{
+				backupResult["finished_on_utc"] = boost::posix_time::to_iso_extended_string(backup.finishedUtc.value());
+			}
+			else
+			{
+				backupResult["finished_on_utc"] = nullptr;
+			}
+			backupsResult.push_back(backupResult);
+		}
+		nlohmann::json result;
+		result["backups"] = backupsResult;
+		result["page_size"] = PAGE_SIZE;
+		return HttpJsonResponse(200, "OK", result);
 	});
 
 	// Start the server in a background thread, as it blocks while it accepts connections

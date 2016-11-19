@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bslib/Backup.hpp"
 #include "bslib/blob/BlobStoreManager.hpp"
 #include "bs_daemon_lib/JobExecutor.hpp"
 
@@ -24,12 +25,17 @@ namespace bs_daemon {
 class HttpServer : public boost::noncopyable
 {
 public:
-	HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager, JobExecutor& jobExecutor);
+	HttpServer(
+		int port,
+		bslib::Backup& backup,
+		bslib::blob::BlobStoreManager& blobStoreManager,
+		JobExecutor& jobExecutor);
 	~HttpServer();
 private:
 	void Stop();
 	void Run();
 
+	bslib::Backup& _backup;
 	bslib::blob::BlobStoreManager& _blobStoreManager;
 	JobExecutor& _jobExecutor;
 	SimpleServer _simpleServer;

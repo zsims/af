@@ -13,6 +13,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <algorithm>
 #include <random>
 
 typedef SimpleWeb::Client<SimpleWeb::HTTP> HttpClient;
@@ -42,7 +43,7 @@ protected:
 		, _testAddress("127.0.0.1:" + std::to_string(_testPort))
 		, _backup(_testBackup.OpenOrCreate())
 		, _jobExecutor(_backup)
-		, _httpServer(_testPort, _testBackup.GetBlobStoreManager(), _jobExecutor)
+		, _httpServer(_testPort, _backup, _testBackup.GetBlobStoreManager(), _jobExecutor)
 	{
 	}
 	const int _testPort;
@@ -179,6 +180,43 @@ TEST_F(HttpServerIntegrationTest, PostStores_BadRequestIfMissingType)
 	ASSERT_EQ(response->status_code, "400 Bad Request");
 	const auto responseContent = nlohmann::json::parse(response->content);
 	EXPECT_TRUE(responseContent.at("error").is_string());
+}
+
+TEST_F(HttpServerIntegrationTest, GetBackups_Success)
+{
+	// Arrange
+	HttpClient client(_testAddress);
+
+	// Record a few backups
+	auto uow = _backup.CreateUnitOfWork();
+	auto recorder = uow->CreateFileBackupRunRecorder();
+	const auto run1 = recorder->Start();
+	recorder->Stop(run1);
+	const auto run2 = recorder->Start();
+	uow->Commit();
+
+	// Act
+	auto response = client.request("GET", "/api/files/backups");
+
+	// Assert
+	ASSERT_EQ(response->status_code, "200 OK");
+	const auto responseContent = nlohmann::json::parse(response->content);
+	EXPECT_TRUE(responseContent.at("page_size").is_number());
+	const auto backupsIt = responseContent.find("backups");
+	ASSERT_TRUE(backupsIt != responseContent.end()) << "'backups' element is found";
+	EXPECT_EQ(2, backupsIt->size());
+	{
+		const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run1; });
+		ASSERT_TRUE(backupIt != backupsIt->end());
+		EXPECT_TRUE(backupIt->at("started_on_utc").is_string());
+		EXPECT_FALSE(backupIt->at("finished_on_utc").is_null());
+	}
+	{
+		const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run2; });
+		ASSERT_TRUE(backupIt != backupsIt->end());
+		EXPECT_TRUE(backupIt->at("started_on_utc").is_string());
+		EXPECT_TRUE(backupIt->at("finished_on_utc").is_null());
+	}
 }
 
 }
