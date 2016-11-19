@@ -19,6 +19,7 @@ add_executable(
     src/default_locationsIntegrationTest.cpp
     src/file/FileAdderIntegrationTest.cpp
     src/file/FileBackupRunEventStreamRepositoryIntegrationTest.cpp
+    src/file/FileBackupRunReaderIntegrationTest.cpp
     src/file/FileBackupRunRecorderIntegrationTest.cpp
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
     src/file/FileRestorerIntegrationTest.cpp

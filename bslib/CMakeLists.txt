@@ -20,6 +20,7 @@ add_library(
     include/bslib/file/exceptions.hpp
     include/bslib/file/FileAdder.hpp
     include/bslib/file/FileBackupRunEvent.hpp
+    include/bslib/file/FileBackupRunReader.hpp
     include/bslib/file/FileBackupRunRecorder.hpp
     include/bslib/file/FileEvent.hpp
     include/bslib/file/FileRestoreEvent.hpp
@@ -49,6 +50,7 @@ add_library(
     src/bslib/file/FileAdder.cpp
     src/bslib/file/FileBackupRunEventStreamRepository.cpp
     src/bslib/file/FileBackupRunEventStreamRepository.hpp
+    src/bslib/file/FileBackupRunReader.cpp
     src/bslib/file/FileBackupRunRecorder.cpp
     src/bslib/file/FileEventStreamRepository.cpp
     src/bslib/file/FileEventStreamRepository.hpp

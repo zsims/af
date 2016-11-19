@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bslib/blob/Address.hpp"
+#include "bslib/file/FileBackupRunReader.hpp"
 #include "bslib/file/FileBackupRunRecorder.hpp"
 #include "bslib/file/FileAdder.hpp"
 #include "bslib/file/FileFinder.hpp"
@@ -25,6 +26,11 @@ public:
 	 * Saves the new unit of work
 	 */
 	virtual void Commit() = 0;
+
+	/**
+	 * Creates a file backup run recorder for reading backup runs
+	 */
+	virtual std::unique_ptr<file::FileBackupRunReader> CreateFileBackupRunReader() = 0;
 
 	/**
 	 * Creates a file backup run recorder for recording details of a backup run
