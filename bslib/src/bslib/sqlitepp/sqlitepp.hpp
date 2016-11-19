@@ -56,6 +56,15 @@ void BindByParameterNameText(sqlite3_stmt* statement, const std::string& name, c
 void BindByParameterNameInt64(sqlite3_stmt* statement, const std::string& name, int64_t value);
 
 /**
+ * Binds an int32 parameter by name (e.g. :Foo)
+ * \param statement The statement to bind the parameter to
+ * \param name The name of the parameter
+ * \param value The value of the parameter
+ * \throws BindParameterFailedException The parameter couldn't be bound
+ */
+void BindByParameterNameInt32(sqlite3_stmt* statement, const std::string& name, int32_t value);
+
+/**
  * Binds a blob parameter by name (e.g. :Foo)
  * \param statement The statement to bind the parameter to
  * \param name The name of the parameter

@@ -69,6 +69,36 @@ void FileBackupRunEventStreamRepository::AddEvent(const FileBackupRunEvent& back
 	}
 }
 
+std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::GetPaged(unsigned skipRuns, unsigned uniqueRunLimit) const
+{
+	sqlitepp::ScopedStatement statement;
+
+	const std::string query = R"(
+		SELECT Id, DateTimeUtc, BackupRunId, Action
+		FROM FileBackupRunEvent
+		WHERE BackupRunId IN (
+			SELECT BackupRunId FROM FileBackupRunEvent
+			WHERE Action = :Action
+			ORDER BY Id ASC 
+			LIMIT :Skip, :PageSize
+		)
+		ORDER BY Id ASC)";
+
+	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
+	sqlitepp::BindByParameterNameInt32(statement, ":Skip", static_cast<int32_t>(skipRuns));
+	sqlitepp::BindByParameterNameInt32(statement, ":PageSize", static_cast<int32_t>(uniqueRunLimit));
+	sqlitepp::BindByParameterNameInt32(statement, ":Action", static_cast<int32_t>(FileBackupRunEventAction::Started));
+
+	std::vector<FileBackupRunEvent> result;
+	auto stepResult = 0;
+	while ((stepResult = sqlite3_step(statement)) == SQLITE_ROW)
+	{
+		result.push_back(MapRowToEvent(statement));
+	}
+
+	return result;
+}
+
 FileBackupRunEvent FileBackupRunEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStatement& statement) const
 {
 	const auto runIdBytesCount = sqlite3_column_bytes(statement, GetFileBackupRunEvent_ColumnIndex_BackupRunId);

@@ -29,6 +29,13 @@ public:
 			AddEvent(e);
 		}
 	}
+
+	/**
+	 * Gets a list of events
+	 * \param skipRuns The number of (unique) runs to skip
+	 * \param uniqueRunLimit The limit of unique runs to return
+	 */
+	std::vector<FileBackupRunEvent> GetPaged(unsigned skipRuns, unsigned uniqueRunLimit) const;
 private:
 	FileBackupRunEvent MapRowToEvent(const sqlitepp::ScopedStatement& statement) const;
 
