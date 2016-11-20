@@ -243,11 +243,28 @@ HttpServer::HttpServer(
 		return HttpJsonResponse(201, "Created", created);
 	});
 
-	_simpleServer.resource["^/api/files/backups$"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+	_simpleServer.resource["^/api/files/backups.*"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+		unsigned skip = 0;
+		unsigned pageSize = 30;
+		const auto queryParameters = request.GetQueryParameters();
+		{
+			auto it = queryParameters.find("skip");
+			if (it != queryParameters.end())
+			{
+				skip = boost::lexical_cast<unsigned>(it->second);
+			}
+		}
+		{
+			auto it = queryParameters.find("pageSize");
+			if (it != queryParameters.end())
+			{
+				pageSize = boost::lexical_cast<unsigned>(it->second);
+			}
+		}
+
 		auto uow = _backup.CreateUnitOfWork();
 		const auto reader = uow->CreateFileBackupRunReader();
-		const auto PAGE_SIZE = 30;
-		const auto page = reader->GetBackups(0, PAGE_SIZE);
+		const auto page = reader->GetBackups(skip, pageSize);
 		auto backupsResult = nlohmann::json::array();
 		for (const auto& backup : page.backups)
 		{
@@ -266,7 +283,20 @@ HttpServer::HttpServer(
 		}
 		nlohmann::json result;
 		result["backups"] = backupsResult;
-		result["page_size"] = PAGE_SIZE;
+		result["page_size"] = pageSize;
+		network::uri nextPageUrl;
+		{
+			network::uri_builder builder(request.uri);
+			// Work around https://github.com/cpp-netlib/uri/issues/91
+			if (request.uri.has_query())
+			{
+				builder.clear_query();
+			}
+			builder.append_query_key_value_pair("skip", std::to_string(page.nextPageSkip));
+			builder.append_query_key_value_pair("pageSize", std::to_string(pageSize));
+			nextPageUrl = builder.uri();
+		}
+		result["next_page_url"] = nextPageUrl.string();
 		return HttpJsonResponse(200, "OK", result);
 	});
 

@@ -22,6 +22,7 @@ target_link_libraries(
     PRIVATE boost_program_options
     PRIVATE bslib_test_util
     PRIVATE webserver
+    PRIVATE cpp-netlib-uri
 )
 
 add_custom_target(
