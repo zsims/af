@@ -78,6 +78,33 @@ TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, GetPaged_Success)
 	EXPECT_THAT(page2, ::testing::ElementsAre(e2, e1));
 }
 
+TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, GetBackupCount_Success)
+{
+	// Arrange
+	FileBackupRunEventStreamRepository repo(*_connection);
+
+	const auto run1 = Uuid::Create();
+	const auto run2 = Uuid::Create();
+	const auto run3 = Uuid::Create();
+
+	const FileBackupRunEvent e1(run1, boost::posix_time::second_clock::universal_time(), FileBackupRunEventAction::Started);
+	const FileBackupRunEvent e2(run1, boost::posix_time::second_clock::universal_time(), FileBackupRunEventAction::Finished);
+	const FileBackupRunEvent e3(run2, boost::posix_time::second_clock::universal_time(), FileBackupRunEventAction::Started);
+	const FileBackupRunEvent e4(run3, boost::posix_time::second_clock::universal_time(), FileBackupRunEventAction::Started);
+	const FileBackupRunEvent e5(run3, boost::posix_time::second_clock::universal_time(), FileBackupRunEventAction::Finished);
+	repo.AddEvent(e1);
+	repo.AddEvent(e2);
+	repo.AddEvent(e3);
+	repo.AddEvent(e4);
+	repo.AddEvent(e5);
+
+	// Act
+	const auto result = repo.GetBackupCount();
+
+	// Assert
+	EXPECT_EQ(3, result);
+}
+
 }
 }
 }

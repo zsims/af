@@ -78,7 +78,6 @@ TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_Success)
 		EXPECT_EQ(backup->startedUtc, emittedEvents[0].dateTimeUtc);
 		EXPECT_EQ(backup->finishedUtc, emittedEvents[1].dateTimeUtc);
 	}
-
 }
 
 TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_EmptySuccess)

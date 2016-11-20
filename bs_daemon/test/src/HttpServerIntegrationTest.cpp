@@ -210,6 +210,7 @@ TEST_F(HttpServerIntegrationTest, GetBackups_Success)
 		ASSERT_EQ(response->status_code, "200 OK");
 		const auto responseContent = nlohmann::json::parse(response->content);
 		EXPECT_EQ(2, responseContent.at("page_size").get<unsigned>());
+		EXPECT_EQ(5, responseContent.at("total_backups").get<unsigned>());
 		const auto backupsIt = responseContent.find("backups");
 		ASSERT_TRUE(backupsIt != responseContent.end()) << "'backups' element is found";
 		EXPECT_EQ(2, backupsIt->size());

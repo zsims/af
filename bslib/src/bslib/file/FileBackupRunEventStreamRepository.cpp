@@ -99,6 +99,21 @@ std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::GetPaged(uns
 	return result;
 }
 
+unsigned FileBackupRunEventStreamRepository::GetBackupCount() const
+{
+	sqlitepp::ScopedStatement statement;
+
+	const auto query = "SELECT COUNT(DISTINCT BackupRunId) FROM FileBackupRunEvent";
+	sqlitepp::prepare_or_throw(_db, query, statement);
+	std::vector<FileBackupRunEvent> result;
+	const auto stepResult = sqlite3_step(statement);
+	if(stepResult == SQLITE_ROW)
+	{
+		return static_cast<unsigned>(sqlite3_column_int64(statement, 0));
+	}
+	return 0;
+}
+
 FileBackupRunEvent FileBackupRunEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStatement& statement) const
 {
 	const auto runIdBytesCount = sqlite3_column_bytes(statement, GetFileBackupRunEvent_ColumnIndex_BackupRunId);

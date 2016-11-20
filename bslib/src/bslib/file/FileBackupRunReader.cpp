@@ -53,6 +53,7 @@ FileBackupRunReader::ResultsPage FileBackupRunReader::GetBackups(unsigned skip, 
 	}
 	const unsigned summariesSize = static_cast<unsigned>(summaryOrder.size());
 	page.nextPageSkip = skip + std::min(summariesSize, pageSize);
+	page.totalBackups = _backupRunEventRepository.GetBackupCount();
 	return page;
 }
 

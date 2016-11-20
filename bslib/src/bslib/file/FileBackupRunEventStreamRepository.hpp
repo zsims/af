@@ -36,6 +36,11 @@ public:
 	 * \param uniqueRunLimit The limit of unique runs to return
 	 */
 	std::vector<FileBackupRunEvent> GetPaged(unsigned skipRuns, unsigned uniqueRunLimit) const;
+
+	/**
+	 * Gets a count of how many unique backup runs there have been
+	 */
+	unsigned GetBackupCount() const;
 private:
 	FileBackupRunEvent MapRowToEvent(const sqlitepp::ScopedStatement& statement) const;
 

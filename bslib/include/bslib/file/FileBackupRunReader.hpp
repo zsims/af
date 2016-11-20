@@ -30,6 +30,7 @@ public:
 
 	struct ResultsPage
 	{
+		unsigned totalBackups;
 		unsigned nextPageSkip;
 		std::vector<BackupSummary> backups;
 	};

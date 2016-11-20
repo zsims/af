@@ -292,6 +292,7 @@ HttpServer::HttpServer(
 		nlohmann::json result;
 		result["backups"] = backupsResult;
 		result["page_size"] = pageSize;
+		result["total_backups"] = page.totalBackups;
 		network::uri nextPageUrl;
 		{
 			network::uri_builder builder(request.uri);
