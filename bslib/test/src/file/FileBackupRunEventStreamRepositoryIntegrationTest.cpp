@@ -74,8 +74,8 @@ TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, GetPaged_Success)
 	const auto page2 = repo.GetPaged(2, 2);
 
 	// Assert
-	EXPECT_THAT(page1, ::testing::ElementsAre(e1, e2, e3));
-	EXPECT_THAT(page2, ::testing::ElementsAre(e4, e5));
+	EXPECT_THAT(page1, ::testing::ElementsAre(e5, e4, e3));
+	EXPECT_THAT(page2, ::testing::ElementsAre(e2, e1));
 }
 
 }

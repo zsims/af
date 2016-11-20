@@ -31,7 +31,7 @@ public:
 	}
 
 	/**
-	 * Gets a list of events
+	 * Gets a list of events, limiting on the associated "run" the events were associated with
 	 * \param skipRuns The number of (unique) runs to skip
 	 * \param uniqueRunLimit The limit of unique runs to return
 	 */

@@ -79,10 +79,10 @@ std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::GetPaged(uns
 		WHERE BackupRunId IN (
 			SELECT BackupRunId FROM FileBackupRunEvent
 			WHERE Action = :Action
-			ORDER BY Id ASC 
+			ORDER BY Id DESC
 			LIMIT :Skip, :PageSize
 		)
-		ORDER BY Id ASC)";
+		ORDER BY Id DESC)";
 
 	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
 	sqlitepp::BindByParameterNameInt32(statement, ":Skip", static_cast<int32_t>(skipRuns));

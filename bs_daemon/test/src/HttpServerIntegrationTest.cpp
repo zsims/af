@@ -214,16 +214,16 @@ TEST_F(HttpServerIntegrationTest, GetBackups_Success)
 		ASSERT_TRUE(backupsIt != responseContent.end()) << "'backups' element is found";
 		EXPECT_EQ(2, backupsIt->size());
 		{
-			const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run1; });
+			const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run5; });
 			ASSERT_TRUE(backupIt != backupsIt->end());
 			EXPECT_TRUE(backupIt->at("started_on_utc").is_string());
 			EXPECT_TRUE(backupIt->at("finished_on_utc").is_string());
 		}
 		{
-			const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run2; });
+			const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run4; });
 			ASSERT_TRUE(backupIt != backupsIt->end());
 			EXPECT_TRUE(backupIt->at("started_on_utc").is_string());
-			EXPECT_TRUE(backupIt->at("finished_on_utc").is_null());
+			EXPECT_TRUE(backupIt->at("finished_on_utc").is_string());
 		}
 		ASSERT_TRUE(responseContent.at("next_page_url").is_string());
 		nextUrl = network::uri(responseContent.at("next_page_url").get<std::string>());
@@ -243,9 +243,9 @@ TEST_F(HttpServerIntegrationTest, GetBackups_Success)
 			EXPECT_TRUE(backupIt->at("finished_on_utc").is_string());
 		}
 		{
-			const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run4; });
+			const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run2; });
 			EXPECT_TRUE(backupIt->at("started_on_utc").is_string());
-			EXPECT_TRUE(backupIt->at("finished_on_utc").is_string());
+			EXPECT_TRUE(backupIt->at("finished_on_utc").is_null());
 		}
 		ASSERT_TRUE(responseContent.at("next_page_url").is_string());
 		nextUrl = network::uri(responseContent.at("next_page_url").get<std::string>());
@@ -259,7 +259,7 @@ TEST_F(HttpServerIntegrationTest, GetBackups_Success)
 		const auto backupsIt = responseContent.find("backups");
 		ASSERT_TRUE(backupsIt != responseContent.end()) << "'backups' element is found";
 		{
-			const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run5; });
+			const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run1; });
 			EXPECT_TRUE(backupIt->at("started_on_utc").is_string());
 			EXPECT_TRUE(backupIt->at("finished_on_utc").is_string());
 		}

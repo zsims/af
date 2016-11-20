@@ -52,31 +52,31 @@ TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_Success)
 	ASSERT_EQ(2, page1.backups.size());
 	EXPECT_EQ(2, page1.nextPageSkip);
 	{
-		const auto backup = std::find_if(page1.backups.begin(), page1.backups.end(), [&](const auto& x) { return x.runId == run1; });
+		const auto backup = std::find_if(page1.backups.begin(), page1.backups.end(), [&](const auto& x) { return x.runId == run4; });
 		ASSERT_NE(backup, page1.backups.end());
-		EXPECT_EQ(backup->startedUtc, emittedEvents[0].dateTimeUtc);
-		EXPECT_EQ(backup->finishedUtc, emittedEvents[1].dateTimeUtc);
+		EXPECT_EQ(backup->startedUtc, emittedEvents[6].dateTimeUtc);
+		EXPECT_FALSE(backup->finishedUtc);
 	}
 	{
-		const auto backup = std::find_if(page1.backups.begin(), page1.backups.end(), [&](const auto& x) { return x.runId == run2; });
+		const auto backup = std::find_if(page1.backups.begin(), page1.backups.end(), [&](const auto& x) { return x.runId == run3; });
 		ASSERT_NE(backup, page1.backups.end());
-		EXPECT_EQ(backup->startedUtc, emittedEvents[2].dateTimeUtc);
-		EXPECT_EQ(backup->finishedUtc, emittedEvents[3].dateTimeUtc);
+		EXPECT_EQ(backup->startedUtc, emittedEvents[4].dateTimeUtc);
+		EXPECT_EQ(backup->finishedUtc, emittedEvents[5].dateTimeUtc);
 	}
 
 	ASSERT_EQ(2, page2.backups.size());
 	EXPECT_EQ(4, page2.nextPageSkip);
 	{
-		const auto backup = std::find_if(page2.backups.begin(), page2.backups.end(), [&](const auto& x) { return x.runId == run3; });
+		const auto backup = std::find_if(page2.backups.begin(), page2.backups.end(), [&](const auto& x) { return x.runId == run2; });
 		ASSERT_NE(backup, page2.backups.end());
-		EXPECT_EQ(backup->startedUtc, emittedEvents[4].dateTimeUtc);
-		EXPECT_EQ(backup->finishedUtc, emittedEvents[5].dateTimeUtc);
+		EXPECT_EQ(backup->startedUtc, emittedEvents[2].dateTimeUtc);
+		EXPECT_EQ(backup->finishedUtc, emittedEvents[3].dateTimeUtc);
 	}
 	{
-		const auto backup = std::find_if(page2.backups.begin(), page2.backups.end(), [&](const auto& x) { return x.runId == run4; });
+		const auto backup = std::find_if(page2.backups.begin(), page2.backups.end(), [&](const auto& x) { return x.runId == run1; });
 		ASSERT_NE(backup, page2.backups.end());
-		EXPECT_EQ(backup->startedUtc, emittedEvents[6].dateTimeUtc);
-		EXPECT_FALSE(backup->finishedUtc);
+		EXPECT_EQ(backup->startedUtc, emittedEvents[0].dateTimeUtc);
+		EXPECT_EQ(backup->finishedUtc, emittedEvents[1].dateTimeUtc);
 	}
 
 }
