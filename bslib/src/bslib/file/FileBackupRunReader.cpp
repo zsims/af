@@ -1,7 +1,9 @@
 #include "bslib/file/FileBackupRunReader.hpp"
 
+#include "bslib/log.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileBackupRunEventStreamRepository.hpp"
+#include "bslib/file/FileEventStreamRepository.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -12,8 +14,11 @@ namespace af {
 namespace bslib {
 namespace file {
 
-FileBackupRunReader::FileBackupRunReader(const FileBackupRunEventStreamRepository& backupRunEventRepository)
+FileBackupRunReader::FileBackupRunReader(
+	const FileBackupRunEventStreamRepository& backupRunEventRepository,
+	const FileEventStreamRepository& fileEventStreamRepository)
 	: _backupRunEventRepository(backupRunEventRepository)
+	, _fileEventStreamRepository(fileEventStreamRepository)
 {
 }
 
@@ -46,10 +51,25 @@ FileBackupRunReader::ResultsPage FileBackupRunReader::GetBackups(unsigned skip, 
 		}
 	}
 
+	const auto allStats = _fileEventStreamRepository.GetStatisticsByRunId(
+		summaryOrder,
+		std::set<FileEventAction>{FileEventAction::ChangedAdded, FileEventAction::ChangedModified});
+
 	ResultsPage page;
 	for (const auto& runId : summaryOrder)
 	{
-		page.backups.push_back(summaries.at(runId));
+		auto& summary = summaries.at(runId);
+		const auto statsIt = allStats.find(runId);
+		if (statsIt != allStats.end())
+		{
+			summary.modifiedFilesCount = statsIt->second.matchingEvents;
+			summary.totalSizeBytes = statsIt->second.matchingSizeBytes;
+		}
+		else
+		{
+			BSLIB_LOG_WARNING << "Failed to calculate statistics for run " << runId;
+		}
+		page.backups.push_back(summary);
 	}
 	const unsigned summariesSize = static_cast<unsigned>(summaryOrder.size());
 	page.nextPageSkip = skip + std::min(summariesSize, pageSize);

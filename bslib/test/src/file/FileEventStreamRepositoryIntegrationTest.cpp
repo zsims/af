@@ -9,6 +9,7 @@
 #include <gmock/gmock.h>
 
 #include <memory>
+#include <set>
 
 namespace af {
 namespace bslib {
@@ -208,6 +209,62 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, AddEvent_MissingBlobThrows)
 	// Act
 	// Assert
 	ASSERT_THROW(repo.AddEvent(FileEvent(_backupRunId, fs::NativePath("/look/phil/no/hands"), FileType::RegularFile, madeUpBlobAddress, FileEventAction::ChangedAdded)), AddFileEventFailedException);
+}
+
+
+TEST_F(FileEventStreamRepositoryIntegrationTest, GetStatisticsByRunId_Success)
+{
+	// Arrange
+	FileEventStreamRepository repo(*_connection);
+	blob::BlobInfoRepository blobRepo(*_connection);
+	const blob::BlobInfo blobInfo1(blob::Address("1259225215937593795395739753973973593571"), 444UL);
+	const blob::BlobInfo blobInfo2(blob::Address("2f59225215937593795395739753973973593571"), 157UL);
+	const blob::BlobInfo blobInfo3(blob::Address("4e59225215937593795395739753973973593571"), 1337UL);
+	const blob::BlobInfo blobInfo4(blob::Address("5e59225215937593795395739753973973593571"), 1UL);
+	const blob::BlobInfo blobInfo5(blob::Address("6959225215937593795395739753973973593571"), 69UL);
+	blobRepo.AddBlob(blobInfo1);
+	blobRepo.AddBlob(blobInfo2);
+	blobRepo.AddBlob(blobInfo3);
+	blobRepo.AddBlob(blobInfo4);
+	blobRepo.AddBlob(blobInfo5);
+
+	const auto run1 = Uuid::Create();
+	const auto run2 = Uuid::Create();
+	const auto run3 = Uuid::Create();
+
+	const std::vector<FileEvent> expectedEvents = {
+		FileEvent(run1, fs::NativePath("/dir"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath("/file"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath("/otherfile"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath("/file"), FileType::RegularFile, blobInfo3.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(run1, fs::NativePath("/old"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(run2, fs::NativePath("/file"), FileType::Directory, boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(run3, fs::NativePath("/file"), FileType::RegularFile, blobInfo4.GetAddress(), FileEventAction::ChangedRemoved),
+		FileEvent(run3, fs::NativePath("/69"), FileType::RegularFile, blobInfo5.GetAddress(), FileEventAction::ChangedAdded)
+	};
+	repo.AddEvents(expectedEvents);
+
+	// Act
+	const auto stats = repo.GetStatisticsByRunId(
+		std::vector<Uuid>{run1, run2, run3},
+		std::set<FileEventAction>{FileEventAction::ChangedAdded, FileEventAction::ChangedModified});
+
+	// Assert
+	{
+		const auto runStats = stats.find(run1);
+		EXPECT_EQ(444UL + 157UL + 1337UL, runStats->second.matchingSizeBytes);
+		EXPECT_EQ(4, runStats->second.matchingEvents);
+	}
+	{
+		const auto runStats = stats.find(run2);
+		EXPECT_EQ(0, runStats->second.matchingSizeBytes);
+		EXPECT_EQ(0, runStats->second.matchingEvents);
+	}
+	{
+		const auto runStats = stats.find(run3);
+		EXPECT_EQ(69, runStats->second.matchingSizeBytes);
+		EXPECT_EQ(1, runStats->second.matchingEvents);
+	}
 }
 
 }

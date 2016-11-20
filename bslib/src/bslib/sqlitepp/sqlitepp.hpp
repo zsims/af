@@ -7,6 +7,9 @@
 
 #include <sqlite3.h>
 
+#include <functional>
+#include <sstream>
+
 namespace af {
 namespace bslib {
 namespace sqlitepp {
@@ -81,6 +84,33 @@ void BindByParameterNameBlob(sqlite3_stmt* statement, const std::string& name, c
  * \throws BindParameterFailedException The parameter couldn't be bound
  */
 void BindByParameterNameNull(sqlite3_stmt* statement, const std::string& name);
+
+/**
+ * Converts the given container elements into a set literal using the given value function
+ * \throws EmptySetLiteralException If there are no elements
+ * \returns A string such as (Element1, Element2)
+ */
+template<typename Container>
+std::string ToSetLiteral(const Container& container, std::function<std::string(typename Container::value_type)> valueFn)
+{
+	std::stringstream ss;
+	ss << "(";
+	auto first = true;
+	for (const auto& e : container)
+	{
+		if (!first)
+		{
+			ss << " ,";
+		}
+		else
+		{
+			first = false;
+		}
+		ss << valueFn(e);
+	}
+	ss << ")";
+	return ss.str();
+}
 
 }
 }

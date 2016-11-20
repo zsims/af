@@ -1,5 +1,6 @@
 #include "bslib/Uuid.hpp"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 
@@ -39,6 +40,13 @@ Uuid::Uuid(const void* rawBuffer, int bufferLength)
 UTF8String Uuid::ToString() const
 {
 	return boost::uuids::to_string(_value);
+}
+
+UTF8String Uuid::ToDashlessString() const
+{
+	auto result = boost::uuids::to_string(_value);
+	boost::replace_all(result, "-", "");
+	return result;
 }
 
 Uuid::BinaryType Uuid::ToArray() const

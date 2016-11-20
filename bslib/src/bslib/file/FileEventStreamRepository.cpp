@@ -135,6 +135,55 @@ boost::optional<FileEvent> FileEventStreamRepository::FindLastChangedEvent(const
 	return MapRowToEvent(_getLastChangedEventByPathStatement);
 }
 
+std::map<Uuid, FileEventStreamRepository::RunStats> FileEventStreamRepository::GetStatisticsByRunId(
+	const std::vector<Uuid>& runIds,
+	const std::set<FileEventAction>& actions) const
+{
+	// Convert UUIDS to a set of hex literals, e.g. (X'000000..', X'123')
+	const auto idsSet = sqlitepp::ToSetLiteral(runIds, [](const Uuid& e) {
+		return "X'" + e.ToDashlessString() + "'";
+	});
+
+	const auto actionsSet = sqlitepp::ToSetLiteral(actions, [](const FileEventAction& a) {
+		return std::to_string(static_cast<int>(a));
+	});
+
+	const std::string query(R"(
+		SELECT FileEvent.BackupRunId, COUNT(FileEvent.Id), SUM(Blob.SizeBytes) FROM FileEvent
+		LEFT OUTER JOIN Blob ON FileEvent.ContentBlobAddress = Blob.Address
+		WHERE FileEvent.BackupRunId IN )" + idsSet + " AND FileEvent.Action IN " + actionsSet + R"(
+		GROUP BY FileEvent.BackupRunId
+	)");
+	sqlitepp::ScopedStatement statement;
+	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
+	std::map<Uuid, RunStats> result;
+	auto stepResult = 0;
+	while ((stepResult = sqlite3_step(statement)) == SQLITE_ROW)
+	{
+		const auto runIdBytesCount = sqlite3_column_bytes(statement, 0);
+		const auto runIdBytes = sqlite3_column_blob(statement, 0);
+		const Uuid runId(runIdBytes, runIdBytesCount);
+		const auto count = sqlite3_column_int64(statement, 1);
+		const auto totalSize = sqlite3_column_int64(statement, 2);
+		RunStats stats;
+		stats.matchingEvents = static_cast<unsigned>(count);
+		stats.matchingSizeBytes = static_cast<uint64_t>(totalSize);
+		result.insert(std::make_pair(runId, stats));
+	}
+
+	// Fill out "no match" for remaining
+	for (const auto& runId : runIds)
+	{
+		auto it = result.find(runId);
+		if (it == result.end())
+		{
+			result.insert(std::make_pair(runId, RunStats()));
+		}
+	}
+
+	return result;
+}
+
 FileEvent FileEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStatement& statement) const
 {
 	const auto rawFullPath = sqlite3_column_text(statement, GetFileEvent_ColumnIndex_FullPath);

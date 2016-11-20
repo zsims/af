@@ -19,7 +19,7 @@ void BackupDatabaseUnitOfWork::Commit()
 
 std::unique_ptr<file::FileBackupRunReader> BackupDatabaseUnitOfWork::CreateFileBackupRunReader()
 {
-	return std::make_unique<file::FileBackupRunReader>(_connection->GetFileBackupRunEventStreamRepository());
+	return std::make_unique<file::FileBackupRunReader>(_connection->GetFileBackupRunEventStreamRepository(), _connection->GetFileEventStreamRepository());
 }
 
 std::unique_ptr<file::FileBackupRunRecorder> BackupDatabaseUnitOfWork::CreateFileBackupRunRecorder()

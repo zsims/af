@@ -12,6 +12,7 @@ namespace af {
 namespace bslib {
 namespace file {
 class FileBackupRunEventStreamRepository;
+class FileEventStreamRepository;
 
 class FileBackupRunReader
 {
@@ -20,22 +21,34 @@ public:
 	{
 		explicit BackupSummary(const Uuid& runId)
 			: runId(runId)
+			, modifiedFilesCount(0)
+			, totalSizeBytes(0)
 		{
 		}
 
 		Uuid runId;
+		uint64_t totalSizeBytes;
+		unsigned modifiedFilesCount;
 		boost::posix_time::ptime startedUtc;
 		boost::optional<boost::posix_time::ptime> finishedUtc;
 	};
 
 	struct ResultsPage
 	{
+		ResultsPage()
+			: totalBackups(0)
+			, nextPageSkip(0)
+		{
+
+		}
 		unsigned totalBackups;
 		unsigned nextPageSkip;
 		std::vector<BackupSummary> backups;
 	};
 
-	explicit FileBackupRunReader(const FileBackupRunEventStreamRepository& backupRunEventRepository);
+	FileBackupRunReader(
+		const FileBackupRunEventStreamRepository& backupRunEventRepository,
+		const FileEventStreamRepository& fileEventStreamRepository);
 
 	/**
 	 * Gets a page of backups
@@ -43,6 +56,7 @@ public:
 	ResultsPage GetBackups(unsigned skip, unsigned pageSize) const;
 private:
 	const FileBackupRunEventStreamRepository& _backupRunEventRepository;
+	const FileEventStreamRepository& _fileEventStreamRepository;
 };
 
 }
