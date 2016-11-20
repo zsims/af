@@ -160,6 +160,14 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 	};
 }
 
+/**
+ * Converts the given posix time/date into an ISO 8601 date with a UTC qualifier, e.g. 2016-11-20T09:49:30Z
+ */
+std::string ToIso8601Utc(const boost::posix_time::ptime& date)
+{
+	return boost::posix_time::to_iso_extended_string(date) + "Z";
+}
+
 }
 
 HttpServer::HttpServer(
@@ -270,10 +278,10 @@ HttpServer::HttpServer(
 		{
 			nlohmann::json backupResult;
 			backupResult["id"] = backup.runId.ToString();
-			backupResult["started_on_utc"] = boost::posix_time::to_iso_extended_string(backup.startedUtc);
+			backupResult["started_on_utc"] = ToIso8601Utc(backup.startedUtc);
 			if (backup.finishedUtc)
 			{
-				backupResult["finished_on_utc"] = boost::posix_time::to_iso_extended_string(backup.finishedUtc.value());
+				backupResult["finished_on_utc"] = ToIso8601Utc(backup.finishedUtc.value());
 			}
 			else
 			{
