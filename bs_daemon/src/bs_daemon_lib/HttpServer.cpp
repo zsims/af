@@ -278,6 +278,8 @@ HttpServer::HttpServer(
 		{
 			nlohmann::json backupResult;
 			backupResult["id"] = backup.runId.ToString();
+			backupResult["modified_files_count"] = backup.modifiedFilesCount;
+			backupResult["total_size_bytes"] = backup.totalSizeBytes;
 			backupResult["started_on_utc"] = ToIso8601Utc(backup.startedUtc);
 			if (backup.finishedUtc)
 			{

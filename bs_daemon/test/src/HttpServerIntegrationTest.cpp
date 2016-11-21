@@ -219,12 +219,16 @@ TEST_F(HttpServerIntegrationTest, GetBackups_Success)
 			ASSERT_TRUE(backupIt != backupsIt->end());
 			EXPECT_TRUE(backupIt->at("started_on_utc").is_string());
 			EXPECT_TRUE(backupIt->at("finished_on_utc").is_string());
+			EXPECT_TRUE(backupIt->at("modified_files_count").is_number());
+			EXPECT_TRUE(backupIt->at("total_size_bytes").is_number());
 		}
 		{
 			const auto backupIt = std::find_if(backupsIt->begin(), backupsIt->end(), [&](const auto& x) { return bslib::Uuid(x.at("id").get<std::string>()) == run4; });
 			ASSERT_TRUE(backupIt != backupsIt->end());
 			EXPECT_TRUE(backupIt->at("started_on_utc").is_string());
 			EXPECT_TRUE(backupIt->at("finished_on_utc").is_string());
+			EXPECT_TRUE(backupIt->at("modified_files_count").is_number());
+			EXPECT_TRUE(backupIt->at("total_size_bytes").is_number());
 		}
 		ASSERT_TRUE(responseContent.at("next_page_url").is_string());
 		nextUrl = network::uri(responseContent.at("next_page_url").get<std::string>());
