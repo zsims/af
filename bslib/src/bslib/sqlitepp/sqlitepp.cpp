@@ -55,6 +55,16 @@ void BindByParameterNameInt64(sqlite3_stmt* statement, const std::string& name, 
 	}
 }
 
+void BindByParameterNameInt32(sqlite3_stmt* statement, const std::string& name, int32_t value)
+{
+	const auto index = sqlite3_bind_parameter_index(statement, name.c_str());
+	const auto bindResult = sqlite3_bind_int(statement, index, value);
+	if (bindResult != SQLITE_OK)
+	{
+		throw BindParameterFailedException(name, bindResult);
+	}
+}
+
 void BindByParameterNameBlob(sqlite3_stmt* statement, const std::string& name, const uint8_t* start, size_t size)
 {
 	const auto index = sqlite3_bind_parameter_index(statement, name.c_str());

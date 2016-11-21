@@ -44,7 +44,7 @@ int Run()
 	backup.OpenOrCreate();
 
 	bs_daemon::JobExecutor jobExecutor(backup);
-	bs_daemon::HttpServer server(8080, blobStoreManager, jobExecutor);
+	bs_daemon::HttpServer server(8080, backup, blobStoreManager, jobExecutor);
 
 	std::cout << "Press any key to exit" << std::endl;
 	_getch();

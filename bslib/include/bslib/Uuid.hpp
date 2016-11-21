@@ -26,6 +26,7 @@ public:
 	explicit Uuid(const UTF8String& value);
 	explicit Uuid(const void* rawBuffer, int bufferLength);
 	UTF8String ToString() const;
+	UTF8String ToDashlessString() const;
 	BinaryType ToArray() const;
 
 	bool operator<(const Uuid& rhs) const;

@@ -99,5 +99,14 @@ public:
 	}
 };
 
+class EmptySetLiteralException : public std::runtime_error
+{
+public:
+	explicit EmptySetLiteralException()
+		: std::runtime_error("Produced set literal is empty")
+	{
+	}
+};
+
 }
 }

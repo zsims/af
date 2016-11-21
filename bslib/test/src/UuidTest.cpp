@@ -67,6 +67,18 @@ TEST(UuidTest, ToString_Success)
 	EXPECT_EQ(lowerStringValue, result);
 }
 
+TEST(UuidTest, ToDashlessString_Success)
+{
+	// Arrange
+	const auto stringValue = "c7f98911-6a3b-4543-b5d9-8dead56de5b7";
+	const auto expectedValue = "c7f989116a3b4543b5d98dead56de5b7";
+	const Uuid uuid(stringValue);
+	// Act
+	const auto result = uuid.ToDashlessString();
+	// Assert
+	EXPECT_EQ(expectedValue, result);
+}
+
 TEST(UuidTest, Empty_ComparableSuccess)
 {
 	// Arrange

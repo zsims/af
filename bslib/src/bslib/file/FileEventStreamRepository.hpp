@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <map>
+#include <set>
 #include <vector>
 
 #include <boost/optional.hpp>
@@ -17,6 +18,12 @@ namespace file {
 class FileEventStreamRepository
 {
 public:
+	struct RunStats
+	{
+		unsigned matchingEvents;
+		uint64_t matchingSizeBytes;
+	};
+
 	explicit FileEventStreamRepository(const sqlitepp::ScopedSqlite3Object& connection);
 
 	/**
@@ -36,6 +43,14 @@ public:
 			AddEvent(e);
 		}
 	}
+
+	/**
+	 * Gets statics by the given run ids with the given actions
+	 * \param a vector of run ids to return
+	 * \param a set of actions to count
+	 * \return A map of run id -> stats
+	 */
+	std::map<Uuid, RunStats> GetStatisticsByRunId(const std::vector<Uuid>& runIds, const std::set<FileEventAction>& actions) const;
 private:
 	FileEvent MapRowToEvent(const sqlitepp::ScopedStatement& statement) const;
 

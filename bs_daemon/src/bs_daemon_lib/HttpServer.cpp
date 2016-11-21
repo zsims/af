@@ -160,10 +160,23 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 	};
 }
 
+/**
+ * Converts the given posix time/date into an ISO 8601 date with a UTC qualifier, e.g. 2016-11-20T09:49:30Z
+ */
+std::string ToIso8601Utc(const boost::posix_time::ptime& date)
+{
+	return boost::posix_time::to_iso_extended_string(date) + "Z";
 }
 
-HttpServer::HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager, JobExecutor& jobExecutor)
-	: _blobStoreManager(blobStoreManager)
+}
+
+HttpServer::HttpServer(
+	int port,
+	bslib::Backup& backup,
+	bslib::blob::BlobStoreManager& blobStoreManager,
+	JobExecutor& jobExecutor)
+	: _backup(backup)
+	, _blobStoreManager(blobStoreManager)
 	, _jobExecutor(jobExecutor)
 	, _simpleServer(port, /* number of threads = */ 1)
 {
@@ -236,6 +249,66 @@ HttpServer::HttpServer(int port, bslib::blob::BlobStoreManager& blobStoreManager
 		created["type"] = store.GetTypeString();
 		created["settings"] = store.ConvertToJson();
 		return HttpJsonResponse(201, "Created", created);
+	});
+
+	_simpleServer.resource["^/api/files/backups.*"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+		unsigned skip = 0;
+		unsigned pageSize = 30;
+		const auto queryParameters = request.GetQueryParameters();
+		{
+			auto it = queryParameters.find("skip");
+			if (it != queryParameters.end())
+			{
+				skip = boost::lexical_cast<unsigned>(it->second);
+			}
+		}
+		{
+			auto it = queryParameters.find("pageSize");
+			if (it != queryParameters.end())
+			{
+				pageSize = boost::lexical_cast<unsigned>(it->second);
+			}
+		}
+
+		auto uow = _backup.CreateUnitOfWork();
+		const auto reader = uow->CreateFileBackupRunReader();
+		const auto page = reader->GetBackups(skip, pageSize);
+		auto backupsResult = nlohmann::json::array();
+		for (const auto& backup : page.backups)
+		{
+			nlohmann::json backupResult;
+			backupResult["id"] = backup.runId.ToString();
+			backupResult["modified_files_count"] = backup.modifiedFilesCount;
+			backupResult["total_size_bytes"] = backup.totalSizeBytes;
+			backupResult["started_on_utc"] = ToIso8601Utc(backup.startedUtc);
+			if (backup.finishedUtc)
+			{
+				backupResult["finished_on_utc"] = ToIso8601Utc(backup.finishedUtc.value());
+			}
+			else
+			{
+				backupResult["finished_on_utc"] = nullptr;
+			}
+			backupsResult.push_back(backupResult);
+		}
+		nlohmann::json result;
+		result["backups"] = backupsResult;
+		result["page_size"] = pageSize;
+		result["total_backups"] = page.totalBackups;
+		network::uri nextPageUrl;
+		{
+			network::uri_builder builder(request.uri);
+			// Work around https://github.com/cpp-netlib/uri/issues/91
+			if (request.uri.has_query())
+			{
+				builder.clear_query();
+			}
+			builder.append_query_key_value_pair("skip", std::to_string(page.nextPageSkip));
+			builder.append_query_key_value_pair("pageSize", std::to_string(pageSize));
+			nextPageUrl = builder.uri();
+		}
+		result["next_page_url"] = nextPageUrl.string();
+		return HttpJsonResponse(200, "OK", result);
 	});
 
 	// Start the server in a background thread, as it blocks while it accepts connections
