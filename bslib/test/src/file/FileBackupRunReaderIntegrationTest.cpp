@@ -35,8 +35,18 @@ TEST_F(FileBackupRunReaderIntegrationTest, Search_Success)
 		emittedEvents.push_back(runEvent);
 	});
 	const auto run1 = recorder->Start();
+	const auto testFilePath = GetUniqueExtendedTempPath();
+	const auto testFilePath2 = GetUniqueExtendedTempPath();
+	WriteFile(testFilePath, "hello");
+	auto fileAdder = _uow->CreateFileAdder(run1);
+	fileAdder->Add(testFilePath.ToExtendedString());
 	recorder->Stop(run1);
 	const auto run2 = recorder->Start();
+	WriteFile(testFilePath, "hell");	// Modify
+	WriteFile(testFilePath2, "hello");	// add
+	auto fileAdder2 = _uow->CreateFileAdder(run2);
+	fileAdder2->Add(testFilePath.ToExtendedString());
+	fileAdder2->Add(testFilePath2.ToExtendedString());
 	recorder->Stop(run2);
 	const auto run3 = recorder->Start();
 	recorder->Stop(run3);
@@ -63,6 +73,7 @@ TEST_F(FileBackupRunReaderIntegrationTest, Search_Success)
 		ASSERT_NE(backup, page1.backups.end());
 		EXPECT_EQ(backup->startedUtc, emittedEvents[4].dateTimeUtc);
 		EXPECT_EQ(backup->finishedUtc, emittedEvents[5].dateTimeUtc);
+		EXPECT_EQ(0, backup->modifiedFilesCount);
 	}
 
 	ASSERT_EQ(2, page2.backups.size());
@@ -72,12 +83,16 @@ TEST_F(FileBackupRunReaderIntegrationTest, Search_Success)
 		ASSERT_NE(backup, page2.backups.end());
 		EXPECT_EQ(backup->startedUtc, emittedEvents[2].dateTimeUtc);
 		EXPECT_EQ(backup->finishedUtc, emittedEvents[3].dateTimeUtc);
+		EXPECT_EQ(2, backup->modifiedFilesCount);
+		EXPECT_EQ(9, backup->totalSizeBytes);
 	}
 	{
 		const auto backup = std::find_if(page2.backups.begin(), page2.backups.end(), [&](const auto& x) { return x.runId == run1; });
 		ASSERT_NE(backup, page2.backups.end());
 		EXPECT_EQ(backup->startedUtc, emittedEvents[0].dateTimeUtc);
 		EXPECT_EQ(backup->finishedUtc, emittedEvents[1].dateTimeUtc);
+		EXPECT_EQ(1, backup->modifiedFilesCount);
+		EXPECT_EQ(5, backup->totalSizeBytes);
 	}
 }
 

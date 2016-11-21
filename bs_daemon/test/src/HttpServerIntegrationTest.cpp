@@ -271,6 +271,45 @@ TEST_F(HttpServerIntegrationTest, GetBackups_Success)
 	}
 }
 
+TEST_F(HttpServerIntegrationTest, GetBackupDetails_Success)
+{
+	// Arrange
+	HttpClient client(_testAddress);
+
+	// Record a few backups
+	auto uow = _backup.CreateUnitOfWork();
+	auto recorder = uow->CreateFileBackupRunRecorder();
+	const auto run1 = recorder->Start();
+	recorder->Stop(run1);
+	uow->Commit();
+
+	// Act
+	auto response = client.request("GET", "/api/files/backups/" + run1.ToString());
+
+	// Assert
+	ASSERT_EQ(response->status_code, "200 OK");
+	const auto responseContent = nlohmann::json::parse(response->content);
+	EXPECT_TRUE(responseContent.at("started_on_utc").is_string());
+	EXPECT_TRUE(responseContent.at("finished_on_utc").is_string());
+	EXPECT_TRUE(responseContent.at("modified_files_count").is_number());
+	EXPECT_TRUE(responseContent.at("total_size_bytes").is_number());
+	EXPECT_TRUE(responseContent.at("backup_events").is_array());
+	EXPECT_EQ(2, responseContent.at("backup_events").size());
+	EXPECT_TRUE(responseContent.at("file_events_url").is_string());
+}
+
+TEST_F(HttpServerIntegrationTest, GetBackupDetails_404IfNotFound)
+{
+	// Arrange
+	HttpClient client(_testAddress);
+
+	// Act
+	auto response = client.request("GET", "/api/files/backups/00000000-0000-0000-0000-000000000000");
+
+	// Assert
+	ASSERT_EQ(response->status_code, "404 Not Found");
+}
+
 }
 }
 }

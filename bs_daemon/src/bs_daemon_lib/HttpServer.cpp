@@ -20,8 +20,9 @@ namespace {
 
 struct HttpJsonRequest
 {
-	explicit HttpJsonRequest(const network::uri& requestUri)
-		: uri(requestUri)
+	HttpJsonRequest(const SimpleServer::Request& originalRequest, const network::uri& requestUri)
+		: originalRequest(originalRequest)
+		, uri(requestUri)
 	{
 	}
 
@@ -58,6 +59,7 @@ struct HttpJsonRequest
 		return result;
 	}
 
+	const SimpleServer::Request& originalRequest;
 	const network::uri uri;
 	nlohmann::json content;
 };
@@ -129,7 +131,7 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 	return [=](std::shared_ptr<SimpleServer::Response> response, std::shared_ptr<SimpleServer::Request> request) {
 		try
 		{
-			HttpJsonRequest jsonRequest(BuildRequestUri(*request));
+			HttpJsonRequest jsonRequest(*request, BuildRequestUri(*request));
 			if (request->method == "POST" || request->method == "PUT")
 			{
 				// TODO: Check JSON content type
@@ -167,6 +169,50 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 std::string ToIso8601Utc(const boost::posix_time::ptime& date)
 {
 	return boost::posix_time::to_iso_extended_string(date) + "Z";
+}
+
+network::uri MakeUrlWithAuthority(const network::uri& original, std::string newPath)
+{
+	network::uri_builder builder;
+	builder.scheme(original.scheme().to_string());
+	builder.authority(original.authority().to_string());
+	builder.path(newPath);
+	return builder.uri();
+}
+
+nlohmann::json ToJson(const bslib::file::FileBackupRunEvent& runEvent)
+{
+	nlohmann::json result;
+	result["action"] = bslib::file::ToString(runEvent.action);
+	result["date_utc"] = ToIso8601Utc(runEvent.dateTimeUtc);
+	return result;
+}
+
+nlohmann::json ToJson(const bslib::file::FileBackupRunReader::BackupSummary& backup, bool includeEvents)
+{
+	nlohmann::json result;
+	result["id"] = backup.runId.ToString();
+	result["modified_files_count"] = backup.modifiedFilesCount;
+	result["total_size_bytes"] = backup.totalSizeBytes;
+	result["started_on_utc"] = ToIso8601Utc(backup.startedUtc);
+	if (backup.finishedUtc)
+	{
+		result["finished_on_utc"] = ToIso8601Utc(backup.finishedUtc.value());
+	}
+	else
+	{
+		result["finished_on_utc"] = nullptr;
+	}
+	if (includeEvents)
+	{
+		auto backupEvents = nlohmann::json::array();
+		for (const auto& ev : backup.backupRunEvents)
+		{
+			backupEvents.push_back(ToJson(ev));
+		}
+		result["backup_events"] = backupEvents;
+	}
+	return result;
 }
 
 }
@@ -252,7 +298,7 @@ HttpServer::HttpServer(
 		return HttpJsonResponse(201, "Created", created);
 	});
 
-	_simpleServer.resource["^/api/files/backups.*"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+	_simpleServer.resource[R"(^/api/files/backups(\?.*|$))"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
 		unsigned skip = 0;
 		unsigned pageSize = 30;
 		const auto queryParameters = request.GetQueryParameters();
@@ -279,19 +325,8 @@ HttpServer::HttpServer(
 		auto backupsResult = nlohmann::json::array();
 		for (const auto& backup : page.backups)
 		{
-			nlohmann::json backupResult;
-			backupResult["id"] = backup.runId.ToString();
-			backupResult["modified_files_count"] = backup.modifiedFilesCount;
-			backupResult["total_size_bytes"] = backup.totalSizeBytes;
-			backupResult["started_on_utc"] = ToIso8601Utc(backup.startedUtc);
-			if (backup.finishedUtc)
-			{
-				backupResult["finished_on_utc"] = ToIso8601Utc(backup.finishedUtc.value());
-			}
-			else
-			{
-				backupResult["finished_on_utc"] = nullptr;
-			}
+			auto backupResult = ToJson(backup, false);
+			backupResult["details_url"] = MakeUrlWithAuthority(request.uri, "/api/files/backups/" + backup.runId.ToString()).string();
 			backupsResult.push_back(backupResult);
 		}
 		nlohmann::json result;
@@ -311,6 +346,23 @@ HttpServer::HttpServer(
 			nextPageUrl = builder.uri();
 		}
 		result["next_page_url"] = nextPageUrl.string();
+		return HttpJsonResponse(200, "OK", result);
+	});
+
+	_simpleServer.resource["^/api/files/backups/([^/]*)$"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+		std::string match = request.originalRequest.path_match[1];
+		const bslib::Uuid runId(match);
+		auto uow = _backup.CreateUnitOfWork();
+		const auto reader = uow->CreateFileBackupRunReader();
+		bslib::file::FileBackupRunSearchCriteria criteria;
+		criteria.runId = runId;
+		const auto page = reader->Search(criteria, 0, 1, true);
+		if (page.backups.empty())
+		{
+			return HttpJsonResponse::Error(404, "Not Found", "Backup with id " + match + " not found");
+		}
+		auto result = ToJson(page.backups[0], true);
+		result["file_events_url"] = MakeUrlWithAuthority(request.uri, "/api/files/backups/" + match + "/fileevents").string();
 		return HttpJsonResponse(200, "OK", result);
 	});
 
