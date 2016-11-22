@@ -2,6 +2,7 @@
 
 #include "bs_daemon_lib/FileBackupJob.hpp"
 #include "bs_daemon_lib/log.hpp"
+#include "bslib/file/FileBackupRunSearchCriteria.hpp"
 
 #include <boost/algorithm/string/split.hpp>
 
@@ -272,7 +273,9 @@ HttpServer::HttpServer(
 
 		auto uow = _backup.CreateUnitOfWork();
 		const auto reader = uow->CreateFileBackupRunReader();
-		const auto page = reader->GetBackups(skip, pageSize);
+
+		const bslib::file::FileBackupRunSearchCriteria criteria(skip, pageSize);
+		const auto page = reader->Search(criteria);
 		auto backupsResult = nlohmann::json::array();
 		for (const auto& backup : page.backups)
 		{

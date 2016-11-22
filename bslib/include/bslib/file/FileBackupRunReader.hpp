@@ -13,6 +13,7 @@ namespace bslib {
 namespace file {
 class FileBackupRunEventStreamRepository;
 class FileEventStreamRepository;
+struct FileBackupRunSearchCriteria;
 
 class FileBackupRunReader
 {
@@ -51,9 +52,9 @@ public:
 		const FileEventStreamRepository& fileEventStreamRepository);
 
 	/**
-	 * Gets a page of backups
+	 * Gets searches for a list of backups
 	 */
-	ResultsPage GetBackups(unsigned skip, unsigned pageSize) const;
+	ResultsPage Search(const FileBackupRunSearchCriteria& criteria) const;
 private:
 	const FileBackupRunEventStreamRepository& _backupRunEventRepository;
 	const FileEventStreamRepository& _fileEventStreamRepository;

@@ -9,10 +9,15 @@
 
 #include <map>
 #include <vector>
+#include <set>
 
 namespace af {
 namespace bslib {
 namespace file {
+
+namespace {
+const std::set<FileEventAction> MODIFIED_ACTIONS{FileEventAction::ChangedAdded, FileEventAction::ChangedModified};
+}
 
 FileBackupRunReader::FileBackupRunReader(
 	const FileBackupRunEventStreamRepository& backupRunEventRepository,
@@ -22,13 +27,12 @@ FileBackupRunReader::FileBackupRunReader(
 {
 }
 
-FileBackupRunReader::ResultsPage FileBackupRunReader::GetBackups(unsigned skip, unsigned pageSize) const
+FileBackupRunReader::ResultsPage FileBackupRunReader::Search(const FileBackupRunSearchCriteria& criteria) const
 {
 	// Maintain order of summaries based on the first-seen backup event
 	std::vector<Uuid> summaryOrder;
 	std::map<Uuid, BackupSummary> summaries;
 
-	FileBackupRunSearchCriteria criteria(skip, pageSize);
 	const auto events = _backupRunEventRepository.SearchByRun(criteria);
 	for (const auto& ev : events)
 	{
@@ -52,10 +56,7 @@ FileBackupRunReader::ResultsPage FileBackupRunReader::GetBackups(unsigned skip, 
 		}
 	}
 
-	const auto allStats = _fileEventStreamRepository.GetStatisticsByRunId(
-		summaryOrder,
-		std::set<FileEventAction>{FileEventAction::ChangedAdded, FileEventAction::ChangedModified});
-
+	const auto allStats = _fileEventStreamRepository.GetStatisticsByRunId(summaryOrder, MODIFIED_ACTIONS);
 	ResultsPage page;
 	for (const auto& runId : summaryOrder)
 	{
@@ -73,7 +74,7 @@ FileBackupRunReader::ResultsPage FileBackupRunReader::GetBackups(unsigned skip, 
 		page.backups.push_back(summary);
 	}
 	const unsigned summariesSize = static_cast<unsigned>(summaryOrder.size());
-	page.nextPageSkip = skip + std::min(summariesSize, pageSize);
+	page.nextPageSkip = criteria.skipRuns + std::min(summariesSize, criteria.uniqueRunLimit);
 	page.totalBackups = _backupRunEventRepository.GetBackupCount();
 	return page;
 }

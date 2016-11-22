@@ -26,7 +26,7 @@ protected:
 	std::unique_ptr<UnitOfWork> _uow;
 };
 
-TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_Success)
+TEST_F(FileBackupRunReaderIntegrationTest, Search_Success)
 {
 	// Arrange
 	auto recorder = _uow->CreateFileBackupRunRecorder();
@@ -45,8 +45,8 @@ TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_Success)
 
 	auto reader = _uow->CreateFileBackupRunReader();
 	// Act
-	const auto page1 = reader->GetBackups(0, 2);
-	const auto page2 = reader->GetBackups(2, 2);
+	const auto page1 = reader->Search(FileBackupRunSearchCriteria(0, 2));
+	const auto page2 = reader->Search(FileBackupRunSearchCriteria(2, 2));
 
 	// Assert
 	ASSERT_EQ(2, page1.backups.size());
@@ -80,13 +80,13 @@ TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_Success)
 	}
 }
 
-TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_EmptySuccess)
+TEST_F(FileBackupRunReaderIntegrationTest, Search_EmptySuccess)
 {
 	// Arrange
 	auto reader = _uow->CreateFileBackupRunReader();
 
 	// Act
-	const auto results = reader->GetBackups(0, 10);
+	const auto results = reader->Search(FileBackupRunSearchCriteria(0, 10));
 
 	// Assert
 	EXPECT_TRUE(results.backups.empty());
