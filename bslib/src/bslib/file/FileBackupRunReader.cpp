@@ -27,7 +27,7 @@ FileBackupRunReader::FileBackupRunReader(
 {
 }
 
-FileBackupRunReader::ResultsPage FileBackupRunReader::Search(const FileBackupRunSearchCriteria& criteria) const
+FileBackupRunReader::ResultsPage FileBackupRunReader::Search(const FileBackupRunSearchCriteria& criteria, bool includeRunEvents) const
 {
 	// Maintain order of summaries based on the first-seen backup event
 	std::vector<Uuid> summaryOrder;
@@ -41,10 +41,19 @@ FileBackupRunReader::ResultsPage FileBackupRunReader::Search(const FileBackupRun
 		{
 			BackupSummary summary(ev.runId);
 			it = summaries.insert(summaries.begin(), std::make_pair(ev.runId, summary));
+			if (includeRunEvents)
+			{
+				summary.backupRunEvents.push_back(ev);
+			}
 			summaryOrder.push_back(ev.runId);
 		}
 
 		auto& foundSummary = it->second;
+		if (includeRunEvents)
+		{
+			// this is extra as it's not actually needed in any of these calculations
+			foundSummary.backupRunEvents.push_back(ev);
+		}
 		switch (ev.action)
 		{
 			case FileBackupRunEventAction::Started:

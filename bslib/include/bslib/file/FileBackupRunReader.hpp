@@ -32,6 +32,7 @@ public:
 		unsigned modifiedFilesCount;
 		boost::posix_time::ptime startedUtc;
 		boost::optional<boost::posix_time::ptime> finishedUtc;
+		std::vector<FileBackupRunEvent> backupRunEvents;
 	};
 
 	struct ResultsPage
@@ -54,7 +55,7 @@ public:
 	/**
 	 * Gets searches for a list of backups
 	 */
-	ResultsPage Search(const FileBackupRunSearchCriteria& criteria) const;
+	ResultsPage Search(const FileBackupRunSearchCriteria& criteria, bool includeRunEvents = false) const;
 private:
 	const FileBackupRunEventStreamRepository& _backupRunEventRepository;
 	const FileEventStreamRepository& _fileEventStreamRepository;

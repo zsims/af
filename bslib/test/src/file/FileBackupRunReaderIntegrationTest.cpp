@@ -56,6 +56,7 @@ TEST_F(FileBackupRunReaderIntegrationTest, Search_Success)
 		ASSERT_NE(backup, page1.backups.end());
 		EXPECT_EQ(backup->startedUtc, emittedEvents[6].dateTimeUtc);
 		EXPECT_FALSE(backup->finishedUtc);
+		EXPECT_TRUE(backup->backupRunEvents.empty());
 	}
 	{
 		const auto backup = std::find_if(page1.backups.begin(), page1.backups.end(), [&](const auto& x) { return x.runId == run3; });
@@ -78,6 +79,26 @@ TEST_F(FileBackupRunReaderIntegrationTest, Search_Success)
 		EXPECT_EQ(backup->startedUtc, emittedEvents[0].dateTimeUtc);
 		EXPECT_EQ(backup->finishedUtc, emittedEvents[1].dateTimeUtc);
 	}
+}
+
+TEST_F(FileBackupRunReaderIntegrationTest, Search_IncludeRunEventsSuccess)
+{
+	// Arrange
+	auto recorder = _uow->CreateFileBackupRunRecorder();
+	std::vector<FileBackupRunEvent> emittedEvents;
+	recorder->GetEventManager().Subscribe([&](const auto& runEvent) {
+		emittedEvents.push_back(runEvent);
+	});
+	const auto run1 = recorder->Start();
+	recorder->Stop(run1);
+	auto reader = _uow->CreateFileBackupRunReader();
+
+	// Act
+	const auto page1 = reader->Search(FileBackupRunSearchCriteria(0, 2), true);
+
+	// Assert
+	ASSERT_EQ(1, page1.backups.size());
+	EXPECT_THAT(page1.backups[0].backupRunEvents, ::testing::UnorderedElementsAreArray(emittedEvents));
 }
 
 TEST_F(FileBackupRunReaderIntegrationTest, Search_EmptySuccess)
