@@ -28,7 +28,8 @@ FileBackupRunReader::ResultsPage FileBackupRunReader::GetBackups(unsigned skip, 
 	std::vector<Uuid> summaryOrder;
 	std::map<Uuid, BackupSummary> summaries;
 
-	const auto events = _backupRunEventRepository.GetPaged(skip, pageSize);
+	FileBackupRunSearchCriteria criteria(skip, pageSize);
+	const auto events = _backupRunEventRepository.SearchByRun(criteria);
 	for (const auto& ev : events)
 	{
 		auto it = summaries.find(ev.runId);

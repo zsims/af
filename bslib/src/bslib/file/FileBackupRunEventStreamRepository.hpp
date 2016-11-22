@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bslib/file/FileBackupRunEvent.hpp"
+#include "bslib/file/FileBackupRunSearchCriteria.hpp"
 #include "bslib/sqlitepp/handles.hpp"
 
 #include <vector>
@@ -31,11 +32,11 @@ public:
 	}
 
 	/**
-	 * Gets a list of events, limiting on the associated "run" the events were associated with
-	 * \param skipRuns The number of (unique) runs to skip
-	 * \param uniqueRunLimit The limit of unique runs to return
+	 * Search for a list of events. All events matching the *run* in the criteria will be returned.
+	 * \remarks "By run" ensures the results will not span runs across multiple pages, making it a PITA to work with results
+	 * Note that only *started* runs will be considered.
 	 */
-	std::vector<FileBackupRunEvent> GetPaged(unsigned skipRuns, unsigned uniqueRunLimit) const;
+	std::vector<FileBackupRunEvent> SearchByRun(const FileBackupRunSearchCriteria& criteria) const;
 
 	/**
 	 * Gets a count of how many unique backup runs there have been
