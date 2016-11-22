@@ -38,6 +38,16 @@ std::vector<FileEvent> FileFinder::GetAllEvents() const
 	return _fileEventStreamRepository.GetAllEvents();
 }
 
+FileFinder::ResultsPage FileFinder::SearchEvents(const FileEventSearchCriteria& criteria, unsigned skip, unsigned pageSize) const
+{
+	ResultsPage results;
+	results.events = _fileEventStreamRepository.Search(criteria, skip, pageSize);
+	results.totalEvents = _fileEventStreamRepository.CountMatching(criteria);
+	const auto eventsSize = static_cast<unsigned>(results.events.size());
+	results.nextPageSkip = skip + std::min(eventsSize, pageSize);
+	return results;
+}
+
 }
 }
 }

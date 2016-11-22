@@ -24,6 +24,7 @@ add_library(
     include/bslib/file/FileBackupRunRecorder.hpp
     include/bslib/file/FileBackupRunSearchCriteria.hpp
     include/bslib/file/FileEvent.hpp
+    include/bslib/file/FileEventSearchCriteria.hpp
     include/bslib/file/FileRestoreEvent.hpp
     include/bslib/file/FileFinder.hpp
     include/bslib/file/FileRestorer.hpp

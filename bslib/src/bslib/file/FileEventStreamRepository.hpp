@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bslib/file/FileEvent.hpp"
+#include "bslib/file/FileEventSearchCriteria.hpp"
 #include "bslib/file/fs/path.hpp"
 #include "bslib/sqlitepp/handles.hpp"
 
@@ -51,6 +52,9 @@ public:
 	 * \return A map of run id -> stats
 	 */
 	std::map<Uuid, RunStats> GetStatisticsByRunId(const std::vector<Uuid>& runIds, const std::set<FileEventAction>& actions) const;
+
+	std::vector<FileEvent> Search(const FileEventSearchCriteria& criteria, unsigned skip, unsigned limit) const;
+	unsigned CountMatching(const FileEventSearchCriteria& criteria) const;
 private:
 	FileEvent MapRowToEvent(const sqlitepp::ScopedStatement& statement) const;
 

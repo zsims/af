@@ -113,7 +113,6 @@ unsigned FileBackupRunEventStreamRepository::GetBackupCount() const
 
 	const auto query = "SELECT COUNT(DISTINCT BackupRunId) FROM FileBackupRunEvent";
 	sqlitepp::prepare_or_throw(_db, query, statement);
-	std::vector<FileBackupRunEvent> result;
 	const auto stepResult = sqlite3_step(statement);
 	if(stepResult == SQLITE_ROW)
 	{
