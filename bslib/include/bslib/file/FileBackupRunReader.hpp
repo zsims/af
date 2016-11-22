@@ -55,7 +55,7 @@ public:
 	/**
 	 * Gets searches for a list of backups
 	 */
-	ResultsPage Search(const FileBackupRunSearchCriteria& criteria, bool includeRunEvents = false) const;
+	ResultsPage Search(const FileBackupRunSearchCriteria& criteria, unsigned skip, unsigned pageSize, bool includeRunEvents = false) const;
 private:
 	const FileBackupRunEventStreamRepository& _backupRunEventRepository;
 	const FileEventStreamRepository& _fileEventStreamRepository;

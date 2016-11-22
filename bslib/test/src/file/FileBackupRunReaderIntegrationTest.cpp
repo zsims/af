@@ -45,8 +45,8 @@ TEST_F(FileBackupRunReaderIntegrationTest, Search_Success)
 
 	auto reader = _uow->CreateFileBackupRunReader();
 	// Act
-	const auto page1 = reader->Search(FileBackupRunSearchCriteria(0, 2));
-	const auto page2 = reader->Search(FileBackupRunSearchCriteria(2, 2));
+	const auto page1 = reader->Search(FileBackupRunSearchCriteria(), 0, 2);
+	const auto page2 = reader->Search(FileBackupRunSearchCriteria(), 2, 2);
 
 	// Assert
 	ASSERT_EQ(2, page1.backups.size());
@@ -94,7 +94,7 @@ TEST_F(FileBackupRunReaderIntegrationTest, Search_IncludeRunEventsSuccess)
 	auto reader = _uow->CreateFileBackupRunReader();
 
 	// Act
-	const auto page1 = reader->Search(FileBackupRunSearchCriteria(0, 2), true);
+	const auto page1 = reader->Search(FileBackupRunSearchCriteria(), 0, 2, true);
 
 	// Assert
 	ASSERT_EQ(1, page1.backups.size());
@@ -107,7 +107,7 @@ TEST_F(FileBackupRunReaderIntegrationTest, Search_EmptySuccess)
 	auto reader = _uow->CreateFileBackupRunReader();
 
 	// Act
-	const auto results = reader->Search(FileBackupRunSearchCriteria(0, 10));
+	const auto results = reader->Search(FileBackupRunSearchCriteria(), 0, 10);
 
 	// Assert
 	EXPECT_TRUE(results.backups.empty());

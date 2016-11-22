@@ -27,13 +27,13 @@ FileBackupRunReader::FileBackupRunReader(
 {
 }
 
-FileBackupRunReader::ResultsPage FileBackupRunReader::Search(const FileBackupRunSearchCriteria& criteria, bool includeRunEvents) const
+FileBackupRunReader::ResultsPage FileBackupRunReader::Search(const FileBackupRunSearchCriteria& criteria, unsigned skip, unsigned pageSize, bool includeRunEvents) const
 {
 	// Maintain order of summaries based on the first-seen backup event
 	std::vector<Uuid> summaryOrder;
 	std::map<Uuid, BackupSummary> summaries;
 
-	const auto events = _backupRunEventRepository.SearchByRun(criteria);
+	const auto events = _backupRunEventRepository.SearchByRun(criteria, skip, pageSize);
 	for (const auto& ev : events)
 	{
 		auto it = summaries.find(ev.runId);
@@ -83,7 +83,7 @@ FileBackupRunReader::ResultsPage FileBackupRunReader::Search(const FileBackupRun
 		page.backups.push_back(summary);
 	}
 	const unsigned summariesSize = static_cast<unsigned>(summaryOrder.size());
-	page.nextPageSkip = criteria.skipRuns + std::min(summariesSize, criteria.uniqueRunLimit);
+	page.nextPageSkip = skip + std::min(summariesSize, pageSize);
 	page.totalBackups = _backupRunEventRepository.GetBackupCount();
 	return page;
 }

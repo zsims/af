@@ -70,7 +70,7 @@ void FileBackupRunEventStreamRepository::AddEvent(const FileBackupRunEvent& back
 	}
 }
 
-std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::SearchByRun(const FileBackupRunSearchCriteria& criteria) const
+std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::SearchByRun(const FileBackupRunSearchCriteria& criteria, unsigned skipRuns, unsigned uniqueRunLimit) const
 {
 	sqlitepp::ScopedStatement statement;
 
@@ -93,8 +93,8 @@ std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::SearchByRun(
 		ORDER BY Id DESC)";
 	const auto query = queryss.str();
 	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
-	sqlitepp::BindByParameterNameInt32(statement, ":Skip", static_cast<int32_t>(criteria.skipRuns));
-	sqlitepp::BindByParameterNameInt32(statement, ":PageSize", static_cast<int32_t>(criteria.uniqueRunLimit));
+	sqlitepp::BindByParameterNameInt32(statement, ":Skip", static_cast<int32_t>(skipRuns));
+	sqlitepp::BindByParameterNameInt32(statement, ":PageSize", static_cast<int32_t>(uniqueRunLimit));
 	sqlitepp::BindByParameterNameInt32(statement, ":Action", static_cast<int32_t>(FileBackupRunEventAction::Started));
 
 	std::vector<FileBackupRunEvent> result;

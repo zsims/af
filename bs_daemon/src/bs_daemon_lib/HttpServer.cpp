@@ -274,8 +274,8 @@ HttpServer::HttpServer(
 		auto uow = _backup.CreateUnitOfWork();
 		const auto reader = uow->CreateFileBackupRunReader();
 
-		const bslib::file::FileBackupRunSearchCriteria criteria(skip, pageSize);
-		const auto page = reader->Search(criteria);
+		const bslib::file::FileBackupRunSearchCriteria criteria;
+		const auto page = reader->Search(criteria, skip, pageSize);
 		auto backupsResult = nlohmann::json::array();
 		for (const auto& backup : page.backups)
 		{

@@ -36,7 +36,7 @@ public:
 	 * \remarks "By run" ensures the results will not span runs across multiple pages, making it a PITA to work with results
 	 * Note that only *started* runs will be considered.
 	 */
-	std::vector<FileBackupRunEvent> SearchByRun(const FileBackupRunSearchCriteria& criteria) const;
+	std::vector<FileBackupRunEvent> SearchByRun(const FileBackupRunSearchCriteria& criteria, unsigned skipRuns, unsigned uniqueRunLimit) const;
 
 	/**
 	 * Gets a count of how many unique backup runs there have been

@@ -70,8 +70,8 @@ TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, SearchByRun_Success)
 	repo.AddEvent(e5);
 
 	// Act
-	const auto page1 = repo.SearchByRun(FileBackupRunSearchCriteria(0, 2));
-	const auto page2 = repo.SearchByRun(FileBackupRunSearchCriteria(2, 2));
+	const auto page1 = repo.SearchByRun(FileBackupRunSearchCriteria(), 0, 2);
+	const auto page2 = repo.SearchByRun(FileBackupRunSearchCriteria(), 2, 2);
 
 	// Assert
 	EXPECT_THAT(page1, ::testing::ElementsAre(e5, e4, e3));
@@ -94,9 +94,9 @@ TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, SearchByRun_SpecificRu
 	repo.AddEvent(e3);
 
 	// Act
-	FileBackupRunSearchCriteria criteria(0, 1);
+	FileBackupRunSearchCriteria criteria;
 	criteria.runId = run1;
-	const auto page = repo.SearchByRun(criteria);
+	const auto page = repo.SearchByRun(criteria, 0, 1);
 
 	// Assert
 	EXPECT_THAT(page, ::testing::ElementsAre(e2, e1));
