@@ -11,6 +11,7 @@
 #include <sqlite3.h>
 
 #include <memory>
+#include <sstream>
 #include <utility>
 
 namespace af {
@@ -27,6 +28,27 @@ enum GetObjectColumnIndex
 	GetFileEvent_ColumnIndex_FileType,
 	GetFileEvent_ColumnIndex_BackupRunId
 };
+
+std::string BuildPredicate(const FileEventSearchCriteria& criteria)
+{
+	std::stringstream ss;
+	bool and = false;
+	if (criteria.runId)
+	{
+		ss << "BackupRunId = X'" << criteria.runId->ToDashlessString() << "'";
+		and = true;
+	}
+	if (!criteria.actions.empty())
+	{
+		if (and)
+		{
+			ss << " AND ";
+		}
+		ss << "Action IN " << sqlitepp::ToSetLiteral(criteria.actions, [](const FileEventAction& a) { return std::to_string(static_cast<int>(a)); });
+	}
+	return ss.str();
+}
+
 }
 
 FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlite3Object& connection)
@@ -182,6 +204,49 @@ std::map<Uuid, FileEventStreamRepository::RunStats> FileEventStreamRepository::G
 	}
 
 	return result;
+}
+
+std::vector<FileEvent> FileEventStreamRepository::Search(const FileEventSearchCriteria& criteria, unsigned skip, unsigned limit) const
+{
+	const auto predicate = BuildPredicate(criteria);
+	std::stringstream queryss;
+	queryss << "SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId FROM FileEvent";
+	if(!predicate.empty())
+	{
+		queryss << " WHERE " << predicate;
+	}
+	queryss << " ORDER BY Id ASC";
+	queryss << " LIMIT " << skip << ", " << limit;
+	const auto query = queryss.str();
+	sqlitepp::ScopedStatement statement;
+	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
+	std::vector<FileEvent> result;
+	auto stepResult = 0;
+	while ((stepResult = sqlite3_step(statement)) == SQLITE_ROW)
+	{
+		result.push_back(MapRowToEvent(statement));
+	}
+	return result;
+}
+
+unsigned FileEventStreamRepository::CountMatching(const FileEventSearchCriteria& criteria) const
+{
+	const auto predicate = BuildPredicate(criteria);
+	std::stringstream queryss;
+	queryss << "SELECT COUNT(*) FROM FileEvent";
+	if(!predicate.empty())
+	{
+		queryss << " WHERE " << predicate;
+	}
+	const auto query = queryss.str();
+	sqlitepp::ScopedStatement statement;
+	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
+	const auto stepResult = sqlite3_step(statement);
+	if(stepResult == SQLITE_ROW)
+	{
+		return static_cast<unsigned>(sqlite3_column_int64(statement, 0));
+	}
+	return 0;
 }
 
 FileEvent FileEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStatement& statement) const
