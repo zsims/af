@@ -9,10 +9,15 @@
 
 #include <map>
 #include <vector>
+#include <set>
 
 namespace af {
 namespace bslib {
 namespace file {
+
+namespace {
+const std::set<FileEventAction> MODIFIED_ACTIONS{FileEventAction::ChangedAdded, FileEventAction::ChangedModified};
+}
 
 FileBackupRunReader::FileBackupRunReader(
 	const FileBackupRunEventStreamRepository& backupRunEventRepository,
@@ -22,13 +27,13 @@ FileBackupRunReader::FileBackupRunReader(
 {
 }
 
-FileBackupRunReader::ResultsPage FileBackupRunReader::GetBackups(unsigned skip, unsigned pageSize) const
+FileBackupRunReader::ResultsPage FileBackupRunReader::Search(const FileBackupRunSearchCriteria& criteria, unsigned skip, unsigned pageSize, bool includeRunEvents) const
 {
 	// Maintain order of summaries based on the first-seen backup event
 	std::vector<Uuid> summaryOrder;
 	std::map<Uuid, BackupSummary> summaries;
 
-	const auto events = _backupRunEventRepository.GetPaged(skip, pageSize);
+	const auto events = _backupRunEventRepository.SearchByRun(criteria, skip, pageSize);
 	for (const auto& ev : events)
 	{
 		auto it = summaries.find(ev.runId);
@@ -36,10 +41,19 @@ FileBackupRunReader::ResultsPage FileBackupRunReader::GetBackups(unsigned skip, 
 		{
 			BackupSummary summary(ev.runId);
 			it = summaries.insert(summaries.begin(), std::make_pair(ev.runId, summary));
+			if (includeRunEvents)
+			{
+				summary.backupRunEvents.push_back(ev);
+			}
 			summaryOrder.push_back(ev.runId);
 		}
 
 		auto& foundSummary = it->second;
+		if (includeRunEvents)
+		{
+			// this is extra as it's not actually needed in any of these calculations
+			foundSummary.backupRunEvents.push_back(ev);
+		}
 		switch (ev.action)
 		{
 			case FileBackupRunEventAction::Started:
@@ -51,10 +65,7 @@ FileBackupRunReader::ResultsPage FileBackupRunReader::GetBackups(unsigned skip, 
 		}
 	}
 
-	const auto allStats = _fileEventStreamRepository.GetStatisticsByRunId(
-		summaryOrder,
-		std::set<FileEventAction>{FileEventAction::ChangedAdded, FileEventAction::ChangedModified});
-
+	const auto allStats = _fileEventStreamRepository.GetStatisticsByRunId(summaryOrder, MODIFIED_ACTIONS);
 	ResultsPage page;
 	for (const auto& runId : summaryOrder)
 	{

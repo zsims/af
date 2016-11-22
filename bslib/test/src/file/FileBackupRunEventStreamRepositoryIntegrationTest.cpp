@@ -49,7 +49,7 @@ TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, GetAllEvents_Success)
 	EXPECT_THAT(result, ::testing::ElementsAreArray(events));
 }
 
-TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, GetPaged_Success)
+TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, SearchByRun_Success)
 {
 	// Arrange
 	FileBackupRunEventStreamRepository repo(*_connection);
@@ -70,12 +70,36 @@ TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, GetPaged_Success)
 	repo.AddEvent(e5);
 
 	// Act
-	const auto page1 = repo.GetPaged(0, 2);
-	const auto page2 = repo.GetPaged(2, 2);
+	const auto page1 = repo.SearchByRun(FileBackupRunSearchCriteria(), 0, 2);
+	const auto page2 = repo.SearchByRun(FileBackupRunSearchCriteria(), 2, 2);
 
 	// Assert
 	EXPECT_THAT(page1, ::testing::ElementsAre(e5, e4, e3));
 	EXPECT_THAT(page2, ::testing::ElementsAre(e2, e1));
+}
+
+TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, SearchByRun_SpecificRunSuccess)
+{
+	// Arrange
+	FileBackupRunEventStreamRepository repo(*_connection);
+
+	const auto run1 = Uuid::Create();
+	const auto run2 = Uuid::Create();
+
+	const FileBackupRunEvent e1(run1, boost::posix_time::second_clock::universal_time(), FileBackupRunEventAction::Started);
+	const FileBackupRunEvent e2(run1, boost::posix_time::second_clock::universal_time(), FileBackupRunEventAction::Finished);
+	const FileBackupRunEvent e3(run2, boost::posix_time::second_clock::universal_time(), FileBackupRunEventAction::Started);
+	repo.AddEvent(e1);
+	repo.AddEvent(e2);
+	repo.AddEvent(e3);
+
+	// Act
+	FileBackupRunSearchCriteria criteria;
+	criteria.runId = run1;
+	const auto page = repo.SearchByRun(criteria, 0, 1);
+
+	// Assert
+	EXPECT_THAT(page, ::testing::ElementsAre(e2, e1));
 }
 
 TEST_F(FileBackupRunEventStreamRepositoryIntegrationTest, GetBackupCount_Success)

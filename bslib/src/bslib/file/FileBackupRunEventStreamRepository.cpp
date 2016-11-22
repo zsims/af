@@ -9,6 +9,7 @@
 #include <sqlite3.h>
 
 #include <memory>
+#include <sstream>
 
 namespace af {
 namespace bslib {
@@ -69,21 +70,28 @@ void FileBackupRunEventStreamRepository::AddEvent(const FileBackupRunEvent& back
 	}
 }
 
-std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::GetPaged(unsigned skipRuns, unsigned uniqueRunLimit) const
+std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::SearchByRun(const FileBackupRunSearchCriteria& criteria, unsigned skipRuns, unsigned uniqueRunLimit) const
 {
 	sqlitepp::ScopedStatement statement;
 
-	const std::string query = R"(
+	std::stringstream queryss;
+	queryss << R"(
 		SELECT Id, DateTimeUtc, BackupRunId, Action
 		FROM FileBackupRunEvent
 		WHERE BackupRunId IN (
 			SELECT BackupRunId FROM FileBackupRunEvent
 			WHERE Action = :Action
+	)";
+	if (criteria.runId)
+	{
+		queryss << " AND BackupRunId = X'" << criteria.runId->ToDashlessString() << "' ";
+	}
+	queryss << R"(
 			ORDER BY Id DESC
 			LIMIT :Skip, :PageSize
 		)
 		ORDER BY Id DESC)";
-
+	const auto query = queryss.str();
 	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
 	sqlitepp::BindByParameterNameInt32(statement, ":Skip", static_cast<int32_t>(skipRuns));
 	sqlitepp::BindByParameterNameInt32(statement, ":PageSize", static_cast<int32_t>(uniqueRunLimit));

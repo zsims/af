@@ -13,6 +13,7 @@ namespace bslib {
 namespace file {
 class FileBackupRunEventStreamRepository;
 class FileEventStreamRepository;
+struct FileBackupRunSearchCriteria;
 
 class FileBackupRunReader
 {
@@ -31,6 +32,7 @@ public:
 		unsigned modifiedFilesCount;
 		boost::posix_time::ptime startedUtc;
 		boost::optional<boost::posix_time::ptime> finishedUtc;
+		std::vector<FileBackupRunEvent> backupRunEvents;
 	};
 
 	struct ResultsPage
@@ -51,9 +53,9 @@ public:
 		const FileEventStreamRepository& fileEventStreamRepository);
 
 	/**
-	 * Gets a page of backups
+	 * Gets searches for a list of backups
 	 */
-	ResultsPage GetBackups(unsigned skip, unsigned pageSize) const;
+	ResultsPage Search(const FileBackupRunSearchCriteria& criteria, unsigned skip, unsigned pageSize, bool includeRunEvents = false) const;
 private:
 	const FileBackupRunEventStreamRepository& _backupRunEventRepository;
 	const FileEventStreamRepository& _fileEventStreamRepository;

@@ -26,7 +26,7 @@ protected:
 	std::unique_ptr<UnitOfWork> _uow;
 };
 
-TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_Success)
+TEST_F(FileBackupRunReaderIntegrationTest, Search_Success)
 {
 	// Arrange
 	auto recorder = _uow->CreateFileBackupRunRecorder();
@@ -45,8 +45,8 @@ TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_Success)
 
 	auto reader = _uow->CreateFileBackupRunReader();
 	// Act
-	const auto page1 = reader->GetBackups(0, 2);
-	const auto page2 = reader->GetBackups(2, 2);
+	const auto page1 = reader->Search(FileBackupRunSearchCriteria(), 0, 2);
+	const auto page2 = reader->Search(FileBackupRunSearchCriteria(), 2, 2);
 
 	// Assert
 	ASSERT_EQ(2, page1.backups.size());
@@ -56,6 +56,7 @@ TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_Success)
 		ASSERT_NE(backup, page1.backups.end());
 		EXPECT_EQ(backup->startedUtc, emittedEvents[6].dateTimeUtc);
 		EXPECT_FALSE(backup->finishedUtc);
+		EXPECT_TRUE(backup->backupRunEvents.empty());
 	}
 	{
 		const auto backup = std::find_if(page1.backups.begin(), page1.backups.end(), [&](const auto& x) { return x.runId == run3; });
@@ -80,13 +81,33 @@ TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_Success)
 	}
 }
 
-TEST_F(FileBackupRunReaderIntegrationTest, GetBackups_EmptySuccess)
+TEST_F(FileBackupRunReaderIntegrationTest, Search_IncludeRunEventsSuccess)
+{
+	// Arrange
+	auto recorder = _uow->CreateFileBackupRunRecorder();
+	std::vector<FileBackupRunEvent> emittedEvents;
+	recorder->GetEventManager().Subscribe([&](const auto& runEvent) {
+		emittedEvents.push_back(runEvent);
+	});
+	const auto run1 = recorder->Start();
+	recorder->Stop(run1);
+	auto reader = _uow->CreateFileBackupRunReader();
+
+	// Act
+	const auto page1 = reader->Search(FileBackupRunSearchCriteria(), 0, 2, true);
+
+	// Assert
+	ASSERT_EQ(1, page1.backups.size());
+	EXPECT_THAT(page1.backups[0].backupRunEvents, ::testing::UnorderedElementsAreArray(emittedEvents));
+}
+
+TEST_F(FileBackupRunReaderIntegrationTest, Search_EmptySuccess)
 {
 	// Arrange
 	auto reader = _uow->CreateFileBackupRunReader();
 
 	// Act
-	const auto results = reader->GetBackups(0, 10);
+	const auto results = reader->Search(FileBackupRunSearchCriteria(), 0, 10);
 
 	// Assert
 	EXPECT_TRUE(results.backups.empty());
