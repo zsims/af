@@ -310,6 +310,84 @@ TEST_F(HttpServerIntegrationTest, GetBackupDetails_404IfNotFound)
 	ASSERT_EQ(response->status_code, "404 Not Found");
 }
 
+TEST_F(HttpServerIntegrationTest, GetBackupFileEvents_Success)
+{
+	// Arrange
+	HttpClient client(_testAddress);
+
+	const auto testFilePath = GetUniqueExtendedTempPath();
+	const auto testFilePath2 = GetUniqueExtendedTempPath();
+	const auto testFilePath3 = GetUniqueExtendedTempPath();
+	WriteFile(testFilePath, "hello");
+	WriteFile(testFilePath2, "hay");
+	WriteFile(testFilePath3, "foo");
+
+	auto uow = _backup.CreateUnitOfWork();
+	auto recorder = uow->CreateFileBackupRunRecorder();
+
+	const auto run1 = recorder->Start();
+	auto fileAdder1 = uow->CreateFileAdder(run1);
+	fileAdder1->Add(testFilePath.ToExtendedString());
+	recorder->Stop(run1);
+
+	const auto run2 = recorder->Start();
+	auto fileAdder2 = uow->CreateFileAdder(run2);
+	WriteFile(testFilePath, "hell");	// Modify
+	fileAdder2->Add(testFilePath.ToExtendedString());
+	fileAdder2->Add(testFilePath2.ToExtendedString());
+	fileAdder2->Add(testFilePath3.ToExtendedString());
+	recorder->Stop(run2);
+	uow->Commit();
+
+	// Act
+	// Assert
+	network::uri nextUrl;
+	{
+		auto response = client.request("GET", "/api/files/backups/" + run2.ToString() + "/fileevents?pageSize=2");
+		ASSERT_EQ(response->status_code, "200 OK");
+		const auto responseContent = nlohmann::json::parse(response->content);
+		EXPECT_EQ(2, responseContent.at("page_size").get<unsigned>());
+		EXPECT_EQ(3, responseContent.at("total_file_events").get<unsigned>());
+		const auto fileEventsIt = responseContent.find("file_events");
+		ASSERT_TRUE(fileEventsIt != responseContent.end()) << "'file_events' element is found";
+		ASSERT_EQ(2, fileEventsIt->size());
+		{
+			const auto fileEvent = fileEventsIt->at(0);
+			EXPECT_EQ("Modified", fileEvent.at("action").get<std::string>());
+			EXPECT_EQ("RegularFile", fileEvent.at("type").get<std::string>());
+			EXPECT_TRUE(fileEvent.at("path").is_string());
+		}
+		{
+			const auto fileEvent = fileEventsIt->at(1);
+			EXPECT_EQ("Added", fileEvent.at("action").get<std::string>());
+			EXPECT_EQ("RegularFile", fileEvent.at("type").get<std::string>());
+			EXPECT_TRUE(fileEvent.at("path").is_string());
+		}
+		ASSERT_TRUE(responseContent.at("next_page_url").is_string());
+		nextUrl = network::uri(responseContent.at("next_page_url").get<std::string>());
+	}
+
+	{
+		// The client is pretty crummy, so have to pull apart the URL :/
+		const auto nextPath = nextUrl.path().to_string() + "?" + nextUrl.query().to_string();
+		auto response = client.request("GET", nextPath);
+		ASSERT_EQ(response->status_code, "200 OK");
+		const auto responseContent = nlohmann::json::parse(response->content);
+		EXPECT_EQ(2, responseContent.at("page_size").get<unsigned>());
+		EXPECT_EQ(3, responseContent.at("total_file_events").get<unsigned>());
+		const auto fileEventsIt = responseContent.find("file_events");
+		ASSERT_TRUE(fileEventsIt != responseContent.end()) << "'file_events' element is found";
+		ASSERT_EQ(1, fileEventsIt->size());
+		{
+			const auto fileEvent = fileEventsIt->at(0);
+			EXPECT_EQ("Added", fileEvent.at("action").get<std::string>());
+			EXPECT_EQ("RegularFile", fileEvent.at("type").get<std::string>());
+			EXPECT_TRUE(fileEvent.at("path").is_string());
+		}
+		EXPECT_TRUE(responseContent.at("next_page_url").is_string());
+	}
+}
+
 }
 }
 }
