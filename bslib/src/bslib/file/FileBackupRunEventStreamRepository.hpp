@@ -39,6 +39,12 @@ public:
 	std::vector<FileBackupRunEvent> SearchByRun(const FileBackupRunSearchCriteria& criteria, unsigned skipRuns, unsigned uniqueRunLimit) const;
 
 	/**
+	 * Gets file backup events by the given run id.
+	 * Events are ordered from oldest to newest
+	 */
+	std::vector<FileBackupRunEvent> GetByRunId(const Uuid& runId) const;
+
+	/**
 	 * Gets a count of how many unique backup runs there have been
 	 */
 	unsigned GetBackupCount() const;

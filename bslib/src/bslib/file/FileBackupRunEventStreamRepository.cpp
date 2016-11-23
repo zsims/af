@@ -107,6 +107,30 @@ std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::SearchByRun(
 	return result;
 }
 
+std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::GetByRunId(const Uuid& runId) const
+{
+	sqlitepp::ScopedStatement statement;
+
+	const std::string query = R"(
+		SELECT Id, DateTimeUtc, BackupRunId, Action
+		FROM FileBackupRunEvent
+		WHERE BackupRunId = :BackupRunId
+		ORDER BY Id ASC)";
+
+	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
+	auto byteUuid = runId.ToArray();
+	sqlitepp::BindByParameterNameBlob(statement, ":BackupRunId", &byteUuid[0], byteUuid.size());
+
+	std::vector<FileBackupRunEvent> result;
+	auto stepResult = 0;
+	while ((stepResult = sqlite3_step(statement)) == SQLITE_ROW)
+	{
+		result.push_back(MapRowToEvent(statement));
+	}
+
+	return result;
+}
+
 unsigned FileBackupRunEventStreamRepository::GetBackupCount() const
 {
 	sqlitepp::ScopedStatement statement;

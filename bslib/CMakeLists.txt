@@ -50,6 +50,7 @@ add_library(
     src/bslib/default_locations.cpp
     src/bslib/log.hpp
     src/bslib/file/FileAdder.cpp
+    src/bslib/file/FileBackupRunEvent.cpp
     src/bslib/file/FileBackupRunEventStreamRepository.cpp
     src/bslib/file/FileBackupRunEventStreamRepository.hpp
     src/bslib/file/FileBackupRunReader.cpp

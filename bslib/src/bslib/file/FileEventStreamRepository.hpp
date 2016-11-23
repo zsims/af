@@ -31,6 +31,7 @@ public:
 	 * Gets all events in the order they were recorded
 	 */
 	std::vector<FileEvent> GetAllEvents() const;
+	std::vector<FileEvent> GetEventsByRunId(const Uuid& runId) const;
 	std::map<fs::NativePath, FileEvent> GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const;
 	boost::optional<FileEvent> FindLastChangedEvent(const fs::NativePath& fullPath) const;
 

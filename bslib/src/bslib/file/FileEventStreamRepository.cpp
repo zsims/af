@@ -157,6 +157,28 @@ boost::optional<FileEvent> FileEventStreamRepository::FindLastChangedEvent(const
 	return MapRowToEvent(_getLastChangedEventByPathStatement);
 }
 
+std::vector<FileEvent> FileEventStreamRepository::GetEventsByRunId(const Uuid& runId) const
+{
+	std::vector<FileEvent> result;
+	const std::string query(R"(
+		SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId FROM FileEvent
+		WHERE BackupRunId = :BackupRunId
+		ORDER BY Id ASC
+	)");
+	sqlitepp::ScopedStatement statement;
+	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
+	auto byteUuid = runId.ToArray();
+	sqlitepp::BindByParameterNameBlob(statement, ":BackupRunId", &byteUuid[0], byteUuid.size());
+
+	auto stepResult = 0;
+	while ((stepResult = sqlite3_step(statement)) == SQLITE_ROW)
+	{
+		result.push_back(MapRowToEvent(statement));
+	}
+
+	return result;
+}
+
 std::map<Uuid, FileEventStreamRepository::RunStats> FileEventStreamRepository::GetStatisticsByRunId(
 	const std::vector<Uuid>& runIds,
 	const std::set<FileEventAction>& actions) const

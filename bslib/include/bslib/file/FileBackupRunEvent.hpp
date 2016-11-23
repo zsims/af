@@ -4,6 +4,8 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <string>
+
 namespace af {
 namespace bslib {
 namespace file {
@@ -37,17 +39,11 @@ struct FileBackupRunEvent
 	}
 };
 
+std::string ToString(FileBackupRunEventAction action);
+
 inline std::ostream& operator<<(std::ostream & os, FileBackupRunEventAction action)
 {
-	switch (action)
-	{
-		case FileBackupRunEventAction::Started:
-			return os << "Started";
-		case FileBackupRunEventAction::Finished:
-			return os << "Finished";
-	};
-
-	return os << "Unknown";
+	return os << ToString(action);
 }
 
 }
