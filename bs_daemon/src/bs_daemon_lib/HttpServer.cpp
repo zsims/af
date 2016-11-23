@@ -3,6 +3,7 @@
 #include "bs_daemon_lib/FileBackupJob.hpp"
 #include "bs_daemon_lib/log.hpp"
 #include "bslib/file/FileBackupRunSearchCriteria.hpp"
+#include "bslib/file/FileEventSearchCriteria.hpp"
 
 #include <boost/algorithm/string/split.hpp>
 
@@ -188,6 +189,15 @@ nlohmann::json ToJson(const bslib::file::FileBackupRunEvent& runEvent)
 	return result;
 }
 
+nlohmann::json ToJson(const bslib::file::FileEvent& fileEvent)
+{
+	nlohmann::json result;
+	result["action"] = bslib::file::ToString(fileEvent.action);
+	result["type"] = bslib::file::ToString(fileEvent.type);
+	result["path"] = fileEvent.fullPath.ToString();
+	return result;
+}
+
 nlohmann::json ToJson(const bslib::file::FileBackupRunReader::BackupSummary& backup, bool includeEvents)
 {
 	nlohmann::json result;
@@ -363,6 +373,56 @@ HttpServer::HttpServer(
 		}
 		auto result = ToJson(page.backups[0], true);
 		result["file_events_url"] = MakeUrlWithAuthority(request.uri, "/api/files/backups/" + match + "/fileevents").string();
+		return HttpJsonResponse(200, "OK", result);
+	});
+
+	_simpleServer.resource["^/api/files/backups/([a-zA-Z0-9-]*)/fileevents.*$"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+		unsigned skip = 0;
+		unsigned pageSize = 30;
+		const auto queryParameters = request.GetQueryParameters();
+		{
+			auto it = queryParameters.find("skip");
+			if (it != queryParameters.end())
+			{
+				skip = boost::lexical_cast<unsigned>(it->second);
+			}
+		}
+		{
+			auto it = queryParameters.find("pageSize");
+			if (it != queryParameters.end())
+			{
+				pageSize = boost::lexical_cast<unsigned>(it->second);
+			}
+		}
+		std::string match = request.originalRequest.path_match[1];
+		const bslib::Uuid runId(match);
+		auto uow = _backup.CreateUnitOfWork();
+		const auto finder = uow->CreateFileFinder();
+		bslib::file::FileEventSearchCriteria criteria;
+		criteria.runId = runId;
+		const auto page = finder->SearchEvents(criteria, skip, pageSize);
+		auto fileEventsResult = nlohmann::json::array();
+		for (const auto& fileEvent : page.events)
+		{
+			fileEventsResult.push_back(ToJson(fileEvent));
+		}
+		nlohmann::json result;
+		result["file_events"] = fileEventsResult;
+		result["page_size"] = pageSize;
+		result["total_file_events"] = page.totalEvents;
+		network::uri nextPageUrl;
+		{
+			network::uri_builder builder(request.uri);
+			// Work around https://github.com/cpp-netlib/uri/issues/91
+			if (request.uri.has_query())
+			{
+				builder.clear_query();
+			}
+			builder.append_query_key_value_pair("skip", std::to_string(page.nextPageSkip));
+			builder.append_query_key_value_pair("pageSize", std::to_string(pageSize));
+			nextPageUrl = builder.uri();
+		}
+		result["next_page_url"] = nextPageUrl.string();
 		return HttpJsonResponse(200, "OK", result);
 	});
 

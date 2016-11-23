@@ -55,6 +55,7 @@ add_library(
     src/bslib/file/FileBackupRunEventStreamRepository.hpp
     src/bslib/file/FileBackupRunReader.cpp
     src/bslib/file/FileBackupRunRecorder.cpp
+    src/bslib/file/FileEvent.cpp
     src/bslib/file/FileEventStreamRepository.cpp
     src/bslib/file/FileEventStreamRepository.hpp
     src/bslib/file/FileFinder.cpp
