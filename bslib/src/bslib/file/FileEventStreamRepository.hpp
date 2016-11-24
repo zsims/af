@@ -31,7 +31,6 @@ public:
 	 * Gets all events in the order they were recorded
 	 */
 	std::vector<FileEvent> GetAllEvents() const;
-	std::vector<FileEvent> GetEventsByRunId(const Uuid& runId) const;
 	std::map<fs::NativePath, FileEvent> GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const;
 	boost::optional<FileEvent> FindLastChangedEvent(const fs::NativePath& fullPath) const;
 
@@ -54,7 +53,19 @@ public:
 	 */
 	std::map<Uuid, RunStats> GetStatisticsByRunId(const std::vector<Uuid>& runIds, const std::set<FileEventAction>& actions) const;
 
+	/**
+	 * Searches returning events based on distinct paths only, e.g. such that you get the last event that matches the criteria for the given path
+	 */
+	std::vector<FileEvent> SearchDistinctPath(const FileEventSearchCriteria& criteria, unsigned skip, unsigned limit) const;
+	
+	/**
+	 * Like SearchDistinctPath() but provides an *additional* set of actions to reduce the results by
+	 */
+	std::vector<FileEvent> SearchDistinctPath(const FileEventSearchCriteria& criteria, const std::set<FileEventAction>& reducedActions, unsigned skip, unsigned limit) const;
+	unsigned CountMatchingDistinctPath(const FileEventSearchCriteria& criteria) const;
+
 	std::vector<FileEvent> Search(const FileEventSearchCriteria& criteria, unsigned skip, unsigned limit) const;
+
 	unsigned CountMatching(const FileEventSearchCriteria& criteria) const;
 private:
 	FileEvent MapRowToEvent(const sqlitepp::ScopedStatement& statement) const;

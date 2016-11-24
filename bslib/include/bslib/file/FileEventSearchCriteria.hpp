@@ -18,6 +18,9 @@ struct FileEventSearchCriteria
 
 	// optional actions to match
 	std::set<FileEventAction> actions;
+
+	// optional full path prefix
+	boost::optional<UTF8String> fullPathPrefix;
 };
 
 }
