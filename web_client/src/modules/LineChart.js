@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
 
-import Chart from 'chart.js'
+import Chart from 'chart.js';
 
 export default class LineChart extends Component {
   constructor(props) {
