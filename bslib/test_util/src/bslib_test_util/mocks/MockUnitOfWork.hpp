@@ -13,6 +13,7 @@ class MockUnitOfWork : public bslib::UnitOfWork
 public:
 	virtual ~MockUnitOfWork() { }
 	MOCK_METHOD0(Commit, void());
+	MOCK_METHOD0(CreateVirtualFileBrowser, std::unique_ptr<bslib::file::VirtualFileBrowser>());
 	MOCK_METHOD1(CreateFileAdder, std::unique_ptr<bslib::file::FileAdder>(const bslib::Uuid&));
 	MOCK_METHOD0(CreateFileRestorer, std::unique_ptr<bslib::file::FileRestorer>());
 	MOCK_METHOD0(CreateFileFinder, std::unique_ptr<bslib::file::FileFinder>());

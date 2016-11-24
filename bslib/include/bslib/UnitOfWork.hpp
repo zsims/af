@@ -6,6 +6,7 @@
 #include "bslib/file/FileAdder.hpp"
 #include "bslib/file/FileFinder.hpp"
 #include "bslib/file/FileRestorer.hpp"
+#include "bslib/file/VirtualFileBrowser.hpp"
 #include "bslib/Uuid.hpp"
 
 #include <boost/core/noncopyable.hpp>
@@ -36,6 +37,11 @@ public:
 	 * Creates a file backup run recorder for recording details of a backup run
 	 */
 	virtual std::unique_ptr<file::FileBackupRunRecorder> CreateFileBackupRunRecorder() = 0;
+
+	/**
+	 * Creates a virtual file browser for enumerating files in the backup
+	 */
+	virtual std::unique_ptr<file::VirtualFileBrowser> CreateVirtualFileBrowser() = 0;
 
 	/**
 	 * Creates a file adder for backing up files and directories.

@@ -29,6 +29,7 @@ add_executable(
     src/file/test_utility/ScopedExclusiveFileAccess.hpp
     src/file/test_utility/ScopedWorkingDirectory.cpp
     src/file/test_utility/ScopedWorkingDirectory.hpp
+    src/file/VirtualFileBrowserIntegrationTest.cpp
     src/ObjectPoolIntegrationTest.cpp
     src/unicodeIntegrationTest.cpp
     src/UuidTest.cpp
