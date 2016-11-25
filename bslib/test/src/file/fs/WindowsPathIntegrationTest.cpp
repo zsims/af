@@ -273,6 +273,19 @@ TEST(WindowsPathIntegrationTest, IsChildPath_Success)
 	EXPECT_TRUE(result);
 }
 
+TEST(WindowsPathIntegrationTest, IsChildPath_SelfSuccess)
+{
+	// Arrange
+	const WindowsPath root(u8R"(C:\something\文件名)");
+	const WindowsPath child(u8R"(C:\something\文件名)");
+
+	// Act
+	const auto result = WindowsPath::IsChildPath(root.ToString().c_str(), child.ToString().c_str());
+
+	// Assert
+	EXPECT_TRUE(result);
+}
+
 TEST(WindowsPathIntegrationTest, IsChildPath_InverseFail)
 {
 	// Arrange
