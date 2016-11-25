@@ -42,6 +42,15 @@ public:
 	}
 };
 
+class RegisterFunctionFailedException : public std::runtime_error
+{
+public:
+	explicit RegisterFunctionFailedException(int sqliteError)
+		: std::runtime_error("Failed to register function, error " + std::to_string(sqliteError))
+	{
+	}
+};
+
 /**
  * A statement could not be prepared
  */

@@ -69,6 +69,20 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 	return ss.str();
 }
 
+static void IsChildPath(sqlite3_context *context, int argc, sqlite3_value **argv)
+{
+	if (argc != 3)
+	{
+		sqlite3_result_error(context, "Incorrect number of arguments", SQLITE_ERROR);
+		return;
+	}
+	const auto rhs = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	const auto lhs = reinterpret_cast<const char*>(sqlite3_value_text(argv[1]));
+	const auto maxDepth = sqlite3_value_int(argv[2]);
+	const auto result = fs::NativePath::IsChildPath(rhs, lhs, maxDepth);
+	sqlite3_result_int(context, result ? 1 : 0);
+}
+
 }
 
 FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlite3Object& connection)
@@ -91,6 +105,14 @@ FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlit
 		WHERE FullPath = :FullPath AND Action IN (0, 1, 2)
 		ORDER BY Id DESC LIMIT 1
 	)", _getLastChangedEventByPathStatement);
+
+	// Custom SQL function for "inspecting" paths
+	const auto registerResult = sqlite3_create_function(_db, "IsChildPath", 3, SQLITE_UTF8 | SQLITE_DETERMINISTIC, &IsChildPath, nullptr, nullptr, nullptr);
+	if (registerResult != SQLITE_OK)
+	{
+		throw RegisterFunctionFailedException(registerResult);
+	}
+
 }
 
 std::vector<FileEvent> FileEventStreamRepository::GetAllEvents() const
