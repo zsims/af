@@ -29,17 +29,6 @@ enum GetObjectColumnIndex
 	GetFileEvent_ColumnIndex_BackupRunId
 };
 
-std::string EscapeLikeArgument(const std::string& needle)
-{
-	auto result = needle;
-	// " isn't legal in Linux or Windows paths, so use that as an escape sequence
-	// to escape the LIKE operators: http://sqlite.org/lang_expr.html#like
-	boost::replace_all(result, "%", "\"%");
-	boost::replace_all(result, "_", "\"_");
-	result += "%";
-	return result;
-}
-
 std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 {
 	std::stringstream ss;
@@ -64,9 +53,23 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 		{
 			ss << " AND ";
 		}
-		ss << R"(FullPath LIKE :Needle ESCAPE '"')";
+		ss << "IsChildPath(:Needle, FullPath, -1)";
 	}
 	return ss.str();
+}
+
+static void IsChildPath(sqlite3_context *context, int argc, sqlite3_value **argv)
+{
+	if (argc != 3)
+	{
+		sqlite3_result_error(context, "Incorrect number of arguments", SQLITE_ERROR);
+		return;
+	}
+	const auto lhs = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	const auto rhs = reinterpret_cast<const char*>(sqlite3_value_text(argv[1]));
+	const auto maxDepth = sqlite3_value_int(argv[2]);
+	const auto result = fs::NativePath::IsChildPath(lhs, rhs, maxDepth);
+	sqlite3_result_int(context, result ? 1 : 0);
 }
 
 }
@@ -74,6 +77,13 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlite3Object& connection)
 	: _db(connection)
 {
+	// Custom SQL function for "inspecting" paths
+	const auto registerResult = sqlite3_create_function(_db, "IsChildPath", 3, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, &IsChildPath, nullptr, nullptr);
+	if (registerResult != SQLITE_OK)
+	{
+		throw RegisterFunctionFailedException(registerResult);
+	}
+
 	sqlitepp::prepare_or_throw(_db, R"(
 		INSERT INTO FileEvent (FullPath, ContentBlobAddress, Action, FileType, BackupRunId) VALUES (:FullPath, :ContentBlobAddress, :Action, :FileType, :BackupRunId)
 	)", _insertEventStatement);
@@ -83,7 +93,7 @@ FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlit
 	)", _getAllEventsStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
 		SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId FROM FileEvent
-		WHERE FullPath LIKE :Needle ESCAPE '"' AND Action IN (0, 1, 2)
+		WHERE IsChildPath(:Needle, FullPath, -1) AND Action IN (0, 1, 2)
 		GROUP BY FullPath HAVING Id = max(Id)
 	)", _getLastChangedEventsUnderPathStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
@@ -110,7 +120,7 @@ std::vector<FileEvent> FileEventStreamRepository::GetAllEvents() const
 std::map<fs::NativePath, FileEvent> FileEventStreamRepository::GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const
 {
 	std::map<fs::NativePath, FileEvent> result;
-	const auto needle = EscapeLikeArgument(fullPath.ToString());
+	const auto needle = fullPath.ToString();
 
 	sqlitepp::ScopedStatementReset reset(_getLastChangedEventsUnderPathStatement);
 	sqlitepp::BindByParameterNameText(_getLastChangedEventsUnderPathStatement, ":Needle", needle);
@@ -253,7 +263,7 @@ std::vector<FileEvent> FileEventStreamRepository::SearchDistinctPath(
 	std::string needle;
 	if (criteria.fullPathPrefix)
 	{
-		needle = EscapeLikeArgument(criteria.fullPathPrefix.value());
+		needle = criteria.fullPathPrefix.value();
 		sqlitepp::BindByParameterNameText(statement, ":Needle", needle);
 	}
 	sqlitepp::BindByParameterNameInt64(statement, ":Skip", static_cast<int64_t>(skip));
@@ -289,7 +299,7 @@ std::vector<FileEvent> FileEventStreamRepository::Search(const FileEventSearchCr
 	std::string needle;
 	if (criteria.fullPathPrefix)
 	{
-		needle = EscapeLikeArgument(criteria.fullPathPrefix.value());
+		needle = criteria.fullPathPrefix.value();
 		sqlitepp::BindByParameterNameText(statement, ":Needle", needle);
 	}
 	std::vector<FileEvent> result;
@@ -316,7 +326,7 @@ unsigned FileEventStreamRepository::CountMatching(const FileEventSearchCriteria&
 	std::string needle;
 	if (criteria.fullPathPrefix)
 	{
-		needle = EscapeLikeArgument(criteria.fullPathPrefix.value());
+		needle = criteria.fullPathPrefix.value();
 		sqlitepp::BindByParameterNameText(statement, ":Needle", needle);
 	}
 	const auto stepResult = sqlite3_step(statement);
@@ -343,7 +353,7 @@ unsigned FileEventStreamRepository::CountMatchingDistinctPath(const FileEventSea
 	std::string needle;
 	if (criteria.fullPathPrefix)
 	{
-		needle = EscapeLikeArgument(criteria.fullPathPrefix.value());
+		needle = criteria.fullPathPrefix.value();
 		sqlitepp::BindByParameterNameText(statement, ":Needle", needle);
 	}
 	const auto stepResult = sqlite3_step(statement);
