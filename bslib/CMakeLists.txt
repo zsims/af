@@ -30,6 +30,8 @@ add_library(
     include/bslib/file/FileRestorer.hpp
     include/bslib/file/fs/path.hpp
     include/bslib/file/fs/WindowsPath.hpp
+    include/bslib/file/VirtualFile.hpp
+    include/bslib/file/VirtualFileBrowser.hpp
     include/bslib/UnitOfWork.hpp
     include/bslib/unicode.hpp
     include/bslib/Uuid.hpp
@@ -64,6 +66,7 @@ add_library(
     src/bslib/file/fs/operations.hpp
     src/bslib/file/fs/path.cpp
     src/bslib/file/fs/WindowsPath.cpp
+    src/bslib/file/VirtualFileBrowser.cpp
     src/bslib/ObjectPool.hpp
     src/bslib/sqlitepp/exceptions.hpp
     src/bslib/sqlitepp/handles.hpp

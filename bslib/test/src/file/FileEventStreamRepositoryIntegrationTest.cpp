@@ -379,6 +379,114 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByRunIdSuccess)
 	EXPECT_THAT(page1, ::testing::ElementsAre(expectedEvents[4]));
 }
 
+TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByFullPathPrefixSuccess)
+{
+	// Arrange
+	FileEventStreamRepository repo(*_connection);
+	blob::BlobInfoRepository blobRepo(*_connection);
+	const blob::BlobInfo blobInfo1(blob::Address("1259225215937593795395739753973973593571"), 444UL);
+	const blob::BlobInfo blobInfo2(blob::Address("2f59225215937593795395739753973973593571"), 157UL);
+	const blob::BlobInfo blobInfo3(blob::Address("4e59225215937593795395739753973973593571"), 1337UL);
+	blobRepo.AddBlob(blobInfo1);
+	blobRepo.AddBlob(blobInfo2);
+	blobRepo.AddBlob(blobInfo3);
+
+	const auto run1 = Uuid::Create();
+	const auto run2 = Uuid::Create();
+
+	const std::vector<FileEvent> expectedEvents = {
+		FileEvent(run1, fs::NativePath("/a"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath("/a/file"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath("/b/otherfile"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath("/b/file"), FileType::RegularFile, blobInfo3.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(run1, fs::NativePath("/c/old"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(run2, fs::NativePath("/c/file"), FileType::Directory, boost::none, FileEventAction::ChangedRemoved),
+	};
+	repo.AddEvents(expectedEvents);
+
+	// Act
+	FileEventSearchCriteria criteria;
+	criteria.actions = std::set<FileEventAction>{ FileEventAction::ChangedRemoved, FileEventAction::ChangedAdded};
+	criteria.runId = run1;
+	criteria.fullPathPrefix = expectedEvents[0].fullPath.ToString();
+	const auto page1 = repo.Search(criteria, 0, 4);
+
+	const auto matching = repo.CountMatching(criteria);
+	EXPECT_THAT(2, matching);
+
+	// Assert
+	EXPECT_THAT(page1, ::testing::ElementsAre(expectedEvents[0], expectedEvents[1]));
+}
+
+TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByFullPathPrefixSuccess)
+{
+	// Arrange
+	FileEventStreamRepository repo(*_connection);
+	blob::BlobInfoRepository blobRepo(*_connection);
+	const blob::BlobInfo blobInfo1(blob::Address("1259225215937593795395739753973973593571"), 444UL);
+	blobRepo.AddBlob(blobInfo1);
+
+	const auto run1 = Uuid::Create();
+	const auto run2 = Uuid::Create();
+
+	const std::vector<FileEvent> expectedEvents = {
+		FileEvent(run1, fs::NativePath("/a"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath("/a/file"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedAdded),
+		FileEvent(run2, fs::NativePath("/c/file"), FileType::Directory, boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(run1, fs::NativePath("/a/file"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(run1, fs::NativePath("/a/extra"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedRemoved)
+	};
+	repo.AddEvents(expectedEvents);
+
+	// Act
+	FileEventSearchCriteria criteria;
+	criteria.actions = std::set<FileEventAction>{ FileEventAction::ChangedRemoved, FileEventAction::ChangedModified, FileEventAction::ChangedAdded};
+	criteria.fullPathPrefix = expectedEvents[0].fullPath.ToString();
+	const auto page1 = repo.SearchDistinctPath(criteria, 0, 4);
+
+	const auto matching = repo.CountMatchingDistinctPath(criteria);
+	EXPECT_EQ(3, matching);
+
+	// Assert
+	EXPECT_EQ(3, page1.size());
+	EXPECT_THAT(page1, ::testing::UnorderedElementsAre(expectedEvents[0], expectedEvents[3], expectedEvents[4]));
+}
+
+TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByFullPathPrefixWithReducedActionsSuccess)
+{
+	// Arrange
+	FileEventStreamRepository repo(*_connection);
+	blob::BlobInfoRepository blobRepo(*_connection);
+	const blob::BlobInfo blobInfo1(blob::Address("1259225215937593795395739753973973593571"), 444UL);
+	blobRepo.AddBlob(blobInfo1);
+
+	const auto run1 = Uuid::Create();
+	const auto run2 = Uuid::Create();
+
+	const std::vector<FileEvent> expectedEvents = {
+		FileEvent(run1, fs::NativePath("/a"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath("/a/file"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedAdded),
+		FileEvent(run2, fs::NativePath("/c/file"), FileType::Directory, boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(run1, fs::NativePath("/a/file"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath("/a/extra"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedRemoved)
+	};
+	repo.AddEvents(expectedEvents);
+
+	// Act
+	FileEventSearchCriteria criteria;
+	criteria.actions = std::set<FileEventAction>{ FileEventAction::ChangedRemoved, FileEventAction::ChangedAdded };
+	criteria.fullPathPrefix = expectedEvents[0].fullPath.ToString();
+	const auto page1 = repo.SearchDistinctPath(criteria, std::set<FileEventAction> { FileEventAction::ChangedAdded }, 0, 4);
+
+	const auto matching = repo.CountMatchingDistinctPath(criteria);
+	// note the count is against the criteria only :). CUT YO'SELF
+	EXPECT_EQ(3, matching);
+
+	// Assert
+	EXPECT_EQ(2, page1.size());
+	EXPECT_THAT(page1, ::testing::UnorderedElementsAre(expectedEvents[0], expectedEvents[3]));
+}
+
 }
 }
 }

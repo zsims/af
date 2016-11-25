@@ -22,7 +22,7 @@ void prepare_or_throw(sqlite3* db, const char* sql, sqlite3_stmt** statement)
 	const auto prepareResult = sqlite3_prepare_v2(db, sql, -1, statement, 0);
 	if (prepareResult != SQLITE_OK)
 	{
-		throw PrepareStatementFailedException(prepareResult);
+		throw PrepareStatementFailedException(prepareResult, std::string(sqlite3_errmsg(db)));
 	}
 }
 
@@ -38,7 +38,7 @@ void exec_or_throw(sqlite3* db, const char* sql)
 void BindByParameterNameText(sqlite3_stmt* statement, const std::string& name, const std::string& value)
 {
 	const auto index = sqlite3_bind_parameter_index(statement, name.c_str());
-	const auto bindResult = sqlite3_bind_text(statement, index, value.c_str(), -1, 0);
+	const auto bindResult = sqlite3_bind_text(statement, index, value.c_str(), -1, SQLITE_STATIC);
 	if (bindResult != SQLITE_OK)
 	{
 		throw BindParameterFailedException(name, bindResult);
@@ -68,7 +68,7 @@ void BindByParameterNameInt32(sqlite3_stmt* statement, const std::string& name, 
 void BindByParameterNameBlob(sqlite3_stmt* statement, const std::string& name, const uint8_t* start, size_t size)
 {
 	const auto index = sqlite3_bind_parameter_index(statement, name.c_str());
-	const auto bindResult = sqlite3_bind_blob(statement, index, start, static_cast<int>(size), 0);
+	const auto bindResult = sqlite3_bind_blob(statement, index, start, static_cast<int>(size), SQLITE_STATIC);
 	if (bindResult != SQLITE_OK)
 	{
 		throw BindParameterFailedException(name, bindResult);

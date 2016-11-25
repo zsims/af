@@ -27,6 +27,11 @@ std::unique_ptr<file::FileBackupRunRecorder> BackupDatabaseUnitOfWork::CreateFil
 	return std::make_unique<file::FileBackupRunRecorder>(_connection->GetFileBackupRunEventStreamRepository());
 }
 
+std::unique_ptr<file::VirtualFileBrowser> BackupDatabaseUnitOfWork::CreateVirtualFileBrowser()
+{
+	return std::make_unique<file::VirtualFileBrowser>(_connection->GetFileEventStreamRepository());
+}
+
 std::unique_ptr<file::FileAdder> BackupDatabaseUnitOfWork::CreateFileAdder(const Uuid& backupRunId)
 {
 	return std::make_unique<file::FileAdder>(backupRunId, _blobStore, _connection->GetBlobInfoRepository(), _connection->GetFileEventStreamRepository());

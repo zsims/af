@@ -48,8 +48,8 @@ public:
 class PrepareStatementFailedException : public std::runtime_error
 {
 public:
-	explicit PrepareStatementFailedException(int sqliteError)
-		: std::runtime_error("Failed to prepare statement, error " + std::to_string(sqliteError))
+	PrepareStatementFailedException(int sqliteError, const std::string& description)
+		: std::runtime_error("Failed to prepare statement, error " + std::to_string(sqliteError) + " " + description)
 	{
 	}
 };
