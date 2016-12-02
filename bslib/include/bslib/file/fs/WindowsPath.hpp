@@ -117,14 +117,6 @@ public:
 		return *this;
 	}
 
-
-
-	/**
-	 * Checks if the given rhs path is a sub path of the lhs, and optionally checks if it has the given depth beyond lhs
-	 * \remarks This is a static function to permit usage from C-like scenarios without constructing a full path
-	 * \returns True if the given paths are equal (a path is its own child), else true if the rhs is a child path of lhs, else true if the rhs is a child path of lhs with the specified depth
-	 */
-	static bool IsChildPath(const char* lhsUtf8, const char* rhsUtf8, int maxDepth = -1);
 private:
 	void EnsureExtendedPath();
 	UTF8String _path;

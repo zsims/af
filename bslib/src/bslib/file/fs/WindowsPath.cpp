@@ -171,47 +171,6 @@ unsigned WindowsPath::GetDepth() const
 	return static_cast<unsigned>(separatorCount);
 }
 
-bool WindowsPath::IsChildPath(const char* lhsUtf8, const char* rhsUtf8, int maxDepth)
-{
-	if (!lhsUtf8 || !rhsUtf8)
-	{
-		return false;
-	}
-
-	char lhs;
-	while ((lhs = *lhsUtf8++))
-	{
-		if (!*rhsUtf8 || lhs != *rhsUtf8)
-		{
-			return false;
-		}
-		rhsUtf8++;
-	}
-
-
-	if (maxDepth < 0)
-	{
-		// no need to check depth
-		return true;
-	}
-
-	char rhs;
-	int depth = 0;
-	while ((rhs = *rhsUtf8++))
-	{
-		if (rhs == SEPARATOR)
-		{
-			depth++;
-		}
-		if (depth > maxDepth)
-		{
-			return false;
-		}
-	}
-
-	return depth == maxDepth;
-}
-
 }
 }
 }
