@@ -11,6 +11,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <unordered_map>
 
 namespace af {
 namespace bslib {
@@ -20,6 +21,7 @@ class BlobStore;
 }
 namespace file {
 class FileEventStreamRepository;
+class FilePathRepository;
 
 /**
  * Adds files to the backup
@@ -31,7 +33,8 @@ public:
 		const Uuid& backupRunId,
 		std::shared_ptr<blob::BlobStore> blobStore,
 		blob::BlobInfoRepository& blobInfoRepository,
-		FileEventStreamRepository& fileEventStreamRepository);
+		FileEventStreamRepository& fileEventStreamRepository,
+		FilePathRepository& filePathRepository);
 
 	/**
 	* Adds the contents of the given file or directory to the attached backup
@@ -54,10 +57,15 @@ private:
 		const std::map<fs::NativePath, FileEvent>& fileEvents,
 		const fs::NativePath& fullPath);
 
+	void SavePathTree();
+
+	std::unordered_map<fs::NativePath, int64_t> _newPaths;
+
 	const Uuid _backupRunId;
 	std::shared_ptr<blob::BlobStore> _blobStore;
 	blob::BlobInfoRepository& _blobInfoRepository;
 	FileEventStreamRepository& _fileEventStreamRepository;
+	FilePathRepository& _filePathRepository;
 	std::vector<FileEvent> _emittedEvents;
 	EventManager<FileEvent> _eventManager;
 };

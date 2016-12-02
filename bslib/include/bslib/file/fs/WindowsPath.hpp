@@ -117,6 +117,8 @@ public:
 		return *this;
 	}
 
+
+
 	/**
 	 * Checks if the given rhs path is a sub path of the lhs, and optionally checks if it has the given depth beyond lhs
 	 * \remarks This is a static function to permit usage from C-like scenarios without constructing a full path
@@ -134,4 +136,16 @@ inline WindowsPath operator/(const WindowsPath& lhs, const char* rhs) { return W
 }
 }
 }
+}
+
+namespace std {
+template <>
+struct hash<af::bslib::file::fs::WindowsPath>
+{
+	std::size_t operator()(const af::bslib::file::fs::WindowsPath& k) const
+	{
+		return std::hash<std::string>()(k.ToString());
+	}
+};
+
 }

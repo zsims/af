@@ -80,6 +80,12 @@ void BackupDatabase::Create()
 				FullPath TEXT NOT NULL COLLATE BINARY UNIQUE,
 				Depth INTEGER NOT NULL
 			);
+			CREATE TABLE FilePathParent (
+				PathId INTEGER NOT NULL,
+				ParentPathId INTEGER NOT NULL,
+				Distance INTEGER NOT NULL,
+				PRIMARY KEY(PathId, ParentPathId)
+			);
 		)";
 
 		sqlitepp::ScopedErrorMessage errorMessage;

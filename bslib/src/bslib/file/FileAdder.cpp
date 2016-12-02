@@ -4,6 +4,7 @@
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileEventStreamRepository.hpp"
+#include "bslib/file/FilePathRepository.hpp"
 #include "bslib/file/fs/operations.hpp"
 
 #include <boost/filesystem.hpp>
@@ -19,11 +20,13 @@ FileAdder::FileAdder(
 	const Uuid& backupRunId,
 	std::shared_ptr<blob::BlobStore> blobStore,
 	blob::BlobInfoRepository& blobInfoRepository,
-	FileEventStreamRepository& fileEventStreamRepository)
+	FileEventStreamRepository& fileEventStreamRepository,
+	FilePathRepository& filePathRepository)
 	: _backupRunId(backupRunId)
 	, _blobStore(blobStore)
 	, _blobInfoRepository(blobInfoRepository)
 	, _fileEventStreamRepository(fileEventStreamRepository)
+	, _filePathRepository(filePathRepository)
 {
 }
 
@@ -75,6 +78,8 @@ void FileAdder::Add(const UTF8String& sourcePath)
 	{
 		throw SourcePathNotSupportedException(absolutePath.ToString());
 	}
+
+	SavePathTree();
 }
 
 void FileAdder::ScanDirectory(const fs::NativePath& sourcePath)
@@ -199,9 +204,67 @@ boost::optional<FileEvent> FileAdder::FindPreviousEvent(
 
 void FileAdder::EmitEvent(const FileEvent& fileEvent)
 {
+	int64_t pathId;
+	const auto existingPathId = _filePathRepository.FindPath(fileEvent.fullPath);
+	if (existingPathId)
+	{
+		pathId = existingPathId.value();
+	}
+	else
+	{
+		pathId = _filePathRepository.AddPath(fileEvent.fullPath);
+		_newPaths.insert(std::make_pair(fileEvent.fullPath, pathId));
+	}
 	_emittedEvents.push_back(fileEvent);
 	_fileEventStreamRepository.AddEvent(fileEvent);
 	_eventManager.Publish(fileEvent);
+}
+
+void FileAdder::SavePathTree()
+{
+	// Avoid looking up paths we already know
+	std::unordered_map<fs::NativePath, int64_t> knownIds(_newPaths);
+
+	for (const auto& kv : _newPaths)
+	{
+		const auto& path = kv.first;
+		const auto pathId = kv.second;
+
+		// TODO: add a "get component iterator" to path to avoid the expensive substring copies
+		unsigned distance = 0;
+		const auto components = path.GetIntermediatePaths();
+		for (auto componentsIt = components.rbegin();
+			componentsIt != components.rend();
+			componentsIt++, distance++)
+		{
+			int64_t parentId = 0;
+			const auto& component = *componentsIt;
+			auto knownIt = knownIds.find(component);
+			if (knownIt != knownIds.end())
+			{
+				parentId = knownIt->second;
+			}
+			else
+			{
+				const auto existingParentId = _filePathRepository.FindPath(component);
+				if (!existingParentId)
+				{
+					parentId = _filePathRepository.AddPath(component);
+					knownIds.insert(std::make_pair(component, parentId));
+				}
+				else
+				{
+					parentId = existingParentId.value();
+				}
+			}
+			
+			// Avoid adding a path to itself
+			if (pathId != parentId)
+			{
+				_filePathRepository.AddParent(pathId, parentId, distance);
+			}
+		}
+	}
 }
 
 }

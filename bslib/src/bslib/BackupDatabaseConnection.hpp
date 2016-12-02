@@ -3,6 +3,7 @@
 #include "bslib/blob/BlobInfoRepository.hpp"
 #include "bslib/file/FileBackupRunEventStreamRepository.hpp"
 #include "bslib/file/FileEventStreamRepository.hpp"
+#include "bslib/file/FilePathRepository.hpp"
 #include "bslib/ObjectPool.hpp"
 #include "bslib/sqlitepp/handles.hpp"
 
@@ -22,6 +23,7 @@ public:
 		: _connection(std::move(connection))
 		, _blobInfoRepository(*_connection)
 		, _fileEventStreamRepository(*_connection)
+		, _filePathRepository(*_connection)
 		, _backupRunEventStreamRepository(*_connection)
 	{
 	}
@@ -30,11 +32,13 @@ public:
 	blob::BlobInfoRepository& GetBlobInfoRepository() { return _blobInfoRepository; }
 	file::FileEventStreamRepository& GetFileEventStreamRepository() { return _fileEventStreamRepository; }
 	file::FileBackupRunEventStreamRepository& GetFileBackupRunEventStreamRepository() { return _backupRunEventStreamRepository; }
+	file::FilePathRepository& GetFilePathRepository() { return _filePathRepository; }
 
 private:
 	const std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
 	blob::BlobInfoRepository _blobInfoRepository;
 	file::FileEventStreamRepository _fileEventStreamRepository;
+	file::FilePathRepository _filePathRepository;
 	file::FileBackupRunEventStreamRepository _backupRunEventStreamRepository;
 };
 
