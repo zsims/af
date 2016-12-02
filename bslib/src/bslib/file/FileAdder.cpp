@@ -84,7 +84,7 @@ void FileAdder::Add(const UTF8String& sourcePath)
 
 void FileAdder::ScanDirectory(const fs::NativePath& sourcePath)
 {
-	auto lastChangeEvents = _fileEventStreamRepository.GetLastChangedEventsStartingWithPath(sourcePath);
+	auto lastChangeEvents = _fileEventStreamRepository.GetLastChangedEventsUnderPath(sourcePath);
 
 	// The directory itself
 	VisitPath(sourcePath, FindPreviousEvent(lastChangeEvents, sourcePath));

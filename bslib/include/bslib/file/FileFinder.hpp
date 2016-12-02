@@ -41,7 +41,7 @@ public:
 	 */
 	FileEvent GetLastEventByPath(const fs::NativePath& fullPath) const;
 	boost::optional<FileEvent> FindLastChangedEventByPath(const fs::NativePath& fullPath) const;
-	std::map<fs::NativePath, FileEvent> GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const;
+	std::map<fs::NativePath, FileEvent> GetLastChangedEventsUnderPath(const fs::NativePath& fullPath) const;
 	std::vector<FileEvent> GetAllEvents() const;
 	ResultsPage SearchEvents(const FileEventSearchCriteria& criteria, unsigned skip, unsigned pageSize) const;
 

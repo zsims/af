@@ -21,9 +21,9 @@ boost::optional<FileEvent> FileFinder::FindLastChangedEventByPath(const fs::Nati
 	return _fileEventStreamRepository.FindLastChangedEvent(fullPath);
 }
 
-std::map<fs::NativePath, FileEvent> FileFinder::GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const
+std::map<fs::NativePath, FileEvent> FileFinder::GetLastChangedEventsUnderPath(const fs::NativePath& fullPath) const
 {
-	return _fileEventStreamRepository.GetLastChangedEventsStartingWithPath(fullPath);
+	return _fileEventStreamRepository.GetLastChangedEventsUnderPath(fullPath);
 }
 
 FileEvent FileFinder::GetLastEventByPath(const fs::NativePath& fullPath) const
