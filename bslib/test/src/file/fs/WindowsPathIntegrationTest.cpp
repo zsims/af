@@ -357,6 +357,28 @@ TEST(WindowsPathIntegrationTest, IsChildPath_MaxDepthNoSeparatorSuccess)
 	EXPECT_FALSE(result);
 }
 
+TEST(WindowsPathIntegrationTest, GetDepth_Success)
+{
+	// Arrange
+	const WindowsPath blank("");
+	const WindowsPath root(u8R"(C:\)");
+	const WindowsPath rootNoTrail(u8R"(C:)");
+	const WindowsPath path(u8R"(C:\文件名 here\)");
+	const WindowsPath pathNoTrail(u8R"(C:\文件名 here)");
+	const WindowsPath deepPath(u8R"(C:\文件名 here\is deeper\)");
+	const WindowsPath deepPathNoTrail(u8R"(C:\文件名 here\is deeper)");
+
+	// Act
+	// Assert
+	EXPECT_EQ(0, blank.GetDepth());
+	EXPECT_EQ(0, root.GetDepth());
+	EXPECT_EQ(0, rootNoTrail.GetDepth());
+	EXPECT_EQ(1, path.GetDepth());
+	EXPECT_EQ(1, pathNoTrail.GetDepth());
+	EXPECT_EQ(2, deepPath.GetDepth());
+	EXPECT_EQ(2, deepPathNoTrail.GetDepth());
+}
+
 }
 }
 }

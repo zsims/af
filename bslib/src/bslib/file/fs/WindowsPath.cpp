@@ -6,6 +6,8 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/tokenizer.hpp>
 
+#include <algorithm>
+
 namespace af {
 namespace bslib {
 namespace file {
@@ -155,6 +157,18 @@ UTF8String WindowsPath::ToNormalString() const
 void WindowsPath::MakePreferred()
 {
 	boost::replace_all(_path, "/", R"(\)");
+}
+
+unsigned WindowsPath::GetDepth() const
+{
+	auto separatorCount = std::count(_path.begin() + EXTENDED_PATH_PREFIX.length(), _path.end(), '\\');
+	// Don't count trailing separators for depth
+	if (_path.length() > EXTENDED_PATH_PREFIX.length() && *(_path.end() - 1) == '\\')
+	{
+		separatorCount--;
+	}
+
+	return static_cast<unsigned>(separatorCount);
 }
 
 bool WindowsPath::IsChildPath(const char* lhsUtf8, const char* rhsUtf8, int maxDepth)

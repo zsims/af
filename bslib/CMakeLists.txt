@@ -61,6 +61,8 @@ add_library(
     src/bslib/file/FileEventStreamRepository.cpp
     src/bslib/file/FileEventStreamRepository.hpp
     src/bslib/file/FileFinder.cpp
+    src/bslib/file/FilePathRepository.cpp
+    src/bslib/file/FilePathRepository.hpp
     src/bslib/file/FileRestorer.cpp
     src/bslib/file/fs/operations.cpp
     src/bslib/file/fs/operations.hpp

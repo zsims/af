@@ -75,6 +75,11 @@ void BackupDatabase::Create()
 				DateTimeUtc INTEGER NOT NULL,
 				Action INTEGER NOT NULL
 			);
+			CREATE TABLE FilePath (
+				Id INTEGER PRIMARY KEY,
+				FullPath TEXT NOT NULL COLLATE BINARY UNIQUE,
+				Depth INTEGER NOT NULL
+			);
 		)";
 
 		sqlitepp::ScopedErrorMessage errorMessage;

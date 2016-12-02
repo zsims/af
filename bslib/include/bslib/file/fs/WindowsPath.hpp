@@ -83,6 +83,14 @@ public:
 	 */
 	void MakePreferred();
 
+	/**
+	 * Gets the depth of the path based on how many components it has.
+	 * \\C:\ has a depth of 0
+	 * \\C:\foo has a depth of 1
+	 * \\C:\foo\bar\ has a depth of 2
+	 */
+	unsigned GetDepth() const;
+
 	bool operator==(const WindowsPath& rhs) const
 	{
 		return _path == rhs._path;
