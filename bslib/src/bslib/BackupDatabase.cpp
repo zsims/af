@@ -63,7 +63,7 @@ void BackupDatabase::Create()
 			);
 			CREATE TABLE FileEvent (
 				Id INTEGER PRIMARY KEY AUTOINCREMENT,
-				FullPath TEXT NOT NULL COLLATE BINARY,
+				PathId INTEGER NOT NULL REFERENCES FilePath (Id),
 				ContentBlobAddress BLOB(20) REFERENCES Blob (Address),
 				Action INTEGER NOT NULL,
 				FileType INTEGER NOT NULL,
@@ -81,8 +81,8 @@ void BackupDatabase::Create()
 				Depth INTEGER NOT NULL
 			);
 			CREATE TABLE FilePathParent (
-				PathId INTEGER NOT NULL,
-				ParentPathId INTEGER NOT NULL,
+				PathId INTEGER NOT NULL REFERENCES FilePath (Id),
+				ParentPathId INTEGER NOT NULL REFERENCES FilePath (Id),
 				Distance INTEGER NOT NULL,
 				PRIMARY KEY(PathId, ParentPathId)
 			);

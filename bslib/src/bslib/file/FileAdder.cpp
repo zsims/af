@@ -216,7 +216,7 @@ void FileAdder::EmitEvent(const FileEvent& fileEvent)
 		_newPaths.insert(std::make_pair(fileEvent.fullPath, pathId));
 	}
 	_emittedEvents.push_back(fileEvent);
-	_fileEventStreamRepository.AddEvent(fileEvent);
+	_fileEventStreamRepository.AddEvent(fileEvent, pathId);
 	_eventManager.Publish(fileEvent);
 }
 
@@ -259,10 +259,7 @@ void FileAdder::SavePathTree()
 			}
 			
 			// Avoid adding a path to itself
-			if (pathId != parentId)
-			{
-				_filePathRepository.AddParent(pathId, parentId, distance);
-			}
+			_filePathRepository.AddParent(pathId, parentId, distance);
 		}
 	}
 }

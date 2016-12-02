@@ -34,16 +34,7 @@ public:
 	std::map<fs::NativePath, FileEvent> GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const;
 	boost::optional<FileEvent> FindLastChangedEvent(const fs::NativePath& fullPath) const;
 
-	void AddEvent(const FileEvent& fileEvent);
-
-	template<typename Container>
-	void AddEvents(const Container& events)
-	{
-		for (const auto& e : events)
-		{
-			AddEvent(e);
-		}
-	}
+	void AddEvent(const FileEvent& fileEvent, int64_t pathId);
 
 	/**
 	 * Gets statics by the given run ids with the given actions
@@ -71,7 +62,6 @@ private:
 	FileEvent MapRowToEvent(const sqlitepp::ScopedStatement& statement) const;
 
 	const sqlitepp::ScopedSqlite3Object& _db;
-	sqlitepp::ScopedStatement _insertEventStatement;
 	sqlitepp::ScopedStatement _getAllEventsStatement;
 	sqlitepp::ScopedStatement _getLastChangedEventByPathStatement;
 	sqlitepp::ScopedStatement _getLastChangedEventsUnderPathStatement;

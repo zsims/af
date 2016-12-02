@@ -35,7 +35,7 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 	bool and = false;
 	if (criteria.runId)
 	{
-		ss << "BackupRunId = X'" << criteria.runId->ToDashlessString() << "'";
+		ss << "FileEvent.BackupRunId = X'" << criteria.runId->ToDashlessString() << "'";
 		and = true;
 	}
 	if (!criteria.actions.empty())
@@ -44,7 +44,7 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 		{
 			ss << " AND ";
 		}
-		ss << "Action IN " << sqlitepp::ToSetLiteral(criteria.actions, [](const FileEventAction& a) { return std::to_string(static_cast<int>(a)); });
+		ss << "FileEvent.Action IN " << sqlitepp::ToSetLiteral(criteria.actions, [](const FileEventAction& a) { return std::to_string(static_cast<int>(a)); });
 		and = true;
 	}
 	if (criteria.fullPathPrefix)
@@ -53,23 +53,9 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 		{
 			ss << " AND ";
 		}
-		ss << "IsChildPath(:Needle, FullPath, -1)";
+		ss << "FileEvent.PathId IN (SELECT PathId FROM FilePathParent WHERE ParentPathId = (SELECT Id FROM FilePath WHERE FullPath = :Needle LIMIT 1))";
 	}
 	return ss.str();
-}
-
-static void IsChildPath(sqlite3_context *context, int argc, sqlite3_value **argv)
-{
-	if (argc != 3)
-	{
-		sqlite3_result_error(context, "Incorrect number of arguments", SQLITE_ERROR);
-		return;
-	}
-	const auto lhs = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
-	const auto rhs = reinterpret_cast<const char*>(sqlite3_value_text(argv[1]));
-	const auto maxDepth = sqlite3_value_int(argv[2]);
-	const auto result = fs::NativePath::IsChildPath(lhs, rhs, maxDepth);
-	sqlite3_result_int(context, result ? 1 : 0);
 }
 
 }
@@ -77,29 +63,24 @@ static void IsChildPath(sqlite3_context *context, int argc, sqlite3_value **argv
 FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlite3Object& connection)
 	: _db(connection)
 {
-	// Custom SQL function for "inspecting" paths
-	const auto registerResult = sqlite3_create_function(_db, "IsChildPath", 3, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, &IsChildPath, nullptr, nullptr);
-	if (registerResult != SQLITE_OK)
-	{
-		throw RegisterFunctionFailedException(registerResult);
-	}
-
 	sqlitepp::prepare_or_throw(_db, R"(
-		INSERT INTO FileEvent (FullPath, ContentBlobAddress, Action, FileType, BackupRunId) VALUES (:FullPath, :ContentBlobAddress, :Action, :FileType, :BackupRunId)
-	)", _insertEventStatement);
-	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId FROM FileEvent
-		ORDER BY Id ASC
+		SELECT FileEvent.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent
+		JOIN FilePath ON FileEvent.PathId = FilePath.Id
+		ORDER BY FileEvent.Id ASC
 	)", _getAllEventsStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId FROM FileEvent
-		WHERE IsChildPath(:Needle, FullPath, -1) AND Action IN (0, 1, 2)
-		GROUP BY FullPath HAVING Id = max(Id)
+		SELECT FileEvent.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent
+		JOIN FilePath ON FileEvent.PathId = FilePath.Id
+		WHERE FilePath.Id IN (
+			SELECT PathId FROM FilePathParent WHERE ParentPathId = (SELECT Id FROM FilePath WHERE FullPath = :Needle LIMIT 1)
+		) AND FileEvent.Action IN (0, 1, 2)
+		GROUP BY FileEvent.PathId HAVING FileEvent.Id = MAX(FileEvent.Id)
 	)", _getLastChangedEventsUnderPathStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId FROM FileEvent
-		WHERE FullPath = :FullPath AND Action IN (0, 1, 2)
-		ORDER BY Id DESC LIMIT 1
+		SELECT FileEvent.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent
+		JOIN FilePath ON FileEvent.PathId = FilePath.Id
+		WHERE FilePath.FullPath = :FullPath AND FileEvent.Action IN (0, 1, 2)
+		ORDER BY FileEvent.Id DESC LIMIT 1
 	)", _getLastChangedEventByPathStatement);
 }
 
@@ -135,11 +116,12 @@ std::map<fs::NativePath, FileEvent> FileEventStreamRepository::GetLastChangedEve
 	return result;
 }
 
-void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent)
+void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent, int64_t pathId)
 {
-	sqlitepp::ScopedStatementReset reset(_insertEventStatement);
-	const auto& rawPath = fileEvent.fullPath.ToString();
-	sqlitepp::BindByParameterNameText(_insertEventStatement, ":FullPath", rawPath);
+	const auto query = "INSERT INTO FileEvent (PathId, ContentBlobAddress, Action, FileType, BackupRunId) VALUES (:PathId, :ContentBlobAddress, :Action, :FileType, :BackupRunId)";
+	sqlitepp::ScopedStatement statement;
+	sqlitepp::prepare_or_throw(_db, query, statement);
+	sqlitepp::BindByParameterNameInt64(statement, ":PathId", pathId);
 
 	// TODO: This has to stay in scope for the duration of the statement, find a better way to do this without copying
 	blob::binary_address binaryContentAddress;
@@ -147,19 +129,19 @@ void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent)
 	if (fileEvent.contentBlobAddress)
 	{
 		binaryContentAddress = fileEvent.contentBlobAddress.value().ToBinary();
-		sqlitepp::BindByParameterNameBlob(_insertEventStatement, ":ContentBlobAddress", &binaryContentAddress[0], binaryContentAddress.size());
+		sqlitepp::BindByParameterNameBlob(statement, ":ContentBlobAddress", &binaryContentAddress[0], binaryContentAddress.size());
 	}
 	else
 	{
-		sqlitepp::BindByParameterNameNull(_insertEventStatement, ":ContentBlobAddress");
+		sqlitepp::BindByParameterNameNull(statement, ":ContentBlobAddress");
 	}
 
 	auto byteUuid = fileEvent.backupRunId.ToArray();
-	sqlitepp::BindByParameterNameBlob(_insertEventStatement, ":BackupRunId", &byteUuid[0], byteUuid.size());
-	sqlitepp::BindByParameterNameInt64(_insertEventStatement, ":Action", static_cast<int64_t>(fileEvent.action));
-	sqlitepp::BindByParameterNameInt64(_insertEventStatement, ":FileType", static_cast<int64_t>(fileEvent.type));
+	sqlitepp::BindByParameterNameBlob(statement, ":BackupRunId", &byteUuid[0], byteUuid.size());
+	sqlitepp::BindByParameterNameInt64(statement, ":Action", static_cast<int64_t>(fileEvent.action));
+	sqlitepp::BindByParameterNameInt64(statement, ":FileType", static_cast<int64_t>(fileEvent.type));
 
-	const auto stepResult = sqlite3_step(_insertEventStatement);
+	const auto stepResult = sqlite3_step(statement);
 	if (stepResult != SQLITE_DONE)
 	{
 		throw AddFileEventFailedException((boost::format("Failed to execute statement for insert event. SQLite error %1%") % stepResult).str());
@@ -238,22 +220,23 @@ std::vector<FileEvent> FileEventStreamRepository::SearchDistinctPath(
 {
 	std::stringstream queryss;
 	queryss << R"(
-		SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId 
+		SELECT FileEvent.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId 
 		FROM FileEvent
-		WHERE Id IN (
-			SELECT MAX(Id)
+		JOIN FilePath ON FileEvent.PathId = FilePath.Id
+		WHERE FileEvent.Id IN (
+			SELECT MAX(FileEvent.Id)
 			FROM FileEvent
 			WHERE )";
 	queryss << BuildPredicate(criteria);
-	queryss << "GROUP BY FullPath)";
+	queryss << "GROUP BY FileEvent.PathId)";
 	if (!reducedActions.empty())
 	{
 		const auto reducedActionsSet = sqlitepp::ToSetLiteral(reducedActions, [](const FileEventAction& a) {
 			return std::to_string(static_cast<int>(a));
 		});
-		queryss << " AND Action IN " << reducedActionsSet;
+		queryss << " AND FileEvent.Action IN " << reducedActionsSet;
 	}
-	queryss << " ORDER BY Id DESC LIMIT :Skip, :Limitation";
+	queryss << " ORDER BY FileEvent.Id DESC LIMIT :Skip, :Limitation";
 	const auto query = queryss.str();
 
 	sqlitepp::ScopedStatement statement;
@@ -286,12 +269,13 @@ std::vector<FileEvent> FileEventStreamRepository::Search(const FileEventSearchCr
 {
 	const auto predicate = BuildPredicate(criteria);
 	std::stringstream queryss;
-	queryss << "SELECT Id, FullPath, ContentBlobAddress, Action, FileType, BackupRunId FROM FileEvent";
+	queryss << "SELECT FileEvent.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent ";
+	queryss << "JOIN FilePath ON FileEvent.PathId = FilePath.Id";
 	if(!predicate.empty())
 	{
 		queryss << " WHERE " << predicate;
 	}
-	queryss << " ORDER BY Id ASC";
+	queryss << " ORDER BY FileEvent.Id ASC";
 	queryss << " LIMIT " << skip << ", " << limit;
 	const auto query = queryss.str();
 	sqlitepp::ScopedStatement statement;
@@ -315,7 +299,8 @@ unsigned FileEventStreamRepository::CountMatching(const FileEventSearchCriteria&
 {
 	const auto predicate = BuildPredicate(criteria);
 	std::stringstream queryss;
-	queryss << "SELECT COUNT(*) FROM FileEvent";
+	queryss << "SELECT COUNT(*) FROM FileEvent ";
+	queryss << "JOIN FilePath ON FileEvent.PathId = FilePath.Id";
 	if(!predicate.empty())
 	{
 		queryss << " WHERE " << predicate;
@@ -341,12 +326,13 @@ unsigned FileEventStreamRepository::CountMatchingDistinctPath(const FileEventSea
 {
 	const auto predicate = BuildPredicate(criteria);
 	std::stringstream queryss;
-	queryss << "SELECT COUNT(*) FROM (SELECT Id FROM FileEvent";
+	queryss << "SELECT COUNT(*) FROM (SELECT FileEvent.Id FROM FileEvent ";
+	queryss << "JOIN FilePath ON FileEvent.PathId = FilePath.Id";
 	if(!predicate.empty())
 	{
 		queryss << " WHERE " << predicate;
 	}
-	queryss << " GROUP BY FullPath)";
+	queryss << " GROUP BY FileEvent.PathId)";
 	const auto query = queryss.str();
 	sqlitepp::ScopedStatement statement;
 	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
