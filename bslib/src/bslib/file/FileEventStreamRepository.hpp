@@ -31,7 +31,7 @@ public:
 	 * Gets all events in the order they were recorded
 	 */
 	std::vector<FileEvent> GetAllEvents() const;
-	std::map<fs::NativePath, FileEvent> GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const;
+	std::map<fs::NativePath, FileEvent> GetLastChangedEventsUnderPath(const fs::NativePath& fullPath) const;
 	boost::optional<FileEvent> FindLastChangedEvent(const fs::NativePath& fullPath) const;
 
 	void AddEvent(const FileEvent& fileEvent, int64_t pathId);

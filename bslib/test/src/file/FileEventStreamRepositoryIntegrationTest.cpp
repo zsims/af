@@ -174,7 +174,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastGoodEventsUnderPath_Succ
 	};
 
 	// Act
-	const auto& result = _fileEventStreamRepository->GetLastChangedEventsStartingWithPath(fs::NativePath(R"(C:\other root\)"));
+	const auto& result = _fileEventStreamRepository->GetLastChangedEventsUnderPath(fs::NativePath(R"(C:\other root\)"));
 
 	// Assert
 	std::vector<FileEvent> justEvents;
@@ -202,7 +202,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, GetLastGoodEventsUnderPath_Hand
 	};
 
 	// Act
-	const auto& result = _fileEventStreamRepository->GetLastChangedEventsStartingWithPath(fs::NativePath(R"(C:\Its_\)"));
+	const auto& result = _fileEventStreamRepository->GetLastChangedEventsUnderPath(fs::NativePath(R"(C:\Its_\)"));
 
 	// Assert
 	std::vector<FileEvent> justEvents;
@@ -409,7 +409,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByRunIdSuccess)
 	EXPECT_THAT(page1, ::testing::ElementsAre(expectedEvents[4]));
 }
 
-TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByFullPathPrefixSuccess)
+TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByancestorPathSuccess)
 {
 	// Arrange
 	blob::BlobInfoRepository blobRepo(*_connection);
@@ -437,7 +437,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByFullPathPrefixSuccess)
 	FileEventSearchCriteria criteria;
 	criteria.actions = std::set<FileEventAction>{ FileEventAction::ChangedRemoved, FileEventAction::ChangedAdded};
 	criteria.runId = run1;
-	criteria.fullPathPrefix = expectedEvents[0].fullPath.ToString();
+	criteria.ancestorPath = expectedEvents[0].fullPath.ToString();
 	const auto page1 = _fileEventStreamRepository->Search(criteria, 0, 4);
 
 	const auto matching = _fileEventStreamRepository->CountMatching(criteria);
@@ -447,7 +447,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByFullPathPrefixSuccess)
 	EXPECT_THAT(page1, ::testing::ElementsAre(expectedEvents[0], expectedEvents[1]));
 }
 
-TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByFullPathPrefixSuccess)
+TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByancestorPathSuccess)
 {
 	// Arrange
 	blob::BlobInfoRepository blobRepo(*_connection);
@@ -469,7 +469,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByFullPathPr
 	// Act
 	FileEventSearchCriteria criteria;
 	criteria.actions = std::set<FileEventAction>{ FileEventAction::ChangedRemoved, FileEventAction::ChangedModified, FileEventAction::ChangedAdded};
-	criteria.fullPathPrefix = expectedEvents[0].fullPath.ToString();
+	criteria.ancestorPath = expectedEvents[0].fullPath.ToString();
 	const auto page1 = _fileEventStreamRepository->SearchDistinctPath(criteria, 0, 4);
 
 	const auto matching = _fileEventStreamRepository->CountMatchingDistinctPath(criteria);
@@ -480,7 +480,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByFullPathPr
 	EXPECT_THAT(page1, ::testing::UnorderedElementsAre(expectedEvents[0], expectedEvents[3], expectedEvents[4]));
 }
 
-TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByFullPathPrefixWithReducedActionsSuccess)
+TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByancestorPathWithReducedActionsSuccess)
 {
 	// Arrange
 	blob::BlobInfoRepository blobRepo(*_connection);
@@ -502,7 +502,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByFullPathPr
 	// Act
 	FileEventSearchCriteria criteria;
 	criteria.actions = std::set<FileEventAction>{ FileEventAction::ChangedRemoved, FileEventAction::ChangedAdded };
-	criteria.fullPathPrefix = expectedEvents[0].fullPath.ToString();
+	criteria.ancestorPath = expectedEvents[0].fullPath.ToString();
 	const auto page1 = _fileEventStreamRepository->SearchDistinctPath(criteria, std::set<FileEventAction> { FileEventAction::ChangedAdded }, 0, 4);
 
 	const auto matching = _fileEventStreamRepository->CountMatchingDistinctPath(criteria);

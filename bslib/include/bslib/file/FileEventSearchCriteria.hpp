@@ -20,7 +20,7 @@ struct FileEventSearchCriteria
 	std::set<FileEventAction> actions;
 
 	// optional full path prefix
-	boost::optional<UTF8String> fullPathPrefix;
+	boost::optional<UTF8String> ancestorPath;
 };
 
 }

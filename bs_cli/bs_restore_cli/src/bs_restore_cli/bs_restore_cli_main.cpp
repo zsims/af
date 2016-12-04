@@ -39,7 +39,7 @@ int Restore(const af::bslib::UTF8String& pathToRestore, const af::bslib::UTF8Str
 		auto uow = backup.CreateUnitOfWork();
 		const auto finder = uow->CreateFileFinder();
 		auto restorer = uow->CreateFileRestorer();
-		const auto events = finder->GetLastChangedEventsStartingWithPath(queryPath);
+		const auto events = finder->GetLastChangedEventsUnderPath(queryPath);
 
 		restorer->GetEventManager().Subscribe([](const auto& fileRestoreEvent) {
 			std::cout << fileRestoreEvent.action << " " << fileRestoreEvent.originalEvent.fullPath.ToString() << " to " << fileRestoreEvent.targetPath.ToString() << std::endl;
