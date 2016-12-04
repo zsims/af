@@ -13,6 +13,7 @@ namespace bslib {
 namespace file {
 
 class FileEventStreamRepository;
+class FilePathRepository;
 struct FileEventSearchCriteria;
 
 /**
@@ -21,7 +22,7 @@ struct FileEventSearchCriteria;
 class FileFinder
 {
 public:
-	explicit FileFinder(FileEventStreamRepository& fileEventStreamRepository);
+	FileFinder(FileEventStreamRepository& fileEventStreamRepository, FilePathRepository& filePathRepository);
 
 	struct ResultsPage
 	{
@@ -43,8 +44,14 @@ public:
 	std::map<fs::NativePath, FileEvent> GetLastChangedEventsStartingWithPath(const fs::NativePath& fullPath) const;
 	std::vector<FileEvent> GetAllEvents() const;
 	ResultsPage SearchEvents(const FileEventSearchCriteria& criteria, unsigned skip, unsigned pageSize) const;
+
+	/**
+	 * Returns true if the given path is known, such that it or one of its children have been visited in a backup
+	 */
+	bool IsKnownPath(const fs::NativePath& fullPath) const;
 private:
 	const FileEventStreamRepository& _fileEventStreamRepository;
+	const FilePathRepository& _filePathRepository;
 };
 
 }

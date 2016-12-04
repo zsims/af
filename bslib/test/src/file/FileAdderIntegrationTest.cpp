@@ -54,6 +54,12 @@ TEST_F(FileAdderIntegrationTest, Add_SuccessWithFile)
 	const auto expectedEmittedEvent = RegularFileEvent(_backupRunId, filePath, fileAddress, FileEventAction::ChangedAdded);
 	EXPECT_TRUE(_finder->FindLastChangedEventByPath(filePath));
 	EXPECT_THAT(emittedEvents, ::testing::ElementsAre(expectedEmittedEvent));
+
+	const auto pathSegments = filePath.GetIntermediatePaths();
+	for (const auto& segment : pathSegments)
+	{
+		EXPECT_TRUE(_finder->IsKnownPath(segment));
+	}
 }
 
 TEST_F(FileAdderIntegrationTest, Add_ConvertsForwardSlashes)

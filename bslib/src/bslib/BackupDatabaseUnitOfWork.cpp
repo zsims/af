@@ -34,7 +34,7 @@ std::unique_ptr<file::VirtualFileBrowser> BackupDatabaseUnitOfWork::CreateVirtua
 
 std::unique_ptr<file::FileAdder> BackupDatabaseUnitOfWork::CreateFileAdder(const Uuid& backupRunId)
 {
-	return std::make_unique<file::FileAdder>(backupRunId, _blobStore, _connection->GetBlobInfoRepository(), _connection->GetFileEventStreamRepository());
+	return std::make_unique<file::FileAdder>(backupRunId, _blobStore, _connection->GetBlobInfoRepository(), _connection->GetFileEventStreamRepository(), _connection->GetFilePathRepository());
 }
 
 std::unique_ptr<file::FileRestorer> BackupDatabaseUnitOfWork::CreateFileRestorer()
@@ -44,7 +44,7 @@ std::unique_ptr<file::FileRestorer> BackupDatabaseUnitOfWork::CreateFileRestorer
 
 std::unique_ptr<file::FileFinder> BackupDatabaseUnitOfWork::CreateFileFinder()
 {
-	return std::make_unique<file::FileFinder>(_connection->GetFileEventStreamRepository());
+	return std::make_unique<file::FileFinder>(_connection->GetFileEventStreamRepository(), _connection->GetFilePathRepository());
 }
 
 std::vector<uint8_t> BackupDatabaseUnitOfWork::GetBlob(const blob::Address& address) const

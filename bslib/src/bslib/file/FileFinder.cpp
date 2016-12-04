@@ -2,14 +2,17 @@
 
 #include "bslib/file/exceptions.hpp"
 #include "bslib/file/FileEventStreamRepository.hpp"
+#include "bslib/file/FilePathRepository.hpp"
 
 namespace af {
 namespace bslib {
 namespace file {
 
 FileFinder::FileFinder(
-	FileEventStreamRepository& fileEventStreamRepository)
+	FileEventStreamRepository& fileEventStreamRepository,
+	FilePathRepository& filePathRepository)
 	: _fileEventStreamRepository(fileEventStreamRepository)
+	, _filePathRepository(filePathRepository)
 {
 }
 
@@ -46,6 +49,15 @@ FileFinder::ResultsPage FileFinder::SearchEvents(const FileEventSearchCriteria& 
 	const auto eventsSize = static_cast<unsigned>(results.events.size());
 	results.nextPageSkip = skip + std::min(eventsSize, pageSize);
 	return results;
+}
+
+bool FileFinder::IsKnownPath(const fs::NativePath& fullPath) const
+{
+	if (_filePathRepository.FindPath(fullPath))
+	{
+		return true;
+	}
+	return false;
 }
 
 }

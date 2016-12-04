@@ -22,6 +22,7 @@ add_executable(
     src/file/FileBackupRunReaderIntegrationTest.cpp
     src/file/FileBackupRunRecorderIntegrationTest.cpp
     src/file/FileEventStreamRepositoryIntegrationTest.cpp
+    src/file/FilePathRepositoryIntegrationTest.cpp
     src/file/FileRestorerIntegrationTest.cpp
     src/file/fs/WindowsPathIntegrationTest.cpp
     src/file/fs/operationsIntegrationTest.cpp

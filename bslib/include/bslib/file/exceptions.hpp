@@ -39,6 +39,24 @@ public:
 	}
 };
 
+class AddFilePathFailedException : public std::runtime_error
+{
+public:
+	explicit AddFilePathFailedException(int sqlError)
+		: std::runtime_error("Failed to insert file path object, SQL error " + std::to_string(sqlError))
+	{
+	}
+};
+
+class AddFilePathParentFailedException : public std::runtime_error
+{
+public:
+	explicit AddFilePathParentFailedException(int sqlError)
+		: std::runtime_error("Failed to insert file path parent, SQL error " + std::to_string(sqlError))
+	{
+	}
+};
+
 /**
 * Given path couldn't be found.
 */
