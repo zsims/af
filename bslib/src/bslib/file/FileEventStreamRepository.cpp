@@ -53,7 +53,12 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 		{
 			ss << " AND ";
 		}
-		ss << "FileEvent.PathId IN (SELECT PathId FROM FilePathParent WHERE ParentPathId = " << criteria.ancestorPathId.value() << ")";
+		ss << "FileEvent.PathId IN (SELECT PathId FROM FilePathParent WHERE ParentPathId = " << criteria.ancestorPathId.value();
+		if (criteria.ancestorPathDistance)
+		{
+			ss << " AND Distance = " << criteria.ancestorPathDistance.value();
+		}
+		ss << ")";
 	}
 	return ss.str();
 }
