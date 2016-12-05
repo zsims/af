@@ -24,6 +24,9 @@ struct FileEventSearchCriteria
 
 	// optional distance to the ancestor path, e.g. 1 = must be a parent
 	boost::optional<unsigned> ancestorPathDistance;
+
+	// optional how deep the paths must be
+	boost::optional<unsigned> pathDepth;
 };
 
 }

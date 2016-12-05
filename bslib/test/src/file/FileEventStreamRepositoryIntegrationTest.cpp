@@ -572,6 +572,34 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByAncestorPa
 	EXPECT_THAT(page1, ::testing::UnorderedElementsAre(expectedEvents[4], expectedEvents[6]));
 }
 
+TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByPathDepthSuccess)
+{
+	// Arrange
+	const auto run1 = Uuid::Create();
+
+	const std::vector<FileEvent> expectedEvents = {
+		FileEvent(run1, fs::NativePath(R"(A:\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath(R"(B:\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath(R"(A:\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath(R"(C:\old)"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved),
+		FileEvent(run1, fs::NativePath(R"(D:\old)"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved),
+	};
+	AddEvents(expectedEvents);
+
+	// Act
+	FileEventSearchCriteria criteria;
+	criteria.actions = { FileEventAction::ChangedRemoved, FileEventAction::ChangedModified, FileEventAction::ChangedAdded };
+	criteria.pathDepth = 0;
+	const auto page1 = _fileEventStreamRepository->SearchDistinctPath(criteria, 0, 4);
+
+	const auto matching = _fileEventStreamRepository->CountMatchingDistinctPath(criteria);
+	EXPECT_EQ(2, matching);
+
+	// Assert
+	EXPECT_EQ(2, page1.size());
+	EXPECT_THAT(page1, ::testing::UnorderedElementsAre(expectedEvents[1], expectedEvents[2]));
+}
+
 TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByAncestorPathIdWithReducedActionsSuccess)
 {
 	// Arrange

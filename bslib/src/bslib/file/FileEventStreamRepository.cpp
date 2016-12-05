@@ -59,6 +59,15 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 			ss << " AND Distance = " << criteria.ancestorPathDistance.value();
 		}
 		ss << ")";
+		and = true;
+	}
+	if (criteria.pathDepth)
+	{
+		if (and)
+		{
+			ss << " AND ";
+		}
+		ss << "FilePath.Depth = " << criteria.pathDepth.value();
 	}
 	return ss.str();
 }
@@ -233,7 +242,7 @@ std::vector<FileEvent> FileEventStreamRepository::SearchDistinctPath(
 			FROM FileEvent
 			WHERE )";
 	queryss << BuildPredicate(criteria);
-	queryss << "GROUP BY FileEvent.PathId)";
+	queryss << " GROUP BY FileEvent.PathId)";
 	if (!reducedActions.empty())
 	{
 		const auto reducedActionsSet = sqlitepp::ToSetLiteral(reducedActions, [](const FileEventAction& a) {
