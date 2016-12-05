@@ -12,7 +12,7 @@ enum FilePathColumnIndex
 {
 	FilePath_ColumnIndex_Id = 0,
 	FilePath_ColumnIndex_FullPath,
-	FilePath_ColumnIndex_Depth,
+	FilePath_ColumnIndex_ParentId
 };
 }
 
@@ -39,14 +39,22 @@ std::vector<std::pair<int64_t, fs::NativePath>> FilePathRepository::GetAllPaths(
 	return result;
 }
 
-int64_t FilePathRepository::AddPath(const fs::NativePath& path)
+int64_t FilePathRepository::AddPath(const fs::NativePath& path, const boost::optional<int64_t>& parentId)
 {
-	const auto query = "INSERT INTO FilePath (FullPath, Depth) VALUES(:FullPath, :Depth)";
+	const auto query = "INSERT INTO FilePath (FullPath, ParentId) VALUES(:FullPath, :ParentId)";
 	sqlitepp::ScopedStatement statement;
 	sqlitepp::prepare_or_throw(_db, query, statement);
 	const auto& rawPath = path.ToString();
 	sqlitepp::BindByParameterNameText(statement, ":FullPath", rawPath);
-	sqlitepp::BindByParameterNameInt32(statement, ":Depth", path.GetDepth());
+
+	if (parentId)
+	{
+		sqlitepp::BindByParameterNameInt64(statement, ":ParentId", parentId.value());
+	}
+	else
+	{
+		sqlitepp::BindByParameterNameNull(statement, ":ParentId");
+	}
 
 	const auto stepResult = sqlite3_step(statement);
 	if (stepResult != SQLITE_DONE)
@@ -71,21 +79,6 @@ boost::optional<int64_t> FilePathRepository::FindPath(const fs::NativePath& path
 	}
 
 	return boost::none;
-}
-
-void FilePathRepository::AddParent(int64_t pathId, int64_t parentId, unsigned distance)
-{
-	const auto query = "INSERT OR IGNORE INTO FilePathParent (PathId, ParentPathId, Distance) VALUES(:PathId, :ParentPathId, :Distance)";
-	sqlitepp::ScopedStatement statement;
-	sqlitepp::prepare_or_throw(_db, query, statement);
-	sqlitepp::BindByParameterNameInt64(statement, ":PathId", pathId);
-	sqlitepp::BindByParameterNameInt64(statement, ":ParentPathId", parentId);
-	sqlitepp::BindByParameterNameInt32(statement, ":Distance", distance);
-	const auto stepResult = sqlite3_step(statement);
-	if (stepResult != SQLITE_DONE)
-	{
-		throw AddFilePathParentFailedException(stepResult);
-	}
 }
 
 }

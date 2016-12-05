@@ -11,13 +11,10 @@ namespace af {
 namespace bslib {
 namespace file {
 
-struct FileEventSearchCriteria
+struct FilePathSearchCriteria
 {
-	// optional run id to match
-	boost::optional<Uuid> runId;
-
-	// optional actions to match
-	std::set<FileEventAction> actions;
+	// optional parent path
+	boost::optional<int64_t> parentPathId;
 };
 
 }

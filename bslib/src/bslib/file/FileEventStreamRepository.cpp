@@ -22,6 +22,7 @@ namespace {
 enum GetObjectColumnIndex
 {
 	GetFileEvent_ColumnIndex_Id = 0,
+	GetFileEvent_ColumnIndex_PathId,
 	GetFileEvent_ColumnIndex_FullPath,
 	GetFileEvent_ColumnIndex_ContentBlobAddress,
 	GetFileEvent_ColumnIndex_Action,
@@ -47,27 +48,16 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 		ss << "FileEvent.Action IN " << sqlitepp::ToSetLiteral(criteria.actions, [](const FileEventAction& a) { return std::to_string(static_cast<int>(a)); });
 		and = true;
 	}
-	if (criteria.ancestorPathId)
+	return ss.str();
+}
+
+std::string BuildPredicate(const FilePathSearchCriteria& criteria)
+{
+	std::stringstream ss;
+	bool and = false;
+	if (criteria.parentPathId)
 	{
-		if (and)
-		{
-			ss << " AND ";
-		}
-		ss << "FileEvent.PathId IN (SELECT PathId FROM FilePathParent WHERE ParentPathId = " << criteria.ancestorPathId.value();
-		if (criteria.ancestorPathDistance)
-		{
-			ss << " AND Distance = " << criteria.ancestorPathDistance.value();
-		}
-		ss << ")";
-		and = true;
-	}
-	if (criteria.pathDepth)
-	{
-		if (and)
-		{
-			ss << " AND ";
-		}
-		ss << "FilePath.Depth = " << criteria.pathDepth.value();
+		ss << "FilePath.Id = " << criteria.parentPathId.value();
 	}
 	return ss.str();
 }
@@ -78,20 +68,23 @@ FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlit
 	: _db(connection)
 {
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT FileEvent.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent
+		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent
 		JOIN FilePath ON FileEvent.PathId = FilePath.Id
 		ORDER BY FileEvent.Id ASC
 	)", _getAllEventsStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT FileEvent.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent
+		WITH RECURSIVE path_decedent(n) AS (
+			SELECT Id FROM FilePath WHERE FullPath = :Needle
+			UNION ALL
+			SELECT Id From FilePath, path_decedent WHERE FilePath.ParentId = path_decedent.n
+		)
+		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent
 		JOIN FilePath ON FileEvent.PathId = FilePath.Id
-		WHERE FilePath.Id IN (
-			SELECT PathId FROM FilePathParent WHERE ParentPathId = (SELECT Id FROM FilePath WHERE FullPath = :Needle LIMIT 1)
-		) AND FileEvent.Action IN (0, 1, 2)
+		WHERE FilePath.Id IN path_decedent AND FileEvent.Action IN (0, 1, 2)
 		GROUP BY FileEvent.PathId HAVING FileEvent.Id = MAX(FileEvent.Id)
 	)", _getLastChangedEventsUnderPathStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT FileEvent.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent
+		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent
 		JOIN FilePath ON FileEvent.PathId = FilePath.Id
 		WHERE FilePath.FullPath = :FullPath AND FileEvent.Action IN (0, 1, 2)
 		ORDER BY FileEvent.Id DESC LIMIT 1
@@ -226,31 +219,31 @@ std::map<Uuid, FileEventStreamRepository::RunStats> FileEventStreamRepository::G
 	return result;
 }
 
-std::vector<FileEvent> FileEventStreamRepository::SearchDistinctPath(
-	const FileEventSearchCriteria& criteria,
-	const std::set<FileEventAction>& reducedActions,
+std::vector<FileEventStreamRepository::PathFirstSearchMatch> FileEventStreamRepository::SearchPathFirst(
+	const FilePathSearchCriteria& pathCriteria,
+	const FileEventSearchCriteria& eventCriteria,
 	unsigned skip,
 	unsigned limit) const
 {
 	std::stringstream queryss;
 	queryss << R"(
-		SELECT FileEvent.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId 
-		FROM FileEvent
-		JOIN FilePath ON FileEvent.PathId = FilePath.Id
-		WHERE FileEvent.Id IN (
+		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId 
+		FROM FilePath
+		LEFT OUTER JOIN FileEvent ON FileEvent.PathId = FilePath.Id AND FileEvent.Id IN (
 			SELECT MAX(FileEvent.Id)
-			FROM FileEvent
-			WHERE )";
-	queryss << BuildPredicate(criteria);
-	queryss << " GROUP BY FileEvent.PathId)";
-	if (!reducedActions.empty())
+			FROM FileEvent)";
+	const auto eventPredicate = BuildPredicate(eventCriteria);
+	if (!eventPredicate.empty())
 	{
-		const auto reducedActionsSet = sqlitepp::ToSetLiteral(reducedActions, [](const FileEventAction& a) {
-			return std::to_string(static_cast<int>(a));
-		});
-		queryss << " AND FileEvent.Action IN " << reducedActionsSet;
+		queryss << " WHERE " << eventPredicate;
 	}
-	queryss << " ORDER BY FileEvent.Id DESC LIMIT :Skip, :Limitation";
+	queryss << " GROUP BY FileEvent.PathId)";
+	const auto pathPredicate = BuildPredicate(pathCriteria);
+	if (!pathPredicate.empty())
+	{
+		queryss << " WHERE " << pathPredicate;
+	}
+	queryss << " ORDER BY FilePath.Id DESC LIMIT :Skip, :Limitation";
 	const auto query = queryss.str();
 
 	sqlitepp::ScopedStatement statement;
@@ -259,29 +252,47 @@ std::vector<FileEvent> FileEventStreamRepository::SearchDistinctPath(
 	// bind needle but make sure it stays in scope for the query
 	sqlitepp::BindByParameterNameInt64(statement, ":Skip", static_cast<int64_t>(skip));
 	sqlitepp::BindByParameterNameInt64(statement, ":Limitation", static_cast<int64_t>(limit));
-	std::vector<FileEvent> result;
+	std::vector<PathFirstSearchMatch> result;
 	auto stepResult = 0;
 	while ((stepResult = sqlite3_step(statement)) == SQLITE_ROW)
 	{
-		result.push_back(MapRowToEvent(statement));
+		boost::optional<FileEvent> matchedEvent;
+		if (sqlite3_column_type(statement, GetFileEvent_ColumnIndex_Id) != SQLITE_NULL)
+		{
+			matchedEvent = MapRowToEvent(statement);
+		}
+		const auto rawFullPath = sqlite3_column_text(statement, GetFileEvent_ColumnIndex_FullPath);
+		PathFirstSearchMatch match;
+		match.latestEvent = matchedEvent;
+		match.fullPath =  fs::NativePath(reinterpret_cast<const char*>(rawFullPath));
+		match.pathId = sqlite3_column_int64(statement, GetFileEvent_ColumnIndex_PathId);
+		result.push_back(match);
 	}
 	return result;
 }
 
-std::vector<FileEvent> FileEventStreamRepository::SearchDistinctPath(const FileEventSearchCriteria& criteria, unsigned skip, unsigned limit) const
+std::vector<FileEvent> FileEventStreamRepository::Search(const FilePathSearchCriteria& pathCriteria, const FileEventSearchCriteria& eventCriteria, unsigned skip, unsigned limit) const
 {
-	return SearchDistinctPath(criteria, {}, skip, limit);
-}
-
-std::vector<FileEvent> FileEventStreamRepository::Search(const FileEventSearchCriteria& criteria, unsigned skip, unsigned limit) const
-{
-	const auto predicate = BuildPredicate(criteria);
 	std::stringstream queryss;
-	queryss << "SELECT FileEvent.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent ";
+	queryss << "SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent ";
 	queryss << "JOIN FilePath ON FileEvent.PathId = FilePath.Id";
-	if(!predicate.empty())
+	const auto eventPredicate = BuildPredicate(eventCriteria);
+	if (!eventPredicate.empty())
 	{
-		queryss << " WHERE " << predicate;
+		queryss << " WHERE " << eventPredicate;
+	}
+	const auto pathPredicate = BuildPredicate(pathCriteria);
+	if (!pathPredicate.empty())
+	{
+		if (!eventPredicate.empty())
+		{
+			queryss << " AND ";
+		}
+		else
+		{
+			queryss << " WHERE ";
+		}
+		queryss << pathPredicate;
 	}
 	queryss << " ORDER BY FileEvent.Id ASC";
 	queryss << " LIMIT " << skip << ", " << limit;
@@ -297,15 +308,33 @@ std::vector<FileEvent> FileEventStreamRepository::Search(const FileEventSearchCr
 	return result;
 }
 
-unsigned FileEventStreamRepository::CountMatching(const FileEventSearchCriteria& criteria) const
+std::vector<FileEvent> FileEventStreamRepository::Search(const FileEventSearchCriteria& eventCriteria, unsigned skip, unsigned limit) const
 {
-	const auto predicate = BuildPredicate(criteria);
+	return Search(FilePathSearchCriteria{}, eventCriteria, skip, limit);
+}
+
+unsigned FileEventStreamRepository::CountMatching(const FilePathSearchCriteria& pathCriteria, const FileEventSearchCriteria& eventCriteria) const
+{
 	std::stringstream queryss;
 	queryss << "SELECT COUNT(*) FROM FileEvent ";
 	queryss << "JOIN FilePath ON FileEvent.PathId = FilePath.Id";
-	if(!predicate.empty())
+	const auto eventPredicate = BuildPredicate(eventCriteria);
+	if(!eventPredicate.empty())
 	{
-		queryss << " WHERE " << predicate;
+		queryss << " WHERE " << eventPredicate;
+	}
+	const auto pathPredicate = BuildPredicate(pathCriteria);
+	if(!pathPredicate.empty())
+	{
+		if (!eventPredicate.empty())
+		{
+			queryss << " AND ";
+		}
+		else
+		{
+			queryss << " WHERE ";
+		}
+		queryss << pathPredicate;
 	}
 	const auto query = queryss.str();
 	sqlitepp::ScopedStatement statement;
@@ -318,22 +347,25 @@ unsigned FileEventStreamRepository::CountMatching(const FileEventSearchCriteria&
 	return 0;
 }
 
-unsigned FileEventStreamRepository::CountMatchingDistinctPath(const FileEventSearchCriteria& criteria) const
+unsigned FileEventStreamRepository::CountMatching(const FileEventSearchCriteria& eventCriteria) const
+{
+	return CountMatching(FilePathSearchCriteria{}, eventCriteria);
+}
+
+unsigned FileEventStreamRepository::CountMatching(const FilePathSearchCriteria& criteria) const
 {
 	const auto predicate = BuildPredicate(criteria);
 	std::stringstream queryss;
-	queryss << "SELECT COUNT(*) FROM (SELECT FileEvent.Id FROM FileEvent ";
-	queryss << "JOIN FilePath ON FileEvent.PathId = FilePath.Id";
-	if(!predicate.empty())
+	queryss << "SELECT COUNT(*) FROM FilePath ";
+	if (!predicate.empty())
 	{
 		queryss << " WHERE " << predicate;
 	}
-	queryss << " GROUP BY FileEvent.PathId)";
 	const auto query = queryss.str();
 	sqlitepp::ScopedStatement statement;
 	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
 	const auto stepResult = sqlite3_step(statement);
-	if(stepResult == SQLITE_ROW)
+	if (stepResult == SQLITE_ROW)
 	{
 		return static_cast<unsigned>(sqlite3_column_int64(statement, 0));
 	}

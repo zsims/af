@@ -2,6 +2,7 @@
 
 #include "bslib/file/FileEvent.hpp"
 #include "bslib/file/FileEventSearchCriteria.hpp"
+#include "bslib/file/FilePathSearchCriteria.hpp"
 #include "bslib/file/fs/path.hpp"
 #include "bslib/sqlitepp/handles.hpp"
 
@@ -25,6 +26,13 @@ public:
 		uint64_t matchingSizeBytes;
 	};
 
+	struct PathFirstSearchMatch
+	{
+		fs::NativePath fullPath;
+		int64_t pathId;
+		boost::optional<FileEvent> latestEvent;
+	};
+
 	explicit FileEventStreamRepository(const sqlitepp::ScopedSqlite3Object& connection);
 
 	/**
@@ -45,19 +53,22 @@ public:
 	std::map<Uuid, RunStats> GetStatisticsByRunId(const std::vector<Uuid>& runIds, const std::set<FileEventAction>& actions) const;
 
 	/**
-	 * Searches returning events based on distinct paths only, e.g. such that you get the last event that matches the criteria for the given path
+	 * Searches for events matching the given event *and* path criteria
 	 */
-	std::vector<FileEvent> SearchDistinctPath(const FileEventSearchCriteria& criteria, unsigned skip, unsigned limit) const;
-	
+	std::vector<FileEvent> Search(const FilePathSearchCriteria& pathCriteria, const FileEventSearchCriteria& eventCriteria, unsigned skip, unsigned limit) const;
+	std::vector<FileEvent> Search(const FileEventSearchCriteria& eventCriteria, unsigned skip, unsigned limit) const;
+	unsigned CountMatching(const FilePathSearchCriteria& pathCriteria, const FileEventSearchCriteria& eventCriteria) const;
+	unsigned CountMatching(const FileEventSearchCriteria& eventCriteria) const;
+
 	/**
-	 * Like SearchDistinctPath() but provides an *additional* set of actions to reduce the results by
+	 * Searches for all matching paths and associated *latest* event
 	 */
-	std::vector<FileEvent> SearchDistinctPath(const FileEventSearchCriteria& criteria, const std::set<FileEventAction>& reducedActions, unsigned skip, unsigned limit) const;
-	unsigned CountMatchingDistinctPath(const FileEventSearchCriteria& criteria) const;
-
-	std::vector<FileEvent> Search(const FileEventSearchCriteria& criteria, unsigned skip, unsigned limit) const;
-
-	unsigned CountMatching(const FileEventSearchCriteria& criteria) const;
+	std::vector<PathFirstSearchMatch> SearchPathFirst(
+		const FilePathSearchCriteria& pathCriteria,
+		const FileEventSearchCriteria& eventCriteria,
+		unsigned skip,
+		unsigned limit) const;
+	unsigned CountMatching(const FilePathSearchCriteria& criteria) const;
 private:
 	FileEvent MapRowToEvent(const sqlitepp::ScopedStatement& statement) const;
 

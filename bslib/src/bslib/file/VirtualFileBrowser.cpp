@@ -36,14 +36,16 @@ VirtualFileBrowser::VirtualFileBrowser(FileEventStreamRepository& fileEventStrea
 
 std::vector<VirtualFile> VirtualFileBrowser::List(unsigned skip, unsigned limit) const
 {
-	FileEventSearchCriteria criteria;
-	criteria.actions = MATCH_EVENTS;
-	const auto events = _fileEventStreamRepository.SearchDistinctPath(criteria, REDUCE_EVENTS, skip, limit);
+	//FileEventSearchCriteria criteria;
+	//criteria.actions = MATCH_EVENTS;
+	//const auto events = _fileEventStreamRepository.SearchDistinctPath(criteria, REDUCE_EVENTS, skip, limit);
+	//std::vector<VirtualFile> result;
+	//for (const auto& ev : events)
+	//{
+	//	result.push_back(ToVirtualFile(ev));
+	//}
+	//return result;
 	std::vector<VirtualFile> result;
-	for (const auto& ev : events)
-	{
-		result.push_back(ToVirtualFile(ev));
-	}
 	return result;
 }
 
