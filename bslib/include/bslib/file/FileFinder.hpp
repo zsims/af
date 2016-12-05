@@ -49,6 +49,7 @@ public:
 	 * Returns true if the given path is known, such that it or one of its children have been visited in a backup
 	 */
 	bool IsKnownPath(const fs::NativePath& fullPath) const;
+	boost::optional<int64_t> FindPathId(const fs::NativePath& fullPath) const;
 private:
 	const FileEventStreamRepository& _fileEventStreamRepository;
 	const FilePathRepository& _filePathRepository;

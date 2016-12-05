@@ -47,13 +47,27 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 		ss << "FileEvent.Action IN " << sqlitepp::ToSetLiteral(criteria.actions, [](const FileEventAction& a) { return std::to_string(static_cast<int>(a)); });
 		and = true;
 	}
-	if (criteria.ancestorPath)
+	if (criteria.ancestorPathId)
 	{
 		if (and)
 		{
 			ss << " AND ";
 		}
-		ss << "FileEvent.PathId IN (SELECT PathId FROM FilePathParent WHERE ParentPathId = (SELECT Id FROM FilePath WHERE FullPath = :Needle LIMIT 1))";
+		ss << "FileEvent.PathId IN (SELECT PathId FROM FilePathParent WHERE ParentPathId = " << criteria.ancestorPathId.value();
+		if (criteria.ancestorPathDistance)
+		{
+			ss << " AND Distance = " << criteria.ancestorPathDistance.value();
+		}
+		ss << ")";
+		and = true;
+	}
+	if (criteria.pathDepth)
+	{
+		if (and)
+		{
+			ss << " AND ";
+		}
+		ss << "FilePath.Depth = " << criteria.pathDepth.value();
 	}
 	return ss.str();
 }
@@ -228,7 +242,7 @@ std::vector<FileEvent> FileEventStreamRepository::SearchDistinctPath(
 			FROM FileEvent
 			WHERE )";
 	queryss << BuildPredicate(criteria);
-	queryss << "GROUP BY FileEvent.PathId)";
+	queryss << " GROUP BY FileEvent.PathId)";
 	if (!reducedActions.empty())
 	{
 		const auto reducedActionsSet = sqlitepp::ToSetLiteral(reducedActions, [](const FileEventAction& a) {
@@ -243,12 +257,6 @@ std::vector<FileEvent> FileEventStreamRepository::SearchDistinctPath(
 	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
 
 	// bind needle but make sure it stays in scope for the query
-	std::string needle;
-	if (criteria.ancestorPath)
-	{
-		needle = criteria.ancestorPath.value();
-		sqlitepp::BindByParameterNameText(statement, ":Needle", needle);
-	}
 	sqlitepp::BindByParameterNameInt64(statement, ":Skip", static_cast<int64_t>(skip));
 	sqlitepp::BindByParameterNameInt64(statement, ":Limitation", static_cast<int64_t>(limit));
 	std::vector<FileEvent> result;
@@ -280,12 +288,6 @@ std::vector<FileEvent> FileEventStreamRepository::Search(const FileEventSearchCr
 	const auto query = queryss.str();
 	sqlitepp::ScopedStatement statement;
 	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
-	std::string needle;
-	if (criteria.ancestorPath)
-	{
-		needle = criteria.ancestorPath.value();
-		sqlitepp::BindByParameterNameText(statement, ":Needle", needle);
-	}
 	std::vector<FileEvent> result;
 	auto stepResult = 0;
 	while ((stepResult = sqlite3_step(statement)) == SQLITE_ROW)
@@ -308,12 +310,6 @@ unsigned FileEventStreamRepository::CountMatching(const FileEventSearchCriteria&
 	const auto query = queryss.str();
 	sqlitepp::ScopedStatement statement;
 	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
-	std::string needle;
-	if (criteria.ancestorPath)
-	{
-		needle = criteria.ancestorPath.value();
-		sqlitepp::BindByParameterNameText(statement, ":Needle", needle);
-	}
 	const auto stepResult = sqlite3_step(statement);
 	if(stepResult == SQLITE_ROW)
 	{
@@ -336,12 +332,6 @@ unsigned FileEventStreamRepository::CountMatchingDistinctPath(const FileEventSea
 	const auto query = queryss.str();
 	sqlitepp::ScopedStatement statement;
 	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
-	std::string needle;
-	if (criteria.ancestorPath)
-	{
-		needle = criteria.ancestorPath.value();
-		sqlitepp::BindByParameterNameText(statement, ":Needle", needle);
-	}
 	const auto stepResult = sqlite3_step(statement);
 	if(stepResult == SQLITE_ROW)
 	{

@@ -60,6 +60,11 @@ bool FileFinder::IsKnownPath(const fs::NativePath& fullPath) const
 	return false;
 }
 
+boost::optional<int64_t> FileFinder::FindPathId(const fs::NativePath& fullPath) const
+{
+	return _filePathRepository.FindPath(fullPath);
+}
+
 }
 }
 }
