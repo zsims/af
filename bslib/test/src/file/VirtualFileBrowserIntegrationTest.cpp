@@ -27,63 +27,27 @@ protected:
 	std::unique_ptr<FileAdder> _adder;
 };
 
-TEST_F(VirtualFileBrowserIntegrationTest, List_Success)
+TEST_F(VirtualFileBrowserIntegrationTest, ListRoots_Success)
 {
 	// Arrange
 	const auto path = GetUniqueExtendedTempPath().EnsureTrailingSlash();
 	const auto fooPath = (path / "Foo").EnsureTrailingSlash();
 	fs::CreateDirectories(fooPath);
-	const auto barPath = (fooPath / "Bar").EnsureTrailingSlash();
-	fs::CreateDirectories(barPath);
-	const auto samsonPath = fooPath / "samson.txt";
-	const auto sakoPath = barPath / "sako.txt";
-	WriteFile(samsonPath, "samson was here");
-	const auto sakoContentAddress = WriteFile(sakoPath, "sako was here");
 	_adder->Add(path.ToString());
-	// Recreate "samson.txt", and note this should be tracked as completely new file
-	fs::Remove(samsonPath);
-	const auto fileAddress = WriteFile(samsonPath, "samson was here with some new content");
-	// Also delete bar
-	fs::RemoveAll(barPath);
-	// Add a new top level directory
-	const auto fizzPath = (path / "fizz").EnsureTrailingSlash();
-	fs::CreateDirectories(fizzPath);
-	_adder->Add(path.ToString());
+	const auto root = path.GetIntermediatePaths()[0];
 
 	// Act
 	const auto browser = _uow->CreateVirtualFileBrowser();
-	const auto files = browser->List(0, 100);
+	const auto roots = browser->ListRoots(0, 100);
 
 	// Assert
+	ASSERT_EQ(1, roots.size());
 	{
-		const auto matched = std::any_of(files.begin(), files.end(), [&](const VirtualFile& file) {
-			return file.fullPath == path && file.type == FileType::Directory;
+		const auto matched = std::any_of(roots.begin(), roots.end(), [&](const VirtualFile& file) {
+			// TODO: as the root doesn't match an event it doesn't have a known type
+			return file.fullPath == root && file.type == FileType::Unknown;
 		});
 		EXPECT_TRUE(matched) << "find " << path.ToString();
-	}
-	{
-		const auto matched = std::any_of(files.begin(), files.end(), [&](const VirtualFile& file) {
-			return file.fullPath == barPath;
-		});
-		EXPECT_FALSE(matched) << "not find " << barPath.ToString();
-	}
-	{
-		const auto matched = std::any_of(files.begin(), files.end(), [&](const VirtualFile& file) {
-			return file.fullPath == samsonPath && file.type == FileType::RegularFile;
-		});
-		EXPECT_TRUE(matched) << "find " << samsonPath.ToString();
-	}
-	{
-		const auto matched = std::any_of(files.begin(), files.end(), [&](const VirtualFile& file) {
-			return file.fullPath == sakoPath;
-		});
-		EXPECT_FALSE(matched) << "not find " << sakoPath.ToString();
-	}
-	{
-		const auto matched = std::any_of(files.begin(), files.end(), [&](const VirtualFile& file) {
-			return file.fullPath == fizzPath && file.type == FileType::Directory;
-		});
-		EXPECT_TRUE(matched) << "find " << fizzPath.ToString();
 	}
 }
 

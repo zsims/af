@@ -30,11 +30,11 @@ TEST_F(FilePathRepositoryIntegrationTest, AddPath_Success)
 	// Arrange
 	FilePathRepository repo(*_connection);
 	const fs::WindowsPath path(R"(C:\Foo\Bar)");
-	const fs::WindowsPath path2(R"(D:\ding\bat)");
+	const fs::WindowsPath path2(R"(c:\Foo\Bar\Baz)");
 
 	// Act
-	const auto id = repo.AddPath(path);
-	const auto id2 = repo.AddPath(path2);
+	const auto id = repo.AddPath(path, boost::none);
+	const auto id2 = repo.AddPath(path2, id);
 
 	// Assert
 	EXPECT_NE(id, id2);
@@ -47,10 +47,10 @@ TEST_F(FilePathRepositoryIntegrationTest, AddPath_FailsIfDuplicatePath)
 	const fs::WindowsPath path(R"(C:\Foo\Bar)");
 
 	// Act
-	const auto id = repo.AddPath(path);
+	const auto id = repo.AddPath(path, boost::none);
 
 	// Assert
-	EXPECT_THROW(repo.AddPath(path), AddFilePathFailedException);
+	EXPECT_THROW(repo.AddPath(path, boost::none), AddFilePathFailedException);
 }
 
 TEST_F(FilePathRepositoryIntegrationTest, FindPath_Success)
@@ -59,7 +59,7 @@ TEST_F(FilePathRepositoryIntegrationTest, FindPath_Success)
 	FilePathRepository repo(*_connection);
 	const fs::WindowsPath path(R"(C:\Foo\Bar)");
 	const fs::WindowsPath path2(R"(D:\ding\bat)");
-	const auto id = repo.AddPath(path);
+	const auto id = repo.AddPath(path, boost::none);
 
 	// Act
 	const auto found = repo.FindPath(path);
@@ -71,38 +71,6 @@ TEST_F(FilePathRepositoryIntegrationTest, FindPath_Success)
 	EXPECT_FALSE(notFound);
 }
 
-TEST_F(FilePathRepositoryIntegrationTest, AddParent_Success)
-{
-	// Arrange
-	FilePathRepository repo(*_connection);
-	const fs::WindowsPath root(R"(C:\)");
-	const fs::WindowsPath foo(R"(C:\Foo)");
-	const fs::WindowsPath bar(R"(D:\Foo\Bar)");
-	const auto rootId = repo.AddPath(root);
-	const auto fooId = repo.AddPath(foo);
-	const auto barId = repo.AddPath(bar);
-
-	// Act
-	// Assert
-	repo.AddParent(barId, fooId, 1);
-	repo.AddParent(barId, rootId, 2);
-	repo.AddParent(fooId, rootId, 1);
-}
-
-TEST_F(FilePathRepositoryIntegrationTest, AddParent_DuplicateSuccess)
-{
-	// Arrange
-	FilePathRepository repo(*_connection);
-	const fs::WindowsPath root(R"(C:\)");
-	const fs::WindowsPath foo(R"(C:\Foo)");
-	const auto rootId = repo.AddPath(root);
-	const auto fooId = repo.AddPath(foo);
-
-	repo.AddParent(fooId, rootId, 1);
-	// Act
-	EXPECT_NO_THROW(repo.AddParent(fooId, rootId, 1));
-	// Assert
-}
 
 }
 }

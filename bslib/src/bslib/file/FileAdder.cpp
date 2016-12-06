@@ -78,8 +78,6 @@ void FileAdder::Add(const UTF8String& sourcePath)
 	{
 		throw SourcePathNotSupportedException(absolutePath.ToString());
 	}
-
-	SavePathTree();
 }
 
 void FileAdder::ScanDirectory(const fs::NativePath& sourcePath)
@@ -204,64 +202,42 @@ boost::optional<FileEvent> FileAdder::FindPreviousEvent(
 
 void FileAdder::EmitEvent(const FileEvent& fileEvent)
 {
-	int64_t pathId;
-	const auto existingPathId = _filePathRepository.FindPath(fileEvent.fullPath);
-	if (existingPathId)
-	{
-		pathId = existingPathId.value();
-	}
-	else
-	{
-		pathId = _filePathRepository.AddPath(fileEvent.fullPath);
-		_newPaths.insert(std::make_pair(fileEvent.fullPath, pathId));
-	}
+	const auto pathId = SavePathTree(fileEvent.fullPath);
 	_emittedEvents.push_back(fileEvent);
 	_fileEventStreamRepository.AddEvent(fileEvent, pathId);
 	_eventManager.Publish(fileEvent);
 }
 
-void FileAdder::SavePathTree()
+int64_t FileAdder::SavePathTree(const fs::NativePath& path)
 {
-	// Avoid looking up paths we already know
-	std::unordered_map<fs::NativePath, int64_t> knownIds(_newPaths);
-
-	for (const auto& kv : _newPaths)
+	const auto pathSegments = path.GetIntermediatePaths();
+	boost::optional<int64_t> lastSegmentId;
+	for (const auto& segment : pathSegments)
 	{
-		const auto& path = kv.first;
-		const auto pathId = kv.second;
-
-		// TODO: add a "get component iterator" to path to avoid the expensive substring copies
-		unsigned distance = 0;
-		const auto components = path.GetIntermediatePaths();
-		for (auto componentsIt = components.rbegin();
-			componentsIt != components.rend();
-			componentsIt++, distance++)
+		int64_t segmentId;
+		// Don't bother looking it up if we already know about it
+		auto knownIt = _knownPaths.find(segment);
+		if (knownIt != _knownPaths.end())
 		{
-			int64_t parentId = 0;
-			const auto& component = *componentsIt;
-			auto knownIt = knownIds.find(component);
-			if (knownIt != knownIds.end())
+			segmentId = knownIt->second;
+		}
+		else
+		{
+			const auto existingId = _filePathRepository.FindPath(segment);
+			if (!existingId)
 			{
-				parentId = knownIt->second;
+				segmentId = _filePathRepository.AddPath(segment, lastSegmentId);
+				_knownPaths.insert(std::make_pair(segment, segmentId));
 			}
 			else
 			{
-				const auto existingParentId = _filePathRepository.FindPath(component);
-				if (!existingParentId)
-				{
-					parentId = _filePathRepository.AddPath(component);
-					knownIds.insert(std::make_pair(component, parentId));
-				}
-				else
-				{
-					parentId = existingParentId.value();
-				}
+				segmentId = existingId.value();
 			}
-			
-			// Avoid adding a path to itself
-			_filePathRepository.AddParent(pathId, parentId, distance);
 		}
+		lastSegmentId = segmentId;
 	}
+
+	return lastSegmentId.value();
 }
 
 }

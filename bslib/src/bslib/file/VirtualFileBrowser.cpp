@@ -10,21 +10,23 @@ namespace bslib {
 namespace file {
 
 namespace {
-const std::set<FileEventAction> MATCH_EVENTS{
+const std::set<FileEventAction> MATCH_EVENTS {
 	FileEventAction::ChangedAdded,
 	FileEventAction::ChangedModified,
 	FileEventAction::ChangedRemoved,
 	FileEventAction::Unchanged
 };
-const std::set<FileEventAction> REDUCE_EVENTS{
-	FileEventAction::ChangedAdded,
-	FileEventAction::ChangedModified,
-	FileEventAction::Unchanged
-};
 
-VirtualFile ToVirtualFile(const FileEvent& fileEvent)
+VirtualFile ToVirtualFile(const FileEventStreamRepository::PathFirstSearchMatch& match)
 {
-	return VirtualFile(fileEvent.fullPath, fileEvent.type);
+	auto pathType = FileType::Unknown;
+	if (match.latestEvent)
+	{
+		pathType = match.latestEvent->type;
+	}
+	VirtualFile result(match.fullPath, pathType);
+	result.matchedFileEvent = match.latestEvent;
+	return result;
 }
 
 }
@@ -34,15 +36,17 @@ VirtualFileBrowser::VirtualFileBrowser(FileEventStreamRepository& fileEventStrea
 {
 }
 
-std::vector<VirtualFile> VirtualFileBrowser::List(unsigned skip, unsigned limit) const
+std::vector<VirtualFile> VirtualFileBrowser::ListRoots(unsigned skip, unsigned limit) const
 {
-	FileEventSearchCriteria criteria;
-	criteria.actions = MATCH_EVENTS;
-	const auto events = _fileEventStreamRepository.SearchDistinctPath(criteria, REDUCE_EVENTS, skip, limit);
+	FilePathSearchCriteria pathCriteria;
+	pathCriteria.rootPath = true;
+	FileEventSearchCriteria eventCriteria;
+	eventCriteria.actions = MATCH_EVENTS;
+	const auto matches = _fileEventStreamRepository.SearchPathFirst(pathCriteria, eventCriteria, skip, limit);
 	std::vector<VirtualFile> result;
-	for (const auto& ev : events)
+	for (const auto& match : matches)
 	{
-		result.push_back(ToVirtualFile(ev));
+		result.push_back(ToVirtualFile(match));
 	}
 	return result;
 }
