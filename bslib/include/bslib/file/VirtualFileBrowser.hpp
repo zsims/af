@@ -16,11 +16,7 @@ class VirtualFileBrowser
 {
 public:
 	explicit VirtualFileBrowser(FileEventStreamRepository& fileEventStreamRepository);
-
-	/**
-	 * Lists all virtual files
-	 */
-	std::vector<VirtualFile> List(unsigned skip, unsigned limit) const;
+	std::vector<VirtualFile> ListRoots(unsigned skip, unsigned limit) const;
 private:
 	FileEventStreamRepository& _fileEventStreamRepository;
 };

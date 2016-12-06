@@ -529,76 +529,72 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_Success)
 	}
 }
 
-
-/*
-TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByAncestorPathIdWithDistanceSuccess)
+TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_RootsSuccess)
 {
 	// Arrange
 	blob::BlobInfoRepository blobRepo(*_connection);
 	const blob::BlobInfo blobInfo1(blob::Address("1259225215937593795395739753973973593571"), 444UL);
+	const blob::BlobInfo blobInfo2(blob::Address("2259225215937593795395739753973973593571"), 444UL);
 	blobRepo.AddBlob(blobInfo1);
+	blobRepo.AddBlob(blobInfo2);
 
 	const auto run1 = Uuid::Create();
 	const auto run2 = Uuid::Create();
 
-	const fs::NativePath folderPath(R"(A:\folder\)");
+	const fs::NativePath rootPath1(R"(C:\)");
+	const fs::NativePath rootPath2(R"(D:\)");
+	const fs::NativePath rootPath3(R"(Y:\)");
+
 	const std::vector<FileEvent> expectedEvents = {
-		FileEvent(run1, fs::NativePath(R"(A:\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(run1, folderPath, FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(run1, fs::NativePath(R"(C:\old)"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved),
-		FileEvent(run2, fs::NativePath(R"(C:\folder)"), FileType::Directory, boost::none, FileEventAction::ChangedRemoved),
-		FileEvent(run1, fs::NativePath(R"(A:\folder\that)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(run1, fs::NativePath(R"(A:\folder\other)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(run2, fs::NativePath(R"(A:\folder\other)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(run1, fs::NativePath(R"(A:\folder\that\is)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(run1, fs::NativePath(R"(D:\xxx)"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedAdded),
+		FileEvent(run2, rootPath1, FileType::Directory, boost::none, FileEventAction::ChangedModified),
+		FileEvent(run1, fs::NativePath(R"(C:\dir)"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedModified),
+		FileEvent(run1, rootPath2, FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(run1, rootPath3, FileType::Directory, blobInfo1.GetAddress(), FileEventAction::ChangedRemoved),
+		FileEvent(run1, fs::NativePath(R"(D:\dir\file\that\is\deep)"), FileType::RegularFile, boost::none , FileEventAction::ChangedAdded),
 	};
 	AddEvents(expectedEvents);
 
-	const auto folderPathId = _filePathRepository->FindPath(folderPath);
-	ASSERT_TRUE(folderPathId);
-
 	// Act
-	FileEventSearchCriteria criteria;
-	criteria.actions = std::set<FileEventAction>{ FileEventAction::ChangedRemoved, FileEventAction::ChangedModified, FileEventAction::ChangedAdded};
-	criteria.ancestorPathId = folderPathId;
-	criteria.ancestorPathDistance = 1;
-	const auto page1 = _fileEventStreamRepository->SearchDistinctPath(criteria, 0, 4);
+	FilePathSearchCriteria pathCriteria;
+	pathCriteria.rootPath = true;
+	FileEventSearchCriteria eventCriteria;
+	eventCriteria.actions = { FileEventAction::ChangedModified, FileEventAction::ChangedAdded };
+	const auto page1 = _fileEventStreamRepository->SearchPathFirst(pathCriteria, eventCriteria, 0, 100);
 
-	const auto matching = _fileEventStreamRepository->CountMatchingDistinctPath(criteria);
-	EXPECT_EQ(2, matching);
+	const auto matching = _fileEventStreamRepository->CountMatching(pathCriteria);
+	EXPECT_EQ(3, matching);
 
 	// Assert
-	EXPECT_EQ(2, page1.size());
-	EXPECT_THAT(page1, ::testing::UnorderedElementsAre(expectedEvents[4], expectedEvents[6]));
+	EXPECT_EQ(3, page1.size());
+	{
+		const auto pathId = _filePathRepository->FindPath(rootPath1);
+		const auto it = std::find_if(page1.begin(), page1.end(), [&](const FileEventStreamRepository::PathFirstSearchMatch& match) {
+			return match.pathId == pathId.value();
+		});
+		ASSERT_TRUE(it != page1.end());
+		EXPECT_TRUE(it->latestEvent);
+		EXPECT_EQ(it->latestEvent.value(), expectedEvents[1]);
+	}
+	{
+		const auto pathId = _filePathRepository->FindPath(rootPath2);
+		const auto it = std::find_if(page1.begin(), page1.end(), [&](const FileEventStreamRepository::PathFirstSearchMatch& match) {
+			return match.pathId == pathId.value();
+		});
+		ASSERT_TRUE(it != page1.end());
+		EXPECT_TRUE(it->latestEvent);
+		EXPECT_EQ(it->latestEvent.value(), expectedEvents[3]);
+	}
+	{
+		const auto pathId = _filePathRepository->FindPath(rootPath3);
+		const auto it = std::find_if(page1.begin(), page1.end(), [&](const FileEventStreamRepository::PathFirstSearchMatch& match) {
+			return match.pathId == pathId.value();
+		});
+		ASSERT_TRUE(it != page1.end());
+		EXPECT_FALSE(it->latestEvent);
+	}
+
 }
-
-TEST_F(FileEventStreamRepositoryIntegrationTest, SearchDistinctPath_ByPathDepthSuccess)
-{
-	// Arrange
-	const auto run1 = Uuid::Create();
-
-	const std::vector<FileEvent> expectedEvents = {
-		FileEvent(run1, fs::NativePath(R"(A:\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(run1, fs::NativePath(R"(B:\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(run1, fs::NativePath(R"(A:\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(run1, fs::NativePath(R"(C:\old)"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved),
-		FileEvent(run1, fs::NativePath(R"(D:\old)"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved),
-	};
-	AddEvents(expectedEvents);
-
-	// Act
-	FileEventSearchCriteria criteria;
-	criteria.actions = { FileEventAction::ChangedRemoved, FileEventAction::ChangedModified, FileEventAction::ChangedAdded };
-	criteria.pathDepth = 0;
-	const auto page1 = _fileEventStreamRepository->SearchDistinctPath(criteria, 0, 4);
-
-	const auto matching = _fileEventStreamRepository->CountMatchingDistinctPath(criteria);
-	EXPECT_EQ(2, matching);
-
-	// Assert
-	EXPECT_EQ(2, page1.size());
-	EXPECT_THAT(page1, ::testing::UnorderedElementsAre(expectedEvents[1], expectedEvents[2]));
-}*/
 
 }
 }

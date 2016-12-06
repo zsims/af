@@ -2,6 +2,8 @@
 
 #include "bslib/file/FileEvent.hpp"
 
+#include <boost/optional.hpp>
+
 namespace af {
 namespace bslib {
 namespace file {
@@ -15,6 +17,7 @@ struct VirtualFile
 	}
 	const fs::NativePath fullPath;
 	const FileType type;
+	boost::optional<FileEvent> matchedFileEvent;
 };
 
 }

@@ -17,7 +17,8 @@ enum class FileType : int
 {
 	RegularFile = 0,
 	Directory,
-	Unsupported
+	Unsupported,
+	Unknown
 };
 
 enum class FileEventAction : int

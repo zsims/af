@@ -15,6 +15,8 @@ struct FilePathSearchCriteria
 {
 	// optional parent path
 	boost::optional<int64_t> parentPathId;
+	// match paths without parents (e.g. roots)
+	boost::optional<bool> rootPath;
 };
 
 }

@@ -54,10 +54,13 @@ std::string BuildPredicate(const FileEventSearchCriteria& criteria)
 std::string BuildPredicate(const FilePathSearchCriteria& criteria)
 {
 	std::stringstream ss;
-	bool and = false;
-	if (criteria.parentPathId)
+	if (criteria.rootPath && criteria.rootPath.value())
 	{
-		ss << "FilePath.Id = " << criteria.parentPathId.value();
+		ss << "FilePath.ParentId IS NULL";
+	}
+	else if (criteria.parentPathId)
+	{
+		ss << "FilePath.ParentId = " << criteria.parentPathId.value();
 	}
 	return ss.str();
 }
