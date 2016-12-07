@@ -24,7 +24,7 @@ VirtualFile ToVirtualFile(const FileEventStreamRepository::PathFirstSearchMatch&
 	{
 		pathType = match.latestEvent->type;
 	}
-	VirtualFile result(match.fullPath, pathType);
+	VirtualFile result(match.pathId, match.fullPath, pathType);
 	result.matchedFileEvent = match.latestEvent;
 	return result;
 }
@@ -49,6 +49,12 @@ std::vector<VirtualFile> VirtualFileBrowser::ListRoots(unsigned skip, unsigned l
 		result.push_back(ToVirtualFile(match));
 	}
 	return result;
+}
+
+std::vector<VirtualFile> VirtualFileBrowser::ListContents(int64_t pathId, unsigned skip, unsigned limit) const
+{
+	// TODO
+	return std::vector<VirtualFile>();
 }
 
 }
