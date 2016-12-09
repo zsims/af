@@ -53,6 +53,33 @@ TEST_F(FilePathRepositoryIntegrationTest, AddPath_FailsIfDuplicatePath)
 	EXPECT_THROW(repo.AddPath(path, boost::none), AddFilePathFailedException);
 }
 
+TEST_F(FilePathRepositoryIntegrationTest, AddPathTree_Success)
+{
+	// Arrange
+	FilePathRepository repo(*_connection);
+	const fs::WindowsPath path(R"(C:\Foo\Bar)");
+
+	// Act
+	const auto id = repo.AddPathTree(path);
+
+	// Assert
+	const auto c = repo.FindPathDetails(fs::WindowsPath(R"(C:\)"));
+	const auto cFoo = repo.FindPathDetails(fs::WindowsPath(R"(C:\Foo\)"));
+	const auto cFooBar = repo.FindPathDetails(fs::WindowsPath(R"(C:\Foo\Bar)"));
+
+	ASSERT_TRUE(c);
+	EXPECT_FALSE(c->parentId);
+
+	ASSERT_TRUE(cFoo);
+	ASSERT_TRUE(cFoo->parentId);
+	EXPECT_EQ(c->pathId, cFoo->parentId.value());
+
+	ASSERT_TRUE(cFooBar);
+	ASSERT_TRUE(cFooBar->parentId);
+	EXPECT_EQ(cFoo->pathId, cFooBar->parentId.value());
+	EXPECT_EQ(cFooBar->pathId, id);
+}
+
 TEST_F(FilePathRepositoryIntegrationTest, FindPath_Success)
 {
 	// Arrange
@@ -70,7 +97,6 @@ TEST_F(FilePathRepositoryIntegrationTest, FindPath_Success)
 	EXPECT_EQ(id, found.value());
 	EXPECT_FALSE(notFound);
 }
-
 
 }
 }

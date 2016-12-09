@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bslib/blob/Address.hpp"
+#include "bslib/file/FileType.hpp"
 #include "bslib/file/fs/path.hpp"
 #include "bslib/Uuid.hpp"
 
@@ -12,14 +13,6 @@
 namespace af {
 namespace bslib {
 namespace file {
-
-enum class FileType : int
-{
-	RegularFile = 0,
-	Directory,
-	Unsupported,
-	Unknown
-};
 
 enum class FileEventAction : int
 {
@@ -97,16 +90,10 @@ struct RegularFileEvent : public FileEvent
 };
 
 std::string ToString(FileEventAction action);
-std::string ToString(FileType type);
 
 inline std::ostream& operator<<(std::ostream & os, FileEventAction action)
 {
 	return os << ToString(action);
-}
-
-inline std::ostream& operator<<(std::ostream & os, FileType type)
-{
-	return os << ToString(type);
 }
 
 }

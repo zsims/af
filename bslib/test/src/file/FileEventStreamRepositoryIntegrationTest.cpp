@@ -30,31 +30,9 @@ protected:
 		_filePathRepository = std::make_unique<FilePathRepository>(*_connection);
 	}
 
-	int64_t SavePathTree(const fs::NativePath& path)
-	{
-		const auto pathSegments = path.GetIntermediatePaths();
-		boost::optional<int64_t> lastSegmentId;
-		for (const auto& segment : pathSegments)
-		{
-			int64_t segmentId;
-			const auto existingId = _filePathRepository->FindPath(segment);
-			if (!existingId)
-			{
-				segmentId = _filePathRepository->AddPath(segment, lastSegmentId);
-			}
-			else
-			{
-				segmentId = existingId.value();
-			}
-			lastSegmentId = segmentId;
-		}
-
-		return lastSegmentId.value();
-	}
-
 	void AddEvent(const FileEvent& fileEvent)
 	{
-		const auto pathId = SavePathTree(fileEvent.fullPath);
+		const auto pathId = _filePathRepository->AddPathTree(fileEvent.fullPath);
 		_fileEventStreamRepository->AddEvent(fileEvent, pathId);
 	}
 

@@ -65,6 +65,44 @@ int64_t FilePathRepository::AddPath(const fs::NativePath& path, const boost::opt
 	return sqlite3_last_insert_rowid(_db);
 }
 
+int64_t FilePathRepository::AddPathTree(const fs::NativePath& path, std::unordered_map<fs::NativePath, int64_t>& lookupCache)
+{
+	const auto pathSegments = path.GetIntermediatePaths();
+	boost::optional<int64_t> lastSegmentId;
+	for (const auto& segment : pathSegments)
+	{
+		int64_t segmentId;
+		// Don't bother looking it up if we already know about it
+		auto knownIt = lookupCache.find(segment);
+		if (knownIt != lookupCache.end())
+		{
+			segmentId = knownIt->second;
+		}
+		else
+		{
+			const auto existingId = FindPath(segment);
+			if (!existingId)
+			{
+				segmentId = AddPath(segment, lastSegmentId);
+				lookupCache.insert(std::make_pair(segment, segmentId));
+			}
+			else
+			{
+				segmentId = existingId.value();
+			}
+		}
+		lastSegmentId = segmentId;
+	}
+
+	return lastSegmentId.value();
+}
+
+int64_t FilePathRepository::AddPathTree(const fs::NativePath& path)
+{
+	std::unordered_map<fs::NativePath, int64_t> knownPaths;
+	return AddPathTree(path, knownPaths);
+}
+
 boost::optional<int64_t> FilePathRepository::FindPath(const fs::NativePath& path) const
 {
 	const auto query = "SELECT Id FROM FilePath WHERE FullPath = :FullPath";
@@ -76,6 +114,27 @@ boost::optional<int64_t> FilePathRepository::FindPath(const fs::NativePath& path
 	if(stepResult == SQLITE_ROW)
 	{
 		return sqlite3_column_int64(statement, FilePath_ColumnIndex_Id);
+	}
+
+	return boost::none;
+}
+
+boost::optional<StoredPath> FilePathRepository::FindPathDetails(const fs::NativePath& path) const
+{
+	const auto query = "SELECT Id, NULL, ParentId FROM FilePath WHERE FullPath = :FullPath";
+	sqlitepp::ScopedStatement statement;
+	sqlitepp::prepare_or_throw(_db, query, statement);
+	const auto& rawPath = path.ToString();
+	sqlitepp::BindByParameterNameText(statement, ":FullPath", rawPath);
+	const auto stepResult = sqlite3_step(statement);
+	if(stepResult == SQLITE_ROW)
+	{
+		boost::optional<int64_t> parentId;
+		if (sqlite3_column_type(statement, FilePath_ColumnIndex_ParentId) != SQLITE_NULL)
+		{
+			parentId = sqlite3_column_int64(statement, FilePath_ColumnIndex_ParentId);
+		}
+		return StoredPath(sqlite3_column_int64(statement, FilePath_ColumnIndex_Id), parentId);
 	}
 
 	return boost::none;
