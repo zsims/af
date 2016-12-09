@@ -571,7 +571,72 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_RootsSuccess)
 		ASSERT_TRUE(it != page1.end());
 		EXPECT_FALSE(it->latestEvent);
 	}
+}
 
+TEST_F(FileEventStreamRepositoryIntegrationTest, CountNestedMatches_Success)
+{
+	// Arrange
+	const auto runId = Uuid::Create();
+	const std::vector<FileEvent> expectedEvents = {
+		FileEvent(runId, fs::NativePath(R"(C:\Users\zsims\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(runId, fs::NativePath(R"(C:\Users\zsims\Downloads\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(runId, fs::NativePath(R"(C:\Users\zsims\Documents\Personal\resume.pdf)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(runId, fs::NativePath(R"(D:\Moves\Personal\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+	};
+	AddEvents(expectedEvents);
+
+	const auto cPathId = _filePathRepository->FindPath(fs::NativePath(R"(C:\)"), FileType::Directory);
+	ASSERT_TRUE(cPathId);
+
+	const auto cUsersPathId = _filePathRepository->FindPath(fs::NativePath(R"(C:\Users\)"), FileType::Directory);
+	ASSERT_TRUE(cUsersPathId);
+
+	const auto cUsersZsimsDocumentsPathId = _filePathRepository->FindPath(fs::NativePath(R"(C:\Users\zsims\Documents\)"), FileType::Directory);
+	ASSERT_TRUE(cUsersZsimsDocumentsPathId);
+
+	const auto cUsersZsimsDocumentsPersonalPathId = _filePathRepository->FindPath(fs::NativePath(R"(C:\Users\zsims\Documents\Personal\)"), FileType::Directory);
+	ASSERT_TRUE(cUsersZsimsDocumentsPersonalPathId);
+
+	const auto dPathId = _filePathRepository->FindPath(fs::NativePath(R"(D:\)"), FileType::Directory);
+	ASSERT_TRUE(dPathId);
+
+	const auto yPathId = _filePathRepository->AddPathTree(fs::NativePath(R"(Y:\)"), FileType::Directory);
+
+	// Act / Assert
+	{
+		// Roots
+		FileEventSearchCriteria eventCriteria;
+		eventCriteria.actions = { FileEventAction::ChangedRemoved, FileEventAction::ChangedModified, FileEventAction::ChangedAdded };
+		const auto matches = _fileEventStreamRepository->CountNestedMatches(eventCriteria, { cPathId.value(), dPathId.value(), yPathId });
+		EXPECT_EQ(3, matches.size());
+		EXPECT_EQ(3, matches.at(cPathId.value()));
+		EXPECT_EQ(1, matches.at(dPathId.value()));
+		EXPECT_EQ(0, matches.at(yPathId));
+	}
+	{
+		// Removed under to C:\Users
+		FileEventSearchCriteria eventCriteria;
+		eventCriteria.actions = { FileEventAction::ChangedRemoved};
+		const auto matches = _fileEventStreamRepository->CountNestedMatches(eventCriteria, { cUsersPathId.value() });
+		EXPECT_EQ(1, matches.size());
+		EXPECT_EQ(0, matches.at(cUsersPathId.value()));
+	}
+	{
+		// Added/Modified/Changed to C:\Users
+		FileEventSearchCriteria eventCriteria;
+		eventCriteria.actions = { FileEventAction::ChangedAdded, FileEventAction::ChangedModified };
+		const auto matches = _fileEventStreamRepository->CountNestedMatches(eventCriteria, { cUsersPathId.value() });
+		EXPECT_EQ(1, matches.size());
+		EXPECT_EQ(3, matches.at(cUsersPathId.value()));
+	}
+	{
+		// C:\Users\zsims\Documents\Personal
+		FileEventSearchCriteria eventCriteria;
+		eventCriteria.actions = { FileEventAction::ChangedAdded, FileEventAction::ChangedModified };
+		const auto matches = _fileEventStreamRepository->CountNestedMatches(eventCriteria, { cUsersZsimsDocumentsPersonalPathId.value() });
+		EXPECT_EQ(1, matches.size());
+		EXPECT_EQ(1, matches.at(cUsersZsimsDocumentsPersonalPathId.value()));
+	}
 }
 
 }

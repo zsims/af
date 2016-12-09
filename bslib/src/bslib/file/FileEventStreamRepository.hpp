@@ -10,6 +10,8 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <boost/optional.hpp>
 
@@ -69,6 +71,11 @@ public:
 		unsigned skip,
 		unsigned limit) const;
 	unsigned CountMatching(const FilePathSearchCriteria& criteria) const;
+
+	/**
+	* Returns a set of path ids from the given set of path ids with the associated count of *sub* matching events
+	*/
+	std::unordered_map<int64_t, unsigned> CountNestedMatches(const FileEventSearchCriteria& eventCriteria, const std::unordered_set<int64_t>& pathIds);
 private:
 	FileEvent MapRowToEvent(const sqlitepp::ScopedStatement& statement) const;
 
