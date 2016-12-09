@@ -19,7 +19,7 @@ const std::set<FileEventAction> MATCH_EVENTS {
 
 VirtualFile ToVirtualFile(const FileEventStreamRepository::PathFirstSearchMatch& match)
 {
-	auto pathType = FileType::Unknown;
+	auto pathType = FileType::Directory;
 	if (match.latestEvent)
 	{
 		pathType = match.latestEvent->type;

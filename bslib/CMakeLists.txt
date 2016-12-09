@@ -25,10 +25,11 @@ add_library(
     include/bslib/file/FileBackupRunSearchCriteria.hpp
     include/bslib/file/FileEvent.hpp
     include/bslib/file/FileEventSearchCriteria.hpp
+    include/bslib/file/FileFinder.hpp
     include/bslib/file/FilePathSearchCriteria.hpp
     include/bslib/file/FileRestoreEvent.hpp
-    include/bslib/file/FileFinder.hpp
     include/bslib/file/FileRestorer.hpp
+    include/bslib/file/FileType.hpp
     include/bslib/file/fs/path.hpp
     include/bslib/file/fs/WindowsPath.hpp
     include/bslib/file/VirtualFile.hpp

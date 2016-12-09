@@ -51,20 +51,6 @@ FileFinder::ResultsPage FileFinder::SearchEvents(const FileEventSearchCriteria& 
 	return results;
 }
 
-bool FileFinder::IsKnownPath(const fs::NativePath& fullPath) const
-{
-	if (_filePathRepository.FindPath(fullPath))
-	{
-		return true;
-	}
-	return false;
-}
-
-boost::optional<int64_t> FileFinder::FindPathId(const fs::NativePath& fullPath) const
-{
-	return _filePathRepository.FindPath(fullPath);
-}
-
 }
 }
 }

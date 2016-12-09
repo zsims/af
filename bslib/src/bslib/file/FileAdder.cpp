@@ -202,42 +202,10 @@ boost::optional<FileEvent> FileAdder::FindPreviousEvent(
 
 void FileAdder::EmitEvent(const FileEvent& fileEvent)
 {
-	const auto pathId = SavePathTree(fileEvent.fullPath);
+	const auto pathId = _filePathRepository.AddPathTree(fileEvent.fullPath, fileEvent.type, _knownPaths);
 	_emittedEvents.push_back(fileEvent);
 	_fileEventStreamRepository.AddEvent(fileEvent, pathId);
 	_eventManager.Publish(fileEvent);
-}
-
-int64_t FileAdder::SavePathTree(const fs::NativePath& path)
-{
-	const auto pathSegments = path.GetIntermediatePaths();
-	boost::optional<int64_t> lastSegmentId;
-	for (const auto& segment : pathSegments)
-	{
-		int64_t segmentId;
-		// Don't bother looking it up if we already know about it
-		auto knownIt = _knownPaths.find(segment);
-		if (knownIt != _knownPaths.end())
-		{
-			segmentId = knownIt->second;
-		}
-		else
-		{
-			const auto existingId = _filePathRepository.FindPath(segment);
-			if (!existingId)
-			{
-				segmentId = _filePathRepository.AddPath(segment, lastSegmentId);
-				_knownPaths.insert(std::make_pair(segment, segmentId));
-			}
-			else
-			{
-				segmentId = existingId.value();
-			}
-		}
-		lastSegmentId = segmentId;
-	}
-
-	return lastSegmentId.value();
 }
 
 }

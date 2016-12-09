@@ -44,12 +44,6 @@ public:
 	std::map<fs::NativePath, FileEvent> GetLastChangedEventsUnderPath(const fs::NativePath& fullPath) const;
 	std::vector<FileEvent> GetAllEvents() const;
 	ResultsPage SearchEvents(const FileEventSearchCriteria& criteria, unsigned skip, unsigned pageSize) const;
-
-	/**
-	 * Returns true if the given path is known, such that it or one of its children have been visited in a backup
-	 */
-	bool IsKnownPath(const fs::NativePath& fullPath) const;
-	boost::optional<int64_t> FindPathId(const fs::NativePath& fullPath) const;
 private:
 	const FileEventStreamRepository& _fileEventStreamRepository;
 	const FilePathRepository& _filePathRepository;

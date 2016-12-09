@@ -57,8 +57,7 @@ private:
 		const std::map<fs::NativePath, FileEvent>& fileEvents,
 		const fs::NativePath& fullPath);
 
-	int64_t SavePathTree(const fs::NativePath& path);
-	std::unordered_map<fs::NativePath, int64_t> _knownPaths;
+	std::unordered_map<fs::NativePath, std::unordered_map<FileType, int64_t>> _knownPaths;
 
 	const Uuid _backupRunId;
 	std::shared_ptr<blob::BlobStore> _blobStore;
