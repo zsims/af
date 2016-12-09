@@ -45,7 +45,7 @@ TEST_F(VirtualFileBrowserIntegrationTest, ListRoots_Success)
 	{
 		const auto matched = std::any_of(roots.begin(), roots.end(), [&](const VirtualFile& file) {
 			// TODO: as the root doesn't match an event it doesn't have a known type
-			return file.fullPath == root && file.type == FileType::Unknown;
+			return file.fullPath == root && file.type == FileType::Directory;
 		});
 		EXPECT_TRUE(matched) << "find " << path.ToString();
 	}

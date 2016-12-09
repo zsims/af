@@ -77,8 +77,10 @@ void BackupDatabase::Create()
 			);
 			CREATE TABLE FilePath (
 				Id INTEGER PRIMARY KEY,
-				FullPath TEXT NOT NULL COLLATE BINARY UNIQUE,
-				ParentId INTEGER NULL REFERENCES FilePath (Id)
+				FullPath TEXT NOT NULL COLLATE BINARY,
+				FileType INTEGER NOT NULL,
+				ParentId INTEGER NULL REFERENCES FilePath (Id),
+				UNIQUE (FullPath, FileType)
 			);
 		)";
 

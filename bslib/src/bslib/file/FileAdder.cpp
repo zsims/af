@@ -202,7 +202,7 @@ boost::optional<FileEvent> FileAdder::FindPreviousEvent(
 
 void FileAdder::EmitEvent(const FileEvent& fileEvent)
 {
-	const auto pathId = _filePathRepository.AddPathTree(fileEvent.fullPath, _knownPaths);
+	const auto pathId = _filePathRepository.AddPathTree(fileEvent.fullPath, fileEvent.type, _knownPaths);
 	_emittedEvents.push_back(fileEvent);
 	_fileEventStreamRepository.AddEvent(fileEvent, pathId);
 	_eventManager.Publish(fileEvent);

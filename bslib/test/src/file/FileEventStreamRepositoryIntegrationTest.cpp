@@ -32,7 +32,7 @@ protected:
 
 	void AddEvent(const FileEvent& fileEvent)
 	{
-		const auto pathId = _filePathRepository->AddPathTree(fileEvent.fullPath);
+		const auto pathId = _filePathRepository->AddPathTree(fileEvent.fullPath, fileEvent.type);
 		_fileEventStreamRepository->AddEvent(fileEvent, pathId);
 	}
 
@@ -419,7 +419,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByParentPathIdSuccess)
 	};
 	AddEvents(expectedEvents);
 
-	const auto rootPathId = _filePathRepository->FindPath(rootPath);
+	const auto rootPathId = _filePathRepository->FindPath(rootPath, FileType::Directory);
 	ASSERT_TRUE(rootPathId);
 
 	// Act
@@ -459,7 +459,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_Success)
 	};
 	AddEvents(expectedEvents);
 
-	const auto rootPathId = _filePathRepository->FindPath(rootPath);
+	const auto rootPathId = _filePathRepository->FindPath(rootPath, FileType::Directory);
 	ASSERT_TRUE(rootPathId);
 
 	// Act
@@ -474,7 +474,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_Success)
 	// Assert
 	EXPECT_EQ(10, page1.size());
 	{
-		const auto pathId = _filePathRepository->FindPath(rootPath);
+		const auto pathId = _filePathRepository->FindPath(rootPath, FileType::Directory);
 		const auto it = std::find_if(page1.begin(), page1.end(), [&](const FileEventStreamRepository::PathFirstSearchMatch& match) {
 			return match.pathId == pathId.value();
 		});
@@ -482,7 +482,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_Success)
 		EXPECT_FALSE(it->latestEvent);
 	}
 	{
-		const auto pathId = _filePathRepository->FindPath(expectedEvents[2].fullPath);
+		const auto pathId = _filePathRepository->FindPath(expectedEvents[2].fullPath, FileType::RegularFile);
 		const auto it = std::find_if(page1.begin(), page1.end(), [&](const FileEventStreamRepository::PathFirstSearchMatch& match) {
 			return match.pathId == pathId.value();
 		});
@@ -490,7 +490,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_Success)
 		EXPECT_TRUE(it->latestEvent);
 	}
 	{
-		const auto pathId = _filePathRepository->FindPath(expectedEvents[3].fullPath);
+		const auto pathId = _filePathRepository->FindPath(expectedEvents[3].fullPath, FileType::RegularFile);
 		const auto it = std::find_if(page1.begin(), page1.end(), [&](const FileEventStreamRepository::PathFirstSearchMatch& match) {
 			return match.pathId == pathId.value();
 		});
@@ -498,7 +498,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_Success)
 		EXPECT_TRUE(it->latestEvent);
 	}
 	{
-		const auto pathId = _filePathRepository->FindPath(expectedEvents[4].fullPath);
+		const auto pathId = _filePathRepository->FindPath(expectedEvents[4].fullPath, FileType::RegularFile);
 		const auto it = std::find_if(page1.begin(), page1.end(), [&](const FileEventStreamRepository::PathFirstSearchMatch& match) {
 			return match.pathId == pathId.value();
 		});
@@ -546,7 +546,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_RootsSuccess)
 	// Assert
 	EXPECT_EQ(3, page1.size());
 	{
-		const auto pathId = _filePathRepository->FindPath(rootPath1);
+		const auto pathId = _filePathRepository->FindPath(rootPath1, FileType::Directory);
 		const auto it = std::find_if(page1.begin(), page1.end(), [&](const FileEventStreamRepository::PathFirstSearchMatch& match) {
 			return match.pathId == pathId.value();
 		});
@@ -555,7 +555,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_RootsSuccess)
 		EXPECT_EQ(it->latestEvent.value(), expectedEvents[1]);
 	}
 	{
-		const auto pathId = _filePathRepository->FindPath(rootPath2);
+		const auto pathId = _filePathRepository->FindPath(rootPath2, FileType::Directory);
 		const auto it = std::find_if(page1.begin(), page1.end(), [&](const FileEventStreamRepository::PathFirstSearchMatch& match) {
 			return match.pathId == pathId.value();
 		});
@@ -564,7 +564,7 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_RootsSuccess)
 		EXPECT_EQ(it->latestEvent.value(), expectedEvents[3]);
 	}
 	{
-		const auto pathId = _filePathRepository->FindPath(rootPath3);
+		const auto pathId = _filePathRepository->FindPath(rootPath3, FileType::Directory);
 		const auto it = std::find_if(page1.begin(), page1.end(), [&](const FileEventStreamRepository::PathFirstSearchMatch& match) {
 			return match.pathId == pathId.value();
 		});
