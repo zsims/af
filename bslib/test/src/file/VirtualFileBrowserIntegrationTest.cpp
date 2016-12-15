@@ -37,9 +37,13 @@ protected:
 
 		// Sample data
 		_filePathRepository->AddPathTree(fs::NativePath(R"(C:\Users\zsims\Downloads\Temp\)"), FileType::Directory);
+		AddEvent(_eventCUsersZsimsVimRc);
 		AddEvent(_eventCUsersZsimsTax2017Ato);
 		AddEvent(_eventCUsersZsimsPictures);
 		AddEvent(_eventCUsersPicturesSamsonJpg);
+		AddEvent(_eventCWtfTempFile);
+		AddEvent(_eventRemovedCWtfTempFile);
+		AddEvent(_eventCWtfTempFolder);
 		AddEvent(_eventD);
 		AddEvent(_eventDMovies);
 		AddEvent(_eventDMoviesPersonal);
@@ -64,6 +68,11 @@ protected:
 		}
 
 		return boost::none;
+	}
+
+	static unsigned CountNestedMatches(const VirtualFileBrowser& browser, int64_t pathId)
+	{
+		return browser.CountNestedMatches({ pathId }).at(pathId);
 	}
 
 	const Uuid _backupRunId;
@@ -97,13 +106,14 @@ TEST_F(VirtualFileBrowserIntegrationTest, ListRoots_Success)
 	{
 		const auto root = FindByPath(fs::NativePath(R"(C:\)"), FileType::Directory, roots);
 		ASSERT_TRUE(root);
-		EXPECT_TRUE(root->containsMatchingEvent);
+		// Note that C:\wtf\temp is both a file and a folder
+		EXPECT_EQ(6, CountNestedMatches(*browser, root->pathId));
 		EXPECT_FALSE(root->matchedFileEvent);
 	}
 	{
 		const auto root = FindByPath(fs::NativePath(R"(D:\)"), FileType::Directory, roots);
 		ASSERT_TRUE(root);
-		EXPECT_TRUE(root->containsMatchingEvent);
+		EXPECT_EQ(3, CountNestedMatches(*browser, root->pathId));
 		ASSERT_TRUE(root->matchedFileEvent);
 		EXPECT_EQ(_eventD, root->matchedFileEvent.value());
 	}
@@ -118,13 +128,14 @@ TEST_F(VirtualFileBrowserIntegrationTest, ListContents_Success)
 	ASSERT_TRUE(pathId);
 	// Act
 	const auto contents = browser->ListContents(pathId.value(), 0, 100);
+
 	// Assert
 	ASSERT_EQ(4, contents.size());
 	{
 		const auto item = FindByPath(fs::NativePath(R"(C:\Users\zsims\_vimrc)"), FileType::RegularFile, contents);
 		ASSERT_TRUE(item);
 		EXPECT_EQ(FileType::RegularFile, item->type);
-		EXPECT_TRUE(item->containsMatchingEvent);
+		EXPECT_EQ(0, CountNestedMatches(*browser, item->pathId));
 		ASSERT_TRUE(item->matchedFileEvent);
 		EXPECT_EQ(_eventCUsersZsimsVimRc, item->matchedFileEvent.value());
 	}
@@ -132,7 +143,7 @@ TEST_F(VirtualFileBrowserIntegrationTest, ListContents_Success)
 		const auto item = FindByPath(fs::NativePath(R"(C:\Users\zsims\Pictures\)"), FileType::Directory, contents);
 		ASSERT_TRUE(item);
 		EXPECT_EQ(FileType::Directory, item->type);
-		EXPECT_TRUE(item->containsMatchingEvent);
+		EXPECT_EQ(1, CountNestedMatches(*browser, item->pathId));
 		ASSERT_TRUE(item->matchedFileEvent);
 		EXPECT_EQ(_eventCUsersZsimsPictures, item->matchedFileEvent.value());
 	}
@@ -140,14 +151,14 @@ TEST_F(VirtualFileBrowserIntegrationTest, ListContents_Success)
 		const auto item = FindByPath(fs::NativePath(R"(C:\Users\zsims\Tax\)"), FileType::Directory, contents);
 		ASSERT_TRUE(item);
 		EXPECT_EQ(FileType::Directory, item->type);
-		EXPECT_TRUE(item->containsMatchingEvent);
+		EXPECT_EQ(1, CountNestedMatches(*browser, item->pathId));
 		EXPECT_FALSE(item->matchedFileEvent);
 	}
 	{
 		const auto item = FindByPath(fs::NativePath(R"(C:\Users\zsims\Downloads\)"), FileType::Directory, contents);
 		ASSERT_TRUE(item);
 		EXPECT_EQ(FileType::Directory, item->type);
-		EXPECT_FALSE(item->containsMatchingEvent);
+		EXPECT_EQ(0, CountNestedMatches(*browser, item->pathId));
 		EXPECT_FALSE(item->matchedFileEvent);
 	}
 
@@ -169,16 +180,63 @@ TEST_F(VirtualFileBrowserIntegrationTest, ListContents_ChangedTypesSuccess)
 		const auto item = FindByPath(fs::NativePath(R"(C:\wtf\temp)"), FileType::RegularFile, contents);
 		ASSERT_TRUE(item);
 		EXPECT_EQ(FileType::RegularFile, item->type);
-		EXPECT_FALSE(item->containsMatchingEvent);
-		EXPECT_FALSE(item->matchedFileEvent);
+		EXPECT_EQ(0, CountNestedMatches(*browser, item->pathId));
+		EXPECT_TRUE(item->matchedFileEvent);
 	}
 	{
 		const auto item = FindByPath(fs::NativePath(R"(C:\wtf\temp)"), FileType::Directory, contents);
 		ASSERT_TRUE(item);
 		EXPECT_EQ(FileType::Directory, item->type);
-		EXPECT_FALSE(item->containsMatchingEvent);
+		EXPECT_EQ(0, CountNestedMatches(*browser, item->pathId));
 		ASSERT_TRUE(item->matchedFileEvent);
 		EXPECT_EQ(_eventCWtfTempFolder, item->matchedFileEvent.value());
+	}
+}
+
+
+TEST_F(VirtualFileBrowserIntegrationTest, CountNestedMatches_RootSuccess)
+{
+	// Arrange
+	const auto cPathId = _filePathRepository->FindPath(fs::NativePath(R"(C:\)"), FileType::Directory);
+	const auto dPathId = _filePathRepository->FindPath(fs::NativePath(R"(D:\)"), FileType::Directory);
+	ASSERT_TRUE(cPathId);
+	ASSERT_TRUE(dPathId);
+	const auto uow = _testBackup.GetBackup().CreateUnitOfWork();
+	const auto browser = uow->CreateVirtualFileBrowser();
+
+	// Act
+	const auto counts = browser->CountNestedMatches({ cPathId.value(), dPathId.value() });
+
+	// Assert
+	EXPECT_EQ(6, counts.at(cPathId.value()));
+	EXPECT_EQ(3, counts.at(dPathId.value()));
+}
+
+TEST_F(VirtualFileBrowserIntegrationTest, CountNestedMatches_ContentsSuccess)
+{
+	// Arrange
+	const auto cUsersZsimsPathId = _filePathRepository->FindPath(fs::NativePath(R"(C:\Users\zsims\)"), FileType::Directory);
+	const auto cUsersZsimsTaxPathId = _filePathRepository->FindPath(fs::NativePath(R"(C:\Users\zsims\Tax\)"), FileType::Directory);
+	const auto cUsersZsimsPicturesPathId = _filePathRepository->FindPath(fs::NativePath(R"(C:\Users\zsims\Pictures\)"), FileType::Directory);
+	ASSERT_TRUE(cUsersZsimsPathId);
+	ASSERT_TRUE(cUsersZsimsTaxPathId);
+	ASSERT_TRUE(cUsersZsimsPicturesPathId);
+	const auto uow = _testBackup.GetBackup().CreateUnitOfWork();
+	const auto browser = uow->CreateVirtualFileBrowser();
+
+	// Act
+	// Assert
+	{
+		const auto counts = browser->CountNestedMatches({ cUsersZsimsPathId.value() });
+		EXPECT_EQ(4, counts.at(cUsersZsimsPathId.value()));
+	}
+	{
+		const auto counts = browser->CountNestedMatches({ cUsersZsimsTaxPathId.value() });
+		EXPECT_EQ(1, counts.at(cUsersZsimsTaxPathId.value()));
+	}
+	{
+		const auto counts = browser->CountNestedMatches({ cUsersZsimsPicturesPathId.value() });
+		EXPECT_EQ(1, counts.at(cUsersZsimsPicturesPathId.value()));
 	}
 }
 

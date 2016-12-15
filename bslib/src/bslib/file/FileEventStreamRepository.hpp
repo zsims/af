@@ -74,6 +74,7 @@ public:
 
 	/**
 	* Returns a set of path ids from the given set of path ids with the associated count of *sub* matching events
+	* Note that the given paths should not overlap, otherwise results are undefined
 	*/
 	std::unordered_map<int64_t, unsigned> CountNestedMatches(const FileEventSearchCriteria& eventCriteria, const std::unordered_set<int64_t>& pathIds);
 private:

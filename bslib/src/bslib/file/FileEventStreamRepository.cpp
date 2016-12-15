@@ -388,15 +388,19 @@ std::unordered_map<int64_t, unsigned> FileEventStreamRepository::CountNestedMatc
 		SELECT DescendantPath.InputPathId, Id From FilePath, DescendantPath WHERE FilePath.ParentId = DescendantPath.PathId
 	))";
 	queryss << R"(
-		SELECT DescendantPath.InputPathId, COUNT(FileEvent.Id) FROM DescendantPath
-		LEFT OUTER JOIN FileEvent ON DescendantPath.PathId = FileEvent.PathId)";
+		SELECT DescendantPath.InputPathId, COUNT(MaxEvent.Id) FROM DescendantPath
+		LEFT OUTER JOIN (
+			SELECT Id, PathId FROM FileEvent)";
 	const auto eventPredicate = BuildPredicate(eventCriteria);
 	if (!eventPredicate.empty())
 	{
-		queryss << " AND " << eventPredicate;
+		queryss << " WHERE " << eventPredicate;
 	}
+	queryss << R"(
+		GROUP BY FileEvent.PathId HAVING FileEvent.Id = MAX(FileEvent.Id)
+		) AS MaxEvent ON DescendantPath.PathId = MaxEvent.PathId
+		AND MaxEvent.PathId NOT IN )" << idsSet << " GROUP BY DescendantPath.InputPathId";
 
-	queryss << "GROUP BY DescendantPath.InputPathId";
 	const auto query = queryss.str();
 	sqlitepp::ScopedStatement statement;
 	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);

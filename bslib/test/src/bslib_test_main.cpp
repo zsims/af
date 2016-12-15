@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
 	namespace po = boost::program_options;
 
-	//testing::GTEST_FLAG(filter) = "FileEventStreamRepositoryIntegrationTest.CountNestedMatches_Success";
+	//testing::GTEST_FLAG(filter) = "VirtualFileBrowserIntegrationTest.*";
 	testing::InitGoogleMock(&argc, argv);
 
 	const auto defaultTempPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
