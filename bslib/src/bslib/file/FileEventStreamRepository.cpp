@@ -76,14 +76,14 @@ FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlit
 		ORDER BY FileEvent.Id ASC
 	)", _getAllEventsStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		WITH RECURSIVE path_decedent(n) AS (
+		WITH RECURSIVE DescendantPath(PathId) AS (
 			SELECT Id FROM FilePath WHERE FullPath = :Needle
 			UNION ALL
-			SELECT Id From FilePath, path_decedent WHERE FilePath.ParentId = path_decedent.n
+			SELECT Id From FilePath, DescendantPath WHERE FilePath.ParentId = DescendantPath.PathId
 		)
 		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId FROM FileEvent
 		JOIN FilePath ON FileEvent.PathId = FilePath.Id
-		WHERE FilePath.Id IN path_decedent AND FileEvent.Action IN (0, 1, 2)
+		WHERE FilePath.Id IN DescendantPath AND FileEvent.Action IN (0, 1, 2)
 		GROUP BY FileEvent.PathId HAVING FileEvent.Id = MAX(FileEvent.Id)
 	)", _getLastChangedEventsUnderPathStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
@@ -373,6 +373,48 @@ unsigned FileEventStreamRepository::CountMatching(const FilePathSearchCriteria& 
 		return static_cast<unsigned>(sqlite3_column_int64(statement, 0));
 	}
 	return 0;
+}
+
+std::unordered_map<int64_t, unsigned> FileEventStreamRepository::CountNestedMatches(const FileEventSearchCriteria& eventCriteria, const std::unordered_set<int64_t>& pathIds)
+{
+	const auto idsSet = sqlitepp::ToSetLiteral(pathIds, [](const int64_t i) {
+		return std::to_string(i);
+	});
+
+	std::stringstream queryss;
+	queryss << R"(WITH RECURSIVE DescendantPath(InputPathId, PathId) AS( 
+		SELECT FilePath.Id, FilePath.Id FROM FilePath WHERE FilePath.Id IN )" << idsSet << R"(
+		UNION ALL
+		SELECT DescendantPath.InputPathId, Id From FilePath, DescendantPath WHERE FilePath.ParentId = DescendantPath.PathId
+	))";
+	queryss << R"(
+		SELECT DescendantPath.InputPathId, COUNT(MaxEvent.Id) FROM DescendantPath
+		LEFT OUTER JOIN (
+			SELECT Id, PathId FROM FileEvent)";
+	const auto eventPredicate = BuildPredicate(eventCriteria);
+	if (!eventPredicate.empty())
+	{
+		queryss << " WHERE " << eventPredicate;
+	}
+	queryss << R"(
+		GROUP BY FileEvent.PathId HAVING FileEvent.Id = MAX(FileEvent.Id)
+		) AS MaxEvent ON DescendantPath.PathId = MaxEvent.PathId
+		AND MaxEvent.PathId NOT IN )" << idsSet << " GROUP BY DescendantPath.InputPathId";
+
+	const auto query = queryss.str();
+	sqlitepp::ScopedStatement statement;
+	sqlitepp::prepare_or_throw(_db, query.c_str(), statement);
+
+	std::unordered_map<int64_t, unsigned> result;
+	auto stepResult = 0;
+	while ((stepResult = sqlite3_step(statement)) == SQLITE_ROW)
+	{
+		const auto pathId = sqlite3_column_int64(statement, 0);
+		const auto count = sqlite3_column_int(statement, 1);
+		result.insert(std::make_pair(pathId, static_cast<unsigned>(count)));
+	}
+
+	return result;
 }
 
 FileEvent FileEventStreamRepository::MapRowToEvent(const sqlitepp::ScopedStatement& statement) const

@@ -10,13 +10,17 @@ namespace file {
 
 struct VirtualFile
 {
-	VirtualFile(const fs::NativePath& fullPath, FileType type)
-		: fullPath(fullPath)
+	VirtualFile(int64_t pathId, const fs::NativePath& fullPath, FileType type)
+		: pathId(pathId)
+		, fullPath(fullPath)
 		, type(type)
 	{
 	}
 	const fs::NativePath fullPath;
+	const int64_t pathId;
 	const FileType type;
+
+	// the match on this path
 	boost::optional<FileEvent> matchedFileEvent;
 };
 

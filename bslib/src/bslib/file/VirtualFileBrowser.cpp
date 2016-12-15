@@ -24,7 +24,7 @@ VirtualFile ToVirtualFile(const FileEventStreamRepository::PathFirstSearchMatch&
 	{
 		pathType = match.latestEvent->type;
 	}
-	VirtualFile result(match.fullPath, pathType);
+	VirtualFile result(match.pathId, match.fullPath, pathType);
 	result.matchedFileEvent = match.latestEvent;
 	return result;
 }
@@ -40,6 +40,25 @@ std::vector<VirtualFile> VirtualFileBrowser::ListRoots(unsigned skip, unsigned l
 {
 	FilePathSearchCriteria pathCriteria;
 	pathCriteria.rootPath = true;
+	return List(pathCriteria, skip, limit);
+}
+
+std::vector<VirtualFile> VirtualFileBrowser::ListContents(int64_t pathId, unsigned skip, unsigned limit) const
+{
+	FilePathSearchCriteria pathCriteria;
+	pathCriteria.parentPathId = pathId;
+	return List(pathCriteria, skip, limit);
+}
+
+std::unordered_map<int64_t, unsigned> VirtualFileBrowser::CountNestedMatches(const std::unordered_set<int64_t>& pathIds) const
+{
+	FileEventSearchCriteria eventCriteria;
+	eventCriteria.actions = MATCH_EVENTS;
+	return _fileEventStreamRepository.CountNestedMatches(eventCriteria, pathIds);
+}
+
+std::vector<VirtualFile> VirtualFileBrowser::List(const FilePathSearchCriteria& pathCriteria, unsigned skip, unsigned limit) const
+{
 	FileEventSearchCriteria eventCriteria;
 	eventCriteria.actions = MATCH_EVENTS;
 	const auto matches = _fileEventStreamRepository.SearchPathFirst(pathCriteria, eventCriteria, skip, limit);
