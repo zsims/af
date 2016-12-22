@@ -225,6 +225,62 @@ nlohmann::json ToJson(const bslib::file::FileBackupRunReader::BackupSummary& bac
 	return result;
 }
 
+nlohmann::json ToJson(const bslib::file::VirtualFile& file)
+{
+	nlohmann::json result;
+	result["pageId"] = file.pathId;
+	const auto filename = file.fullPath.GetFilename();
+	if (!filename.empty())
+	{
+		result["name"] = filename;
+	}
+	else
+	{
+		result["name"] = file.fullPath.ToNormalString();
+	}
+	result["type"] = bslib::file::ToString(file.type);
+	if (file.matchedFileEvent)
+	{
+		result["matched_file_event"] = ToJson(file.matchedFileEvent.value());
+	}
+	return result;
+}
+
+struct PagingParameters
+{
+	PagingParameters(unsigned skip, unsigned pageSize)
+		: skip(skip)
+		, pageSize(pageSize)
+	{
+	}
+
+	const unsigned skip;
+	const unsigned pageSize;
+};
+
+PagingParameters GetPagingParameters(const HttpJsonRequest& request)
+{
+	unsigned skip = 0;
+	unsigned pageSize = 30;
+	const auto queryParameters = request.GetQueryParameters();
+	{
+		auto it = queryParameters.find("skip");
+		if (it != queryParameters.end())
+		{
+			skip = boost::lexical_cast<unsigned>(it->second);
+		}
+	}
+	{
+		auto it = queryParameters.find("pageSize");
+		if (it != queryParameters.end())
+		{
+			pageSize = boost::lexical_cast<unsigned>(it->second);
+		}
+	}
+
+	return PagingParameters(skip, pageSize);
+}
+
 }
 
 HttpServer::HttpServer(
@@ -309,29 +365,11 @@ HttpServer::HttpServer(
 	});
 
 	_simpleServer.resource[R"(^/api/files/backups(\?.*|$))"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
-		unsigned skip = 0;
-		unsigned pageSize = 30;
-		const auto queryParameters = request.GetQueryParameters();
-		{
-			auto it = queryParameters.find("skip");
-			if (it != queryParameters.end())
-			{
-				skip = boost::lexical_cast<unsigned>(it->second);
-			}
-		}
-		{
-			auto it = queryParameters.find("pageSize");
-			if (it != queryParameters.end())
-			{
-				pageSize = boost::lexical_cast<unsigned>(it->second);
-			}
-		}
-
+		const auto paging = GetPagingParameters(request);
 		auto uow = _backup.CreateUnitOfWork();
 		const auto reader = uow->CreateFileBackupRunReader();
-
 		const bslib::file::FileBackupRunSearchCriteria criteria;
-		const auto page = reader->Search(criteria, skip, pageSize);
+		const auto page = reader->Search(criteria, paging.skip, paging.pageSize);
 		auto backupsResult = nlohmann::json::array();
 		for (const auto& backup : page.backups)
 		{
@@ -341,7 +379,7 @@ HttpServer::HttpServer(
 		}
 		nlohmann::json result;
 		result["backups"] = backupsResult;
-		result["page_size"] = pageSize;
+		result["page_size"] = paging.pageSize;
 		result["total_backups"] = page.totalBackups;
 		network::uri nextPageUrl;
 		{
@@ -352,7 +390,7 @@ HttpServer::HttpServer(
 				builder.clear_query();
 			}
 			builder.append_query_key_value_pair("skip", std::to_string(page.nextPageSkip));
-			builder.append_query_key_value_pair("pageSize", std::to_string(pageSize));
+			builder.append_query_key_value_pair("pageSize", std::to_string(paging.pageSize));
 			nextPageUrl = builder.uri();
 		}
 		result["next_page_url"] = nextPageUrl.string();
@@ -377,30 +415,14 @@ HttpServer::HttpServer(
 	});
 
 	_simpleServer.resource["^/api/files/backups/([a-zA-Z0-9-]*)/fileevents.*$"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
-		unsigned skip = 0;
-		unsigned pageSize = 30;
-		const auto queryParameters = request.GetQueryParameters();
-		{
-			auto it = queryParameters.find("skip");
-			if (it != queryParameters.end())
-			{
-				skip = boost::lexical_cast<unsigned>(it->second);
-			}
-		}
-		{
-			auto it = queryParameters.find("pageSize");
-			if (it != queryParameters.end())
-			{
-				pageSize = boost::lexical_cast<unsigned>(it->second);
-			}
-		}
+		const auto paging = GetPagingParameters(request);
 		std::string match = request.originalRequest.path_match[1];
 		const bslib::Uuid runId(match);
 		auto uow = _backup.CreateUnitOfWork();
 		const auto finder = uow->CreateFileFinder();
 		bslib::file::FileEventSearchCriteria criteria;
 		criteria.runId = runId;
-		const auto page = finder->SearchEvents(criteria, skip, pageSize);
+		const auto page = finder->SearchEvents(criteria, paging.skip, paging.pageSize);
 		auto fileEventsResult = nlohmann::json::array();
 		for (const auto& fileEvent : page.events)
 		{
@@ -408,7 +430,7 @@ HttpServer::HttpServer(
 		}
 		nlohmann::json result;
 		result["file_events"] = fileEventsResult;
-		result["page_size"] = pageSize;
+		result["page_size"] = paging.pageSize;
 		result["total_file_events"] = page.totalEvents;
 		network::uri nextPageUrl;
 		{
@@ -419,7 +441,48 @@ HttpServer::HttpServer(
 				builder.clear_query();
 			}
 			builder.append_query_key_value_pair("skip", std::to_string(page.nextPageSkip));
-			builder.append_query_key_value_pair("pageSize", std::to_string(pageSize));
+			builder.append_query_key_value_pair("pageSize", std::to_string(paging.pageSize));
+			nextPageUrl = builder.uri();
+		}
+		result["next_page_url"] = nextPageUrl.string();
+		return HttpJsonResponse(200, "OK", result);
+	});
+
+	// GET /api/files/browse/(:pathId)?at=DATE&skip=N&pageSize=M
+	_simpleServer.resource["^/api/files/browse(?:/([0-9]+))?[^/]*$"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+		const auto paging = GetPagingParameters(request);
+		auto uow = _backup.CreateUnitOfWork();
+		const auto browser = uow->CreateVirtualFileBrowser();
+		const auto pathIdMatch = request.originalRequest.path_match[1];
+		std::vector<bslib::file::VirtualFile> files;
+		if (!pathIdMatch.matched)
+		{
+			files = browser->ListRoots(paging.skip, paging.pageSize);
+		}
+		else
+		{
+			const auto pathId = boost::lexical_cast<unsigned>(pathIdMatch.str());
+			files = browser->ListContents(pathId, paging.skip, paging.pageSize);
+		}
+		auto filesResult = nlohmann::json::array();
+		for (const auto& file : files)
+		{
+			filesResult.push_back(ToJson(file));
+		}
+		nlohmann::json result;
+		result["files"] = filesResult;
+		result["page_size"] = paging.pageSize;
+		network::uri nextPageUrl;
+		{
+			network::uri_builder builder(request.uri);
+			// Work around https://github.com/cpp-netlib/uri/issues/91
+			if (request.uri.has_query())
+			{
+				builder.clear_query();
+			}
+			const auto nextPageSkip = paging.skip + std::min(static_cast<unsigned>(files.size()), paging.pageSize);
+			builder.append_query_key_value_pair("skip", std::to_string(nextPageSkip));
+			builder.append_query_key_value_pair("pageSize", std::to_string(paging.pageSize));
 			nextPageUrl = builder.uri();
 		}
 		result["next_page_url"] = nextPageUrl.string();

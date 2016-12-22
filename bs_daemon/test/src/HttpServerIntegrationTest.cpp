@@ -388,6 +388,55 @@ TEST_F(HttpServerIntegrationTest, GetBackupFileEvents_Success)
 	}
 }
 
+TEST_F(HttpServerIntegrationTest, GetFiles_Success)
+{
+	// Arrange
+	HttpClient client(_testAddress);
+
+	const auto testFilePath = GetUniqueExtendedTempPath();
+	const auto testFilePath2 = GetUniqueExtendedTempPath();
+	const auto testFilePath3 = GetUniqueExtendedTempPath();
+	WriteFile(testFilePath, "hello");
+	WriteFile(testFilePath2, "hay");
+	WriteFile(testFilePath3, "foo");
+
+	auto uow = _backup.CreateUnitOfWork();
+	auto recorder = uow->CreateFileBackupRunRecorder();
+
+	const auto run1 = recorder->Start();
+	auto fileAdder1 = uow->CreateFileAdder(run1);
+	fileAdder1->Add(testFilePath.ToExtendedString());
+	recorder->Stop(run1);
+
+	const auto run2 = recorder->Start();
+	auto fileAdder2 = uow->CreateFileAdder(run2);
+	WriteFile(testFilePath, "hell");	// Modify
+	fileAdder2->Add(testFilePath.ToExtendedString());
+	fileAdder2->Add(testFilePath2.ToExtendedString());
+	fileAdder2->Add(testFilePath3.ToExtendedString());
+	recorder->Stop(run2);
+	uow->Commit();
+
+	// Act
+	// Assert
+	{
+		auto response = client.request("GET", "/api/files/browse?pageSize=2");
+		ASSERT_EQ(response->status_code, "200 OK");
+		const auto responseContent = nlohmann::json::parse(response->content);
+		EXPECT_EQ(2, responseContent.at("page_size").get<unsigned>());
+		const auto filesIt = responseContent.find("files");
+		ASSERT_TRUE(filesIt != responseContent.end()) << "'files' element is found";
+		ASSERT_EQ(1, filesIt->size());
+		{
+			const auto fileEvent = filesIt->at(0);
+			EXPECT_EQ("Directory", fileEvent.at("type").get<std::string>());
+			EXPECT_TRUE(fileEvent.at("name").is_string());
+		}
+		ASSERT_TRUE(responseContent.at("next_page_url").is_string());
+	}
+}
+
+
 }
 }
 }
