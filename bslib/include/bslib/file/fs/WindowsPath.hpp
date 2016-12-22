@@ -41,7 +41,7 @@ public:
 	WindowsPath EnsureTrailingSlashCopy() const;
 
 	/**
-	 * Returns the filename portion of the path
+	 * Returns the filename portion of the path, trailing slashes are ignored so "C:\foo\".GetFilename() <=> "C:\foo".GetFilename()
 	 */
 	UTF8String GetFilename() const;
 
