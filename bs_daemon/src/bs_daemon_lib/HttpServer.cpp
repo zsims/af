@@ -6,6 +6,7 @@
 #include "bslib/file/FileEventSearchCriteria.hpp"
 
 #include <boost/algorithm/string/split.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <json.hpp>
 #include <network/uri.hpp>
@@ -281,6 +282,19 @@ PagingParameters GetPagingParameters(const HttpJsonRequest& request)
 	return PagingParameters(skip, pageSize);
 }
 
+template<typename T, typename C = std::vector<T>>
+C ParseCommaList(const std::string& source)
+{
+	C result;
+	boost::char_separator<char> sep(",");
+	boost::tokenizer<boost::char_separator<char>>  tokens(source, sep);
+	for (const auto& token : tokens)
+	{
+		result.emplace(boost::lexical_cast<T>(token));
+	}
+	return result;
+}
+
 }
 
 HttpServer::HttpServer(
@@ -486,6 +500,27 @@ HttpServer::HttpServer(
 			nextPageUrl = builder.uri();
 		}
 		result["next_page_url"] = nextPageUrl.string();
+		return HttpJsonResponse(200, "OK", result);
+	});
+
+	_simpleServer.resource["^/api/files/browse/([0-9,]*)/descendantmatches"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+		const auto paging = GetPagingParameters(request);
+		const auto pathIdsMatch = request.originalRequest.path_match[1];
+		const auto pathIds = ParseCommaList<int64_t, std::unordered_set<int64_t>>(pathIdsMatch.str());
+		auto uow = _backup.CreateUnitOfWork();
+		const auto browser = uow->CreateVirtualFileBrowser();
+
+		const auto counts = browser->CountNestedMatches(pathIds);
+		nlohmann::json countsResult = nlohmann::json::array();
+		for (const auto& kv : counts)
+		{
+			nlohmann::json pathIdCount;
+			pathIdCount["pathId"] = kv.first;
+			pathIdCount["count"] = kv.second;
+			countsResult.push_back(pathIdCount);
+		}
+		nlohmann::json result;
+		result["counts"] = countsResult;
 		return HttpJsonResponse(200, "OK", result);
 	});
 
