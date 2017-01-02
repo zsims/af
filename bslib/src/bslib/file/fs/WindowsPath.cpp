@@ -105,10 +105,21 @@ WindowsPath WindowsPath::AppendFullCopy(const WindowsPath& p) const
 
 UTF8String WindowsPath::GetFilename() const
 {
-	const auto index = _path.find_last_of(SEPARATOR);
-	if (index != UTF8String::npos && index != (_path.length() - 1))
+	if (_path.empty())
 	{
-		return UTF8String(_path.begin() + index + 1, _path.end());
+		return UTF8String();
+	}
+	auto realEnd = _path.end() - 1;
+	if (EndsWithSeparator(_path))
+	{
+		realEnd--;
+	}
+	for (auto it = realEnd; it != _path.begin(); it--)
+	{
+		if (*it == SEPARATOR)
+		{
+			return UTF8String(it + 1, realEnd + 1);
+		}
 	}
 	return UTF8String();
 }

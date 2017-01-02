@@ -65,6 +65,32 @@ TEST(WindowsPathIntegrationTest, GetFilename_Success)
 	EXPECT_EQ(actual, expected);
 }
 
+TEST(WindowsPathIntegrationTest, GetFilename_EmptySuccess)
+{
+	// Arrange
+	const WindowsPath input(u8R"(C:\something\文件名\)");
+
+	// Act
+	const auto actual = input.GetFilename();
+
+	// Assert
+	const UTF8String expected(u8"文件名");
+	EXPECT_EQ(actual, expected);
+}
+
+TEST(WindowsPathIntegrationTest, GetFilename_RootSuccess)
+{
+	// Arrange
+	const WindowsPath input(u8R"(C:\)");
+
+	// Act
+	const auto actual = input.GetFilename();
+
+	// Assert
+	const UTF8String expected(u8"C:");
+	EXPECT_EQ(actual, expected);
+}
+
 TEST(WindowsPathIntegrationTest, ToExtendedString_Success)
 {
 	// Arrange
