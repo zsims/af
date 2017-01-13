@@ -5,6 +5,7 @@
 #include "bslib/file/fs/path.hpp"
 #include "bslib/Uuid.hpp"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/optional.hpp>
 
 #include <cstdint>
@@ -34,11 +35,13 @@ struct FileEvent
 		const fs::NativePath& fullPath,
 		FileType type,
 		const boost::optional<blob::Address>& contentBlobAddress, 
-		FileEventAction action)
+		FileEventAction action,
+		const boost::posix_time::ptime& dateTimeUtc = boost::posix_time::second_clock::universal_time())
 		: backupRunId(backupRunId)
 		, fullPath(fullPath)
 		, type(type)
 		, contentBlobAddress(contentBlobAddress)
+		, dateTimeUtc(dateTimeUtc)
 		, action(action)
 	{
 	}
@@ -54,10 +57,12 @@ struct FileEvent
 	const fs::NativePath fullPath;
 	const FileType type;
 	const boost::optional<blob::Address> contentBlobAddress;
+	const boost::posix_time::ptime dateTimeUtc;
 	const FileEventAction action;
 
 	bool operator==(const FileEvent& rhs) const
 	{
+		// Note this purposefully ignores dates as this is really only used for testing
 		return backupRunId == rhs.backupRunId &&
 			fullPath == rhs.fullPath &&
 			type == rhs.type &&
@@ -71,8 +76,9 @@ struct DirectoryEvent : public FileEvent
 	DirectoryEvent(
 		const Uuid& backupRunId,
 		const fs::NativePath& fullPath,
-		FileEventAction action)
-		: FileEvent(backupRunId, fullPath, FileType::Directory, boost::none, action)
+		FileEventAction action,
+		const boost::posix_time::ptime& dateTimeUtc = boost::posix_time::second_clock::universal_time())
+		: FileEvent(backupRunId, fullPath, FileType::Directory, boost::none, action, dateTimeUtc)
 	{
 	}
 };
@@ -83,8 +89,9 @@ struct RegularFileEvent : public FileEvent
 		const Uuid& backupRunId,
 		const fs::NativePath& fullPath,
 		const boost::optional<blob::Address>& contentBlobAddress, 
-		FileEventAction action)
-		: FileEvent(backupRunId, fullPath, FileType::RegularFile, contentBlobAddress, action)
+		FileEventAction action,
+		const boost::posix_time::ptime& dateTimeUtc = boost::posix_time::second_clock::universal_time())
+		: FileEvent(backupRunId, fullPath, FileType::RegularFile, contentBlobAddress, action, dateTimeUtc)
 	{
 	}
 };

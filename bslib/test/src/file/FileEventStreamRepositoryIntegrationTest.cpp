@@ -5,6 +5,7 @@
 #include "bslib/sqlitepp/sqlitepp.hpp"
 #include "bslib_test_util/TestBase.hpp"
 
+#include <boost/date_time.hpp>
 #include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -355,6 +356,47 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByActionSuccess)
 	EXPECT_THAT(page2, ::testing::ElementsAre(expectedEvents[2], expectedEvents[3]));
 }
 
+TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByDateSuccess)
+{
+	// Arrange
+	blob::BlobInfoRepository blobRepo(*_connection);
+	const blob::BlobInfo blobInfo1(blob::Address("1259225215937593795395739753973973593571"), 444UL);
+	const blob::BlobInfo blobInfo2(blob::Address("2f59225215937593795395739753973973593571"), 157UL);
+	const blob::BlobInfo blobInfo3(blob::Address("4e59225215937593795395739753973973593571"), 1337UL);
+	blobRepo.AddBlob(blobInfo1);
+	blobRepo.AddBlob(blobInfo2);
+	blobRepo.AddBlob(blobInfo3);
+
+	const boost::posix_time::ptime start(boost::gregorian::date(2001, boost::date_time::Sep, 11), boost::posix_time::time_duration(10, 30, 0));
+
+	const auto run1 = Uuid::Create();
+	const auto run2 = Uuid::Create();
+
+	const std::vector<FileEvent> expectedEvents = {
+		FileEvent(run1, fs::NativePath(R"(C:\dir)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded, start + boost::posix_time::minutes(0)),
+		FileEvent(run1, fs::NativePath(R"(C:\file)"), FileType::RegularFile, blobInfo1.GetAddress(), FileEventAction::ChangedAdded, start + boost::posix_time::seconds(59)),
+		FileEvent(run1, fs::NativePath(R"(C:\otherfile)"), FileType::RegularFile, blobInfo2.GetAddress(), FileEventAction::ChangedAdded, start + boost::posix_time::minutes(1)),
+		FileEvent(run1, fs::NativePath(R"(C:\file)"), FileType::RegularFile, blobInfo3.GetAddress(), FileEventAction::ChangedModified, start + boost::posix_time::minutes(10)),
+		FileEvent(run1, fs::NativePath(R"(C:\old)"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved, start + boost::posix_time::hours(1)),
+		FileEvent(run2, fs::NativePath(R"(C:\file)"), FileType::Directory, boost::none, FileEventAction::ChangedRemoved, start + boost::posix_time::seconds(1)),
+	};
+	AddEvents(expectedEvents);
+
+	// Act
+	FileEventSearchCriteria criteria;
+	criteria.before = start + boost::posix_time::minutes(1);
+	criteria.actions = std::set<FileEventAction>{ FileEventAction::ChangedAdded, FileEventAction::ChangedModified };
+	const auto page1 = _fileEventStreamRepository->Search(criteria, 0, 2);
+	const auto page2 = _fileEventStreamRepository->Search(criteria, 2, 2);
+
+	const auto matching = _fileEventStreamRepository->CountMatching(criteria);
+	EXPECT_THAT(3, matching);
+
+	// Assert
+	EXPECT_THAT(page1, ::testing::ElementsAre(expectedEvents[0], expectedEvents[1]));
+	EXPECT_THAT(page2, ::testing::ElementsAre(expectedEvents[2]));
+}
+
 TEST_F(FileEventStreamRepositoryIntegrationTest, Search_ByRunIdSuccess)
 {
 	// Arrange
@@ -576,12 +618,13 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, SearchPathFirst_RootsSuccess)
 TEST_F(FileEventStreamRepositoryIntegrationTest, CountNestedMatches_Success)
 {
 	// Arrange
+	const boost::posix_time::ptime start(boost::gregorian::date(2001, boost::date_time::Sep, 11), boost::posix_time::time_duration(10, 30, 0));
 	const auto runId = Uuid::Create();
 	const std::vector<FileEvent> expectedEvents = {
-		FileEvent(runId, fs::NativePath(R"(C:\Users\zsims\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(runId, fs::NativePath(R"(C:\Users\zsims\Downloads\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(runId, fs::NativePath(R"(C:\Users\zsims\Documents\Personal\resume.pdf)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded),
-		FileEvent(runId, fs::NativePath(R"(D:\Moves\Personal\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded),
+		FileEvent(runId, fs::NativePath(R"(C:\Users\zsims\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded, start),
+		FileEvent(runId, fs::NativePath(R"(C:\Users\zsims\Downloads\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded, start + boost::posix_time::minutes(1)),
+		FileEvent(runId, fs::NativePath(R"(C:\Users\zsims\Documents\Personal\resume.pdf)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded, start + boost::posix_time::minutes(2)),
+		FileEvent(runId, fs::NativePath(R"(D:\Moves\Personal\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded, start + boost::posix_time::hours(1) + boost::posix_time::minutes(2)),
 	};
 	AddEvents(expectedEvents);
 
@@ -611,6 +654,17 @@ TEST_F(FileEventStreamRepositoryIntegrationTest, CountNestedMatches_Success)
 		EXPECT_EQ(3, matches.size());
 		EXPECT_EQ(3, matches.at(cPathId.value()));
 		EXPECT_EQ(1, matches.at(dPathId.value()));
+		EXPECT_EQ(0, matches.at(yPathId));
+	}
+	{
+		// Roots with dates
+		FileEventSearchCriteria eventCriteria;
+		eventCriteria.before = start + boost::posix_time::minutes(1);
+		eventCriteria.actions = { FileEventAction::ChangedRemoved, FileEventAction::ChangedModified, FileEventAction::ChangedAdded };
+		const auto matches = _fileEventStreamRepository->CountNestedMatches(eventCriteria, { cPathId.value(), dPathId.value(), yPathId });
+		EXPECT_EQ(3, matches.size());
+		EXPECT_EQ(2, matches.at(cPathId.value()));
+		EXPECT_EQ(0, matches.at(dPathId.value()));
 		EXPECT_EQ(0, matches.at(yPathId));
 	}
 	{

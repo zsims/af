@@ -67,7 +67,8 @@ void BackupDatabase::Create()
 				ContentBlobAddress BLOB(20) REFERENCES Blob (Address),
 				Action INTEGER NOT NULL,
 				FileType INTEGER NOT NULL,
-				BackupRunId BLOB(16) NOT NULL
+				BackupRunId BLOB(16) NOT NULL,
+				DateTimeUtc INTEGER NOT NULL
 			);
 			CREATE TABLE FileBackupRunEvent (
 				Id INTEGER PRIMARY KEY AUTOINCREMENT,
