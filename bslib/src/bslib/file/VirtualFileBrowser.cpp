@@ -19,20 +19,16 @@ const std::set<FileEventAction> MATCH_EVENTS {
 
 VirtualFile ToVirtualFile(const FileEventStreamRepository::PathFirstSearchMatch& match)
 {
-	auto pathType = FileType::Directory;
-	if (match.latestEvent)
-	{
-		pathType = match.latestEvent->type;
-	}
-	VirtualFile result(match.pathId, match.fullPath, pathType);
+	VirtualFile result(match.pathId, match.fullPath, match.pathType);
 	result.matchedFileEvent = match.latestEvent;
 	return result;
 }
 
 }
 
-VirtualFileBrowser::VirtualFileBrowser(FileEventStreamRepository& fileEventStreamRepository)
+VirtualFileBrowser::VirtualFileBrowser(FileEventStreamRepository& fileEventStreamRepository, const boost::optional<boost::posix_time::ptime>& atUtc)
 	: _fileEventStreamRepository(fileEventStreamRepository)
+	, _atUtc(atUtc)
 {
 }
 
@@ -54,6 +50,7 @@ std::unordered_map<int64_t, unsigned> VirtualFileBrowser::CountNestedMatches(con
 {
 	FileEventSearchCriteria eventCriteria;
 	eventCriteria.actions = MATCH_EVENTS;
+	eventCriteria.before = _atUtc;
 	return _fileEventStreamRepository.CountNestedMatches(eventCriteria, pathIds);
 }
 
@@ -61,6 +58,7 @@ std::vector<VirtualFile> VirtualFileBrowser::List(const FilePathSearchCriteria& 
 {
 	FileEventSearchCriteria eventCriteria;
 	eventCriteria.actions = MATCH_EVENTS;
+	eventCriteria.before = _atUtc;
 	const auto matches = _fileEventStreamRepository.SearchPathFirst(pathCriteria, eventCriteria, skip, limit);
 	std::vector<VirtualFile> result;
 	for (const auto& match : matches)

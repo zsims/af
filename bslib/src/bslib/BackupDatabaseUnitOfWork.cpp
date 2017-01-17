@@ -27,9 +27,9 @@ std::unique_ptr<file::FileBackupRunRecorder> BackupDatabaseUnitOfWork::CreateFil
 	return std::make_unique<file::FileBackupRunRecorder>(_connection->GetFileBackupRunEventStreamRepository());
 }
 
-std::unique_ptr<file::VirtualFileBrowser> BackupDatabaseUnitOfWork::CreateVirtualFileBrowser()
+std::unique_ptr<file::VirtualFileBrowser> BackupDatabaseUnitOfWork::CreateVirtualFileBrowser(const boost::optional<boost::posix_time::ptime>& atUtc)
 {
-	return std::make_unique<file::VirtualFileBrowser>(_connection->GetFileEventStreamRepository());
+	return std::make_unique<file::VirtualFileBrowser>(_connection->GetFileEventStreamRepository(), atUtc);
 }
 
 std::unique_ptr<file::FileAdder> BackupDatabaseUnitOfWork::CreateFileAdder(const Uuid& backupRunId)

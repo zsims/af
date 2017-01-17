@@ -82,7 +82,7 @@ FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlit
 	: _db(connection)
 {
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId, FileEvent.DateTimeUtc FROM FileEvent
+		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FilePath.FileType, FileEvent.BackupRunId, FileEvent.DateTimeUtc FROM FileEvent
 		JOIN FilePath ON FileEvent.PathId = FilePath.Id
 		ORDER BY FileEvent.Id ASC
 	)", _getAllEventsStatement);
@@ -92,13 +92,13 @@ FileEventStreamRepository::FileEventStreamRepository(const sqlitepp::ScopedSqlit
 			UNION ALL
 			SELECT Id From FilePath, DescendantPath WHERE FilePath.ParentId = DescendantPath.PathId
 		)
-		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId, FileEvent.DateTimeUtc FROM FileEvent
+		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FilePath.FileType, FileEvent.BackupRunId, FileEvent.DateTimeUtc FROM FileEvent
 		JOIN FilePath ON FileEvent.PathId = FilePath.Id
 		WHERE FilePath.Id IN DescendantPath AND FileEvent.Action IN (0, 1, 2)
 		GROUP BY FileEvent.PathId HAVING FileEvent.Id = MAX(FileEvent.Id)
 	)", _getLastChangedEventsUnderPathStatement);
 	sqlitepp::prepare_or_throw(_db, R"(
-		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId, FileEvent.DateTimeUtc FROM FileEvent
+		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FilePath.FileType, FileEvent.BackupRunId, FileEvent.DateTimeUtc FROM FileEvent
 		JOIN FilePath ON FileEvent.PathId = FilePath.Id
 		WHERE FilePath.FullPath = :FullPath AND FileEvent.Action IN (0, 1, 2)
 		ORDER BY FileEvent.Id DESC LIMIT 1
@@ -141,7 +141,7 @@ void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent, int64_t pat
 {
 	const auto secs = GetSecondsSinceEpoch(fileEvent.dateTimeUtc);
 
-	const auto query = "INSERT INTO FileEvent (PathId, ContentBlobAddress, Action, FileType, BackupRunId, DateTimeUtc) VALUES (:PathId, :ContentBlobAddress, :Action, :FileType, :BackupRunId, :DateTimeUtc)";
+	const auto query = "INSERT INTO FileEvent (PathId, ContentBlobAddress, Action, BackupRunId, DateTimeUtc) VALUES (:PathId, :ContentBlobAddress, :Action, :BackupRunId, :DateTimeUtc)";
 	sqlitepp::ScopedStatement statement;
 	sqlitepp::prepare_or_throw(_db, query, statement);
 	sqlitepp::BindByParameterNameInt64(statement, ":PathId", pathId);
@@ -163,7 +163,6 @@ void FileEventStreamRepository::AddEvent(const FileEvent& fileEvent, int64_t pat
 	auto byteUuid = fileEvent.backupRunId.ToArray();
 	sqlitepp::BindByParameterNameBlob(statement, ":BackupRunId", &byteUuid[0], byteUuid.size());
 	sqlitepp::BindByParameterNameInt64(statement, ":Action", static_cast<int64_t>(fileEvent.action));
-	sqlitepp::BindByParameterNameInt64(statement, ":FileType", static_cast<int64_t>(fileEvent.type));
 
 	const auto stepResult = sqlite3_step(statement);
 	if (stepResult != SQLITE_DONE)
@@ -244,7 +243,7 @@ std::vector<FileEventStreamRepository::PathFirstSearchMatch> FileEventStreamRepo
 {
 	std::stringstream queryss;
 	queryss << R"(
-		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId, FileEvent.DateTimeUtc
+		SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FilePath.FileType, FileEvent.BackupRunId, FileEvent.DateTimeUtc
 		FROM FilePath
 		LEFT OUTER JOIN FileEvent ON FileEvent.PathId = FilePath.Id AND FileEvent.Id IN (
 			SELECT MAX(FileEvent.Id)
@@ -281,7 +280,8 @@ std::vector<FileEventStreamRepository::PathFirstSearchMatch> FileEventStreamRepo
 		const auto rawFullPath = sqlite3_column_text(statement, GetFileEvent_ColumnIndex_FullPath);
 		PathFirstSearchMatch match;
 		match.latestEvent = matchedEvent;
-		match.fullPath =  fs::NativePath(reinterpret_cast<const char*>(rawFullPath));
+		match.pathType = static_cast<FileType>(sqlite3_column_int(statement, GetFileEvent_ColumnIndex_FileType));
+		match.fullPath = fs::NativePath(reinterpret_cast<const char*>(rawFullPath));
 		match.pathId = sqlite3_column_int64(statement, GetFileEvent_ColumnIndex_PathId);
 		result.push_back(match);
 	}
@@ -291,7 +291,7 @@ std::vector<FileEventStreamRepository::PathFirstSearchMatch> FileEventStreamRepo
 std::vector<FileEvent> FileEventStreamRepository::Search(const FilePathSearchCriteria& pathCriteria, const FileEventSearchCriteria& eventCriteria, unsigned skip, unsigned limit) const
 {
 	std::stringstream queryss;
-	queryss << "SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FileEvent.FileType, FileEvent.BackupRunId, FileEvent.DateTimeUtc FROM FileEvent ";
+	queryss << "SELECT FileEvent.Id, FilePath.Id, FilePath.FullPath, FileEvent.ContentBlobAddress, FileEvent.Action, FilePath.FileType, FileEvent.BackupRunId, FileEvent.DateTimeUtc FROM FileEvent ";
 	queryss << "JOIN FilePath ON FileEvent.PathId = FilePath.Id";
 	const auto eventPredicate = BuildPredicate(eventCriteria);
 	if (!eventPredicate.empty())

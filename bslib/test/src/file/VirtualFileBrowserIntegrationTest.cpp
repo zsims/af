@@ -3,6 +3,7 @@
 #include "bslib_test_util/TestBase.hpp"
 #include "bslib_test_util/gtest_boost_filesystem_fix.hpp"
 
+#include <boost/date_time.hpp>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -13,22 +14,26 @@ namespace bslib {
 namespace file {
 namespace test {
 
+namespace {
+const boost::posix_time::ptime START(boost::gregorian::date(2001, boost::date_time::Sep, 11), boost::posix_time::time_duration(10, 30, 0));
+}
+
 class VirtualFileBrowserIntegrationTest : public bslib_test_util::TestBase
 {
 protected:
 	VirtualFileBrowserIntegrationTest()
 		: _backupRunId(Uuid::Create())
-		, _eventCUsersZsimsVimRc(_backupRunId, fs::NativePath(R"(C:\Users\zsims\_vimrc)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded)
-		, _eventCUsersZsimsTax2017Ato(_backupRunId, fs::NativePath(R"(C:\Users\zsims\Tax\2017.ato)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded)
-		, _eventCUsersZsimsPictures(_backupRunId, fs::NativePath(R"(C:\Users\zsims\Pictures\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded)
-		, _eventCUsersPicturesSamsonJpg(_backupRunId, fs::NativePath(R"(C:\Users\zsims\Pictures\Samson.jpg)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded)
-		, _eventCWtfTempFile(_backupRunId, fs::NativePath(R"(C:\wtf\temp)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded)
-		, _eventRemovedCWtfTempFile(_backupRunId, fs::NativePath(R"(C:\wtf\temp)"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved)
-		, _eventCWtfTempFolder(_backupRunId, fs::NativePath(R"(C:\wtf\temp)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded)
-		, _eventD(_backupRunId, fs::NativePath(R"(D:\)"), FileType::Directory, boost::none, FileEventAction::Unchanged)
-		, _eventDMovies(_backupRunId, fs::NativePath(R"(D:\Movies\)"), FileType::Directory, boost::none, FileEventAction::Unchanged)
-		, _eventDMoviesPersonal(_backupRunId, fs::NativePath(R"(D:\Movies\Personal\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded)
-		, _eventDMoviesPersonalSamsonsFirstStepsAvi(_backupRunId, fs::NativePath(R"(D:\Movies\Personal\Samson's first steps.avi)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded)
+		, _eventCUsersZsimsVimRc(_backupRunId, fs::NativePath(R"(C:\Users\zsims\_vimrc)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded, START + boost::posix_time::hours(1))
+		, _eventCUsersZsimsTax2017Ato(_backupRunId, fs::NativePath(R"(C:\Users\zsims\Tax\2017.ato)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded, START + boost::posix_time::hours(6))
+		, _eventCUsersZsimsPictures(_backupRunId, fs::NativePath(R"(C:\Users\zsims\Pictures\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded, START)
+		, _eventCUsersPicturesSamsonJpg(_backupRunId, fs::NativePath(R"(C:\Users\zsims\Pictures\Samson.jpg)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded, START)
+		, _eventCWtfTempFile(_backupRunId, fs::NativePath(R"(C:\wtf\temp)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded, START)
+		, _eventRemovedCWtfTempFile(_backupRunId, fs::NativePath(R"(C:\wtf\temp)"), FileType::RegularFile, boost::none, FileEventAction::ChangedRemoved, START)
+		, _eventCWtfTempFolder(_backupRunId, fs::NativePath(R"(C:\wtf\temp)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded, START)
+		, _eventD(_backupRunId, fs::NativePath(R"(D:\)"), FileType::Directory, boost::none, FileEventAction::Unchanged, START + boost::posix_time::hours(6))
+		, _eventDMovies(_backupRunId, fs::NativePath(R"(D:\Movies\)"), FileType::Directory, boost::none, FileEventAction::Unchanged, START + boost::posix_time::hours(6))
+		, _eventDMoviesPersonal(_backupRunId, fs::NativePath(R"(D:\Movies\Personal\)"), FileType::Directory, boost::none, FileEventAction::ChangedAdded, START + boost::posix_time::hours(6))
+		, _eventDMoviesPersonalSamsonsFirstStepsAvi(_backupRunId, fs::NativePath(R"(D:\Movies\Personal\Samson's first steps.avi)"), FileType::RegularFile, boost::none, FileEventAction::ChangedAdded, START + boost::posix_time::hours(6))
 	{
 		_testBackup.OpenOrCreate();
 		_connection = _testBackup.ConnectToDatabase();
@@ -91,7 +96,6 @@ protected:
 	std::unique_ptr<sqlitepp::ScopedSqlite3Object> _connection;
 	std::unique_ptr<FileEventStreamRepository> _fileEventStreamRepository;
 	std::unique_ptr<FilePathRepository> _filePathRepository;
-
 };
 
 TEST_F(VirtualFileBrowserIntegrationTest, ListRoots_Success)
@@ -116,6 +120,30 @@ TEST_F(VirtualFileBrowserIntegrationTest, ListRoots_Success)
 		EXPECT_EQ(3, CountNestedMatches(*browser, root->pathId));
 		ASSERT_TRUE(root->matchedFileEvent);
 		EXPECT_EQ(_eventD, root->matchedFileEvent.value());
+	}
+}
+
+TEST_F(VirtualFileBrowserIntegrationTest, ListRoots_AtDateSuccess)
+{
+	// Arrange
+	const auto uow = _testBackup.GetBackup().CreateUnitOfWork();
+	const auto browser = uow->CreateVirtualFileBrowser(START + boost::posix_time::hours(3));
+	// Act
+	const auto roots = browser->ListRoots(0, 100);
+	// Assert
+	ASSERT_EQ(2, roots.size());
+	{
+		const auto root = FindByPath(fs::NativePath(R"(C:\)"), FileType::Directory, roots);
+		ASSERT_TRUE(root);
+		// Excludes the ATO file which was seen 6 hours from the START
+		EXPECT_EQ(5, CountNestedMatches(*browser, root->pathId));
+		EXPECT_FALSE(root->matchedFileEvent);
+	}
+	{
+		const auto root = FindByPath(fs::NativePath(R"(D:\)"), FileType::Directory, roots);
+		ASSERT_TRUE(root);
+		EXPECT_EQ(0, CountNestedMatches(*browser, root->pathId));
+		ASSERT_FALSE(root->matchedFileEvent);
 	}
 }
 
@@ -152,6 +180,51 @@ TEST_F(VirtualFileBrowserIntegrationTest, ListContents_Success)
 		ASSERT_TRUE(item);
 		EXPECT_EQ(FileType::Directory, item->type);
 		EXPECT_EQ(1, CountNestedMatches(*browser, item->pathId));
+		EXPECT_FALSE(item->matchedFileEvent);
+	}
+	{
+		const auto item = FindByPath(fs::NativePath(R"(C:\Users\zsims\Downloads\)"), FileType::Directory, contents);
+		ASSERT_TRUE(item);
+		EXPECT_EQ(FileType::Directory, item->type);
+		EXPECT_EQ(0, CountNestedMatches(*browser, item->pathId));
+		EXPECT_FALSE(item->matchedFileEvent);
+	}
+
+	// These two paths are the same, but C:\temp existed as both a file and a folder
+}
+
+TEST_F(VirtualFileBrowserIntegrationTest, ListContents_AtDateSuccess)
+{
+	// Arrange
+	const auto uow = _testBackup.GetBackup().CreateUnitOfWork();
+	const auto browser = uow->CreateVirtualFileBrowser(START);
+	const auto pathId = _filePathRepository->FindPath(fs::NativePath(R"(C:\Users\zsims\)"), FileType::Directory);
+	ASSERT_TRUE(pathId);
+	// Act
+	const auto contents = browser->ListContents(pathId.value(), 0, 100);
+
+	// Assert
+	ASSERT_EQ(4, contents.size());
+	{
+		const auto item = FindByPath(fs::NativePath(R"(C:\Users\zsims\_vimrc)"), FileType::RegularFile, contents);
+		ASSERT_TRUE(item);
+		EXPECT_EQ(FileType::RegularFile, item->type);
+		EXPECT_EQ(0, CountNestedMatches(*browser, item->pathId));
+		ASSERT_FALSE(item->matchedFileEvent);
+	}
+	{
+		const auto item = FindByPath(fs::NativePath(R"(C:\Users\zsims\Pictures\)"), FileType::Directory, contents);
+		ASSERT_TRUE(item);
+		EXPECT_EQ(FileType::Directory, item->type);
+		EXPECT_EQ(1, CountNestedMatches(*browser, item->pathId));
+		ASSERT_TRUE(item->matchedFileEvent);
+		EXPECT_EQ(_eventCUsersZsimsPictures, item->matchedFileEvent.value());
+	}
+	{
+		const auto item = FindByPath(fs::NativePath(R"(C:\Users\zsims\Tax\)"), FileType::Directory, contents);
+		ASSERT_TRUE(item);
+		EXPECT_EQ(FileType::Directory, item->type);
+		EXPECT_EQ(0, CountNestedMatches(*browser, item->pathId));
 		EXPECT_FALSE(item->matchedFileEvent);
 	}
 	{

@@ -31,6 +31,7 @@ public:
 	struct PathFirstSearchMatch
 	{
 		fs::NativePath fullPath;
+		FileType pathType;
 		int64_t pathId;
 		boost::optional<FileEvent> latestEvent;
 	};
