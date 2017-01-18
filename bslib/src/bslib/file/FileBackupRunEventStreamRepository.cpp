@@ -1,5 +1,6 @@
 #include "bslib/file/FileBackupRunEventStreamRepository.hpp"
 
+#include "bslib/date_time.hpp"
 #include "bslib/file/FileBackupRunEvent.hpp"
 #include "bslib/file/exceptions.hpp"
 #include "bslib/sqlitepp/sqlitepp.hpp"
@@ -53,8 +54,7 @@ std::vector<FileBackupRunEvent> FileBackupRunEventStreamRepository::GetAllEvents
 
 void FileBackupRunEventStreamRepository::AddEvent(const FileBackupRunEvent& backupEvent)
 {
-	static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
-	const auto secs = (backupEvent.dateTimeUtc - epoch).total_seconds();
+	const auto secs = GetSecondsSinceEpoch(backupEvent.dateTimeUtc);
 	sqlitepp::ScopedStatementReset reset(_insertEventStatement);
 	sqlitepp::BindByParameterNameInt64(_insertEventStatement, ":DateTimeUtc", secs);
 	sqlitepp::BindByParameterNameInt64(_insertEventStatement, ":Action", static_cast<int64_t>(backupEvent.action));
@@ -151,8 +151,7 @@ FileBackupRunEvent FileBackupRunEventStreamRepository::MapRowToEvent(const sqlit
 	const auto runIdBytes = sqlite3_column_blob(statement, GetFileBackupRunEvent_ColumnIndex_BackupRunId);
 	const Uuid runId(runIdBytes, runIdBytesCount);
 	const FileBackupRunEventAction action = static_cast<FileBackupRunEventAction>(sqlite3_column_int(statement, GetFileBackupRunEvent_ColumnIndex_Action));
-	const auto unixDate = static_cast<time_t>(sqlite3_column_int(statement, GetFileBackupRunEvent_ColumnIndex_DateUtc));
-	const auto pt = boost::posix_time::from_time_t(unixDate);
+	const auto pt = FromSecondsSinceEpoch(sqlite3_column_int(statement, GetFileBackupRunEvent_ColumnIndex_DateUtc));
 	return FileBackupRunEvent(runId, pt, action);
 }
 

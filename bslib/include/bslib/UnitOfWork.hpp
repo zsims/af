@@ -10,6 +10,8 @@
 #include "bslib/Uuid.hpp"
 
 #include <boost/core/noncopyable.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/optional.hpp>
 
 #include <memory>
 #include <string>
@@ -41,7 +43,7 @@ public:
 	/**
 	 * Creates a virtual file browser for enumerating files in the backup
 	 */
-	virtual std::unique_ptr<file::VirtualFileBrowser> CreateVirtualFileBrowser() = 0;
+	virtual std::unique_ptr<file::VirtualFileBrowser> CreateVirtualFileBrowser(const boost::optional<boost::posix_time::ptime>& atUtc = boost::none) = 0;
 
 	/**
 	 * Creates a file adder for backing up files and directories.

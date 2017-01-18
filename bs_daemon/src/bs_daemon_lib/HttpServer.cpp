@@ -2,6 +2,7 @@
 
 #include "bs_daemon_lib/FileBackupJob.hpp"
 #include "bs_daemon_lib/log.hpp"
+#include "bslib/date_time.hpp"
 #include "bslib/file/FileBackupRunSearchCriteria.hpp"
 #include "bslib/file/FileEventSearchCriteria.hpp"
 
@@ -165,14 +166,6 @@ RequestHandler JsonHandler(JsonRequestHandler handler)
 	};
 }
 
-/**
- * Converts the given posix time/date into an ISO 8601 date with a UTC qualifier, e.g. 2016-11-20T09:49:30Z
- */
-std::string ToIso8601Utc(const boost::posix_time::ptime& date)
-{
-	return boost::posix_time::to_iso_extended_string(date) + "Z";
-}
-
 network::uri MakeUrlWithAuthority(const network::uri& original, std::string newPath)
 {
 	network::uri_builder builder;
@@ -186,7 +179,7 @@ nlohmann::json ToJson(const bslib::file::FileBackupRunEvent& runEvent)
 {
 	nlohmann::json result;
 	result["action"] = bslib::file::ToString(runEvent.action);
-	result["date_utc"] = ToIso8601Utc(runEvent.dateTimeUtc);
+	result["date_utc"] = bslib::ToIso8601Utc(runEvent.dateTimeUtc);
 	return result;
 }
 
@@ -196,6 +189,7 @@ nlohmann::json ToJson(const bslib::file::FileEvent& fileEvent)
 	result["action"] = bslib::file::ToString(fileEvent.action);
 	result["type"] = bslib::file::ToString(fileEvent.type);
 	result["path"] = fileEvent.fullPath.ToString();
+	result["date_utc"] = bslib::ToIso8601Utc(fileEvent.dateTimeUtc);
 	return result;
 }
 
@@ -205,10 +199,10 @@ nlohmann::json ToJson(const bslib::file::FileBackupRunReader::BackupSummary& bac
 	result["id"] = backup.runId.ToString();
 	result["modified_files_count"] = backup.modifiedFilesCount;
 	result["total_size_bytes"] = backup.totalSizeBytes;
-	result["started_on_utc"] = ToIso8601Utc(backup.startedUtc);
+	result["started_on_utc"] = bslib::ToIso8601Utc(backup.startedUtc);
 	if (backup.finishedUtc)
 	{
-		result["finished_on_utc"] = ToIso8601Utc(backup.finishedUtc.value());
+		result["finished_on_utc"] = bslib::ToIso8601Utc(backup.finishedUtc.value());
 	}
 	else
 	{
@@ -229,7 +223,7 @@ nlohmann::json ToJson(const bslib::file::FileBackupRunReader::BackupSummary& bac
 nlohmann::json ToJson(const bslib::file::VirtualFile& file)
 {
 	nlohmann::json result;
-	result["pageId"] = file.pathId;
+	result["pathId"] = file.pathId;
 	const auto filename = file.fullPath.GetFilename();
 	if (!filename.empty())
 	{
@@ -465,8 +459,17 @@ HttpServer::HttpServer(
 	// GET /api/files/browse/(:pathId)?at=DATE&skip=N&pageSize=M
 	_simpleServer.resource["^/api/files/browse(?:/([0-9]+))?[^/]*$"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
 		const auto paging = GetPagingParameters(request);
+		boost::optional<boost::posix_time::ptime> at;
+		const auto queryParameters = request.GetQueryParameters();
+		{
+			auto it = queryParameters.find("at");
+			if (it != queryParameters.end())
+			{
+				at = bslib::FromIso8601Utc(it->second);
+			}
+		}
 		auto uow = _backup.CreateUnitOfWork();
-		const auto browser = uow->CreateVirtualFileBrowser();
+		const auto browser = uow->CreateVirtualFileBrowser(at);
 		const auto pathIdMatch = request.originalRequest.path_match[1];
 		std::vector<bslib::file::VirtualFile> files;
 		if (!pathIdMatch.matched)
@@ -503,13 +506,21 @@ HttpServer::HttpServer(
 		return HttpJsonResponse(200, "OK", result);
 	});
 
-	_simpleServer.resource["^/api/files/browse/([0-9,]*)/descendantmatches"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
+	_simpleServer.resource["^/api/files/browse/([0-9,]*)/descendantmatches.*"]["GET"] = JsonHandler([&](const HttpJsonRequest& request) {
 		const auto paging = GetPagingParameters(request);
+		boost::optional<boost::posix_time::ptime> at;
+		const auto queryParameters = request.GetQueryParameters();
+		{
+			auto it = queryParameters.find("at");
+			if (it != queryParameters.end())
+			{
+				at = bslib::FromIso8601Utc(it->second);
+			}
+		}
 		const auto pathIdsMatch = request.originalRequest.path_match[1];
 		const auto pathIds = ParseCommaList<int64_t, std::unordered_set<int64_t>>(pathIdsMatch.str());
 		auto uow = _backup.CreateUnitOfWork();
-		const auto browser = uow->CreateVirtualFileBrowser();
-
+		const auto browser = uow->CreateVirtualFileBrowser(at);
 		const auto counts = browser->CountNestedMatches(pathIds);
 		nlohmann::json countsResult = nlohmann::json::array();
 		for (const auto& kv : counts)
