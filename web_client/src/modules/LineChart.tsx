@@ -1,10 +1,16 @@
-import React, {Component} from 'react';
-import ReactDOM from 'react-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 
-import Chart from 'chart.js';
+import * as ChartJs from 'chart.js';
 
-export default class LineChart extends Component {
-  constructor(props) {
+interface LineChartState {
+  data: ChartJs.ChartData;
+  chart?: any;
+  options: any;
+}
+
+export default class LineChart extends React.Component<any, LineChartState> {
+  constructor(props: any) {
     super(props);
     this.state = {
       data: {
@@ -41,11 +47,13 @@ export default class LineChart extends Component {
   }
 
   initializeChart = () => {
-    var chart = ReactDOM.findDOMNode(this);
-    this.state.chart = new Chart(chart, {
-      type: 'line',
-      data: this.state.data,
-      options: this.state.options,
+    var chartNode = ReactDOM.findDOMNode(this) as HTMLCanvasElement;
+    this.setState({
+      chart: new ChartJs(chartNode, {
+        type: 'line',
+        data: this.state.data,
+        options: this.state.options,
+      })
     });
   };
 

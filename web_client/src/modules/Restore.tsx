@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import * as React from 'react';
 
 import FlatButton from 'material-ui/FlatButton';
 import {List, ListItem} from 'material-ui/List';
@@ -11,7 +11,7 @@ import FileFolder from 'material-ui/svg-icons/file/folder';
 import MailOutline from 'material-ui/svg-icons/communication/mail-outline'
 import ArrowBack from 'material-ui/svg-icons/navigation/arrow-back'
 
-export default class Restore extends Component {
+export default class Restore extends React.Component<any, any> {
   constructor() {
     super();
     this.state = {
@@ -40,7 +40,7 @@ export default class Restore extends Component {
             </ToolbarGroup>
           </Toolbar>
           <List>
-            {this.state.folders.map(function (folder) {
+            {this.state.folders.map(function (folder: any) {
               return <ListItem
                 key={folder.name}
                 primaryText={folder.name}
@@ -48,7 +48,7 @@ export default class Restore extends Component {
                 rightIcon={<FileDownload/>}
               />;
             })}
-            {this.state.files.map(function (file) {
+            {this.state.files.map(function (file: any) {
               return <ListItem
                 key={file.name}
                 primaryText={file.name}

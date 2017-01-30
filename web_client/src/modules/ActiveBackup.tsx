@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import * as React from 'react';
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
 
@@ -12,8 +12,14 @@ const timeOptions = {
   day: "numeric", hour: "2-digit", minute: "2-digit"
 };
 
-export default class ActiveBackup extends Component {
-  constructor(props) {
+interface ActiveBackupState {
+  expanded: boolean;
+  files: string[];
+  startDate: Date;
+}
+
+export default class ActiveBackup extends React.Component<any, ActiveBackupState> {
+  constructor(props: any) {
     super(props);
     this.state = {
       expanded: false,
