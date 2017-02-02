@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
+const path = require('path');
 
 function isExternal(module) {
   var userRequest = module.userRequest;
@@ -16,8 +17,9 @@ module.exports = {
         "app": "./src/index.tsx"
     },
     output: {
-        filename: "app.js",
-        path: __dirname + "/dist"
+        filename: "[name].bundle.js",
+        sourceMapFilename: "[name].bundle.map",
+        path: path.resolve(__dirname, "./dist")
     },
     // Enable sourcemaps for debugging webpack's output.
     devtool: "source-map",
@@ -25,22 +27,26 @@ module.exports = {
         // Allow inline refreshing on changes
         inline: true,
         port: 3000,
-        contentBase: __dirname + "/dist"
+        contentBase: path.resolve(__dirname, "./dist")
     },
     resolve: {
-        // Add '.ts' and '.tsx' as resolvable extensions.
-        extensions: ["", ".webpack.js", ".web.js", ".ts", ".tsx", ".js"]
+        extensions: [".ts", ".tsx", ".js", ".jsx"]
     },
     module: {
-        loaders: [
-            // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
-            { test: /\.tsx?$/, loader: "awesome-typescript-loader" },
-            // Allow embedded CSS per https://webpack.github.io/docs/stylesheets.html
-            { test: /\.css$/, loader: "style-loader!css-loader" }
-        ],
-        preLoaders: [
-            // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
-            { test: /\.js$/, loader: "source-map-loader" }
+        rules: [
+            {
+                enforce: 'pre',
+                test: /\.js$/,
+                use: "source-map-loader"
+            },
+            {
+                test: /\.tsx?$/,
+                use: "awesome-typescript-loader",
+            },
+            {
+                test: /\.css$/,
+                use: ["style-loader", "css-loader"]
+            }
         ]
     },
     plugins: [
