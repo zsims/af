@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import * as React from 'react';
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
 
@@ -8,8 +8,8 @@ import NavigationExpandLess from 'material-ui/svg-icons/navigation/expand-less';
 
 import LineChart from './LineChart';
 
-export default class StorageStatistics extends Component {
-  constructor(props) {
+export default class StorageStatistics extends React.Component<any, any> {
+  constructor(props: any) {
     super(props);
     this.state = {
       expanded: false,

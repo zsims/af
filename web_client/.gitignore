@@ -5,9 +5,10 @@ node_modules
 
 # testing
 coverage
+test_results.xml
 
 # production
-build
+dist
 
 # misc
 .DS_Store

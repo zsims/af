@@ -3,20 +3,47 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "react-scripts": "^0.6.1"
+    "@types/chai": "^3.4.34",
+    "@types/enzyme": "^2.7.2",
+    "@types/mocha": "^2.2.38",
+    "@types/react-addons-test-utils": "^0.14.17",
+    "@types/sinon": "^1.16.34",
+    "awesome-typescript-loader": "^3.0.0-beta.18",
+    "chai": "^3.5.0",
+    "css-loader": "^0.26.1",
+    "enzyme": "^2.7.1",
+    "html-webpack-plugin": "^2.28.0",
+    "ignore-styles": "^5.0.1",
+    "mocha": "^3.2.0",
+    "react-addons-test-utils": "^15.4.2",
+    "sinon": "^1.17.7",
+    "source-map-loader": "^0.1.6",
+    "style-loader": "^0.13.1",
+    "ts-loader": "^2.0.0",
+    "ts-node": "^2.0.0",
+    "typescript": "^2.1.5",
+    "webpack": "^2.2.1",
+    "webpack-dev-server": "^2.2.1"
   },
   "dependencies": {
+    "@types/chart.js": "^0.0.12",
+    "@types/material-ui": "^0.16.48",
+    "@types/react": "^15.0.4",
+    "@types/react-dom": "^0.14.21",
+    "@types/react-router": "^3.0.0",
+    "@types/react-tap-event-plugin": "0.0.30",
     "chart.js": "^2.4.0",
     "material-ui": "^0.16.7",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "react-router": "^3.0.1",
-    "react-tap-event-plugin": "^2.0.0"
+    "react-tap-event-plugin": "^2.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "start": "webpack-dev-server",
+    "build": "webpack",
+    "test": "mocha --opts mocha.opts",
+    "test:xunit": "mocha --opts mocha.opts --reporter XUnit --reporter-options output=test_results.xml",
+    "test:watch": "mocha --opts mocha.opts --watch"
   }
 }

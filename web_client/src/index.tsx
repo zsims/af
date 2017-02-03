@@ -1,17 +1,19 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 
 import App from './App';
 import SystemLogs from './modules/SystemLogs';
 import Restore from './modules/Restore';
 import Settings from './modules/Settings';
 import Summary from './modules/Summary';
+import * as injectTapEventPlugin from 'react-tap-event-plugin';
 
 import './index.css';
 
 import {Router, Route, hashHistory, IndexRoute} from 'react-router';
 
-import injectTapEventPlugin from 'react-tap-event-plugin';
+// Needed for onTouchTap
+// http://www.material-ui.com/#/get-started/installation
 injectTapEventPlugin();
 
 ReactDOM.render((

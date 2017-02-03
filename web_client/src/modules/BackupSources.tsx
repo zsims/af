@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import * as React from 'react';
 
 import FlatButton from 'material-ui/FlatButton';
 import {List, ListItem} from 'material-ui/List';
@@ -6,12 +6,21 @@ import {List, ListItem} from 'material-ui/List';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import FileFolder from 'material-ui/svg-icons/file/folder';
 
-function createSource(path) {
+interface Source {
+  name: string;
+  path: string;
+}
+
+function createSource(path: string): Source {
   return {name: path.substr(path.lastIndexOf("\\") + 1), path: path}
 }
 
-export default class BackupSources extends Component {
-  constructor(props) {
+interface BackupSourcesState {
+  sources: Source[];
+}
+
+export default class BackupSources extends React.Component<any, BackupSourcesState> {
+  constructor(props: any) {
     super(props);
     this.state = {
       sources: [createSource("C:\\User\\zsims\\Documents"), createSource("U:\\Movies")],

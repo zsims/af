@@ -1,5 +1,6 @@
-import React, {Component} from 'react';
+import * as React from 'react';
 import './App.css';
+import * as MaterialUI from "material-ui";
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -26,8 +27,11 @@ const style = {
   }
 };
 
+interface AppState {
+  value: string;
+}
 
-export default class App extends Component {
+export default class App extends React.Component<any, AppState> {
   static contextTypes = {
     router: React.PropTypes.object
   };
@@ -36,7 +40,7 @@ export default class App extends Component {
     value: "/"
   };
 
-  navigateTo = (event, value) => {
+  navigateTo = (event: MaterialUI.TouchTapEvent, value: any) => {
     this.setState({value: value});
     this.context.router.push(value);
   };
