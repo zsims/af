@@ -21,6 +21,8 @@ typedef std::function<void(std::shared_ptr<SimpleServer::Response>, std::shared_
 
 namespace {
 
+const std::string ALLOWED_CORS_ORIGIN = "http://localhost:3000";
+
 struct HttpJsonRequest
 {
 	HttpJsonRequest(const SimpleServer::Request& originalRequest, const network::uri& requestUri)
@@ -105,6 +107,7 @@ void SendJsonResponse(const HttpJsonResponse& jsonResponse, std::shared_ptr<Simp
 		content = jsonResponse.content.dump(1);
 	}
 	*response << "HTTP/1.1 " << jsonResponse.statusCode << " " << jsonResponse.statusDescription << "\r\n";
+	*response << "Access-Control-Allow-Origin: " << ALLOWED_CORS_ORIGIN << "\r\n";
 	if (!content.empty())
 	{
 		*response << "Content-Length: " << content.length() << "\r\n";
@@ -303,6 +306,14 @@ HttpServer::HttpServer(
 {
 	_simpleServer.config.address = "127.0.0.1";
 	_simpleServer.config.reuse_address = true;
+
+	_simpleServer.default_resource["OPTIONS"] = [&](std::shared_ptr<SimpleServer::Response> response, std::shared_ptr<SimpleServer::Request> request) {
+		*response << "HTTP/1.1 200 OK\r\n" <<
+			"Access-Control-Allow-Origin: " << ALLOWED_CORS_ORIGIN << "\r\n" <<
+			"Access-Control-Allow-Methods: *\r\n" <<
+			"Access-Control-Allow-Headers: Content-Type, Accept\r\n" <<
+			"Access-Control-Max-Age: 86400\r\n\r\n";
+	};
 
 	_simpleServer.default_resource["GET"] = [&](std::shared_ptr<SimpleServer::Response> response, std::shared_ptr<SimpleServer::Request> request) {
 		*response << "HTTP/1.1 404 Not Found\r\n\r\n";
