@@ -1,21 +1,25 @@
 import * as React from 'react';
+import {observer, inject} from 'mobx-react';
 
 import FlatButton from 'material-ui/FlatButton';
 import {List, ListItem} from 'material-ui/List';
 
 import ContentAdd from 'material-ui/svg-icons/content/add';
-import NotificationDriveEta from 'material-ui/svg-icons/notification/drive-eta';
+import ContentArchive from 'material-ui/svg-icons/content/archive';
+import DestinationStore from '../stores/DestinationStore';
 
-interface BackupDestinationsState {
-  sources: {name: string, path: string}[];
+interface BackupDestinationsProps {
+  destinationStore: DestinationStore;
 }
 
-export default class BackupDestinations extends React.Component<any, BackupDestinationsState> {
-  constructor(props:any ) {
+@observer
+export default class BackupDestinations extends React.Component<BackupDestinationsProps, any> {
+  constructor(props: any) {
     super(props);
-    this.state = {
-      sources: [{name: "Local Folder", path: "B:\\Backup"}],
-    };
+  }
+
+  addDestination() {
+    this.props.destinationStore.createDestination('HI', {});
   }
 
   render() {
@@ -23,16 +27,16 @@ export default class BackupDestinations extends React.Component<any, BackupDesti
       <div>
         <h3>Backup destinations</h3>
         <List>
-          {this.state.sources.map(function (source) {
+          {this.props.destinationStore.destinations.map(function (destination) {
             return <ListItem
-              key={source.path}
-              primaryText={source.name}
-              secondaryText={source.path}
-              leftIcon={<NotificationDriveEta/>}
+              key={destination.id}
+              primaryText={destination.name}
+              secondaryText={destination.settings.path}
+              leftIcon={<ContentArchive/>}
             />;
           })}
         </List>
-        <FlatButton label="Add destination" icon={<ContentAdd/>}/>
+        <FlatButton label="Add destination" icon={<ContentAdd/>} onTouchTap={() => this.addDestination()}/>
       </div>
     );
   }

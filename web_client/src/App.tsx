@@ -2,6 +2,9 @@ import * as React from 'react';
 import './App.css';
 import * as MaterialUI from "material-ui";
 
+import DevTools from 'mobx-react-devtools';
+import DestinationStore from './stores/DestinationStore';
+
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import AppBar from 'material-ui/AppBar';
@@ -60,6 +63,7 @@ export default class App extends React.Component<any, AppState> {
           <div style={{marginLeft: "250px"}}>
           {this.props.children}
           </div>
+          <DevTools />
         </div>
       </MuiThemeProvider>
     );
