@@ -2,10 +2,10 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
 import App from './App';
-import SystemLogs from './modules/SystemLogs';
-import Restore from './modules/Restore';
-import Settings from './modules/Settings';
-import Summary from './modules/Summary';
+import SystemLogs from './components/SystemLogs';
+import Restore from './components/Restore';
+import Settings from './components/Settings';
+import Summary from './components/Summary';
 import * as injectTapEventPlugin from 'react-tap-event-plugin';
 
 import './index.css';
