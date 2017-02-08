@@ -7,6 +7,7 @@ import SystemLogs from './components/SystemLogs';
 import Restore from './components/Restore';
 import Settings from './components/Settings';
 import Summary from './components/Summary';
+import AddBackupDestination from './components/AddBackupDestination';
 import * as injectTapEventPlugin from 'react-tap-event-plugin';
 
 import DestinationStore from './stores/DestinationStore';
@@ -30,6 +31,7 @@ ReactDOM.render((
           <IndexRoute component={Summary}/>
           <Route path="/restore" component={Restore}/>
           <Route path="/settings" component={Settings}/>
+          <Route path="/settings/adddestination" component={AddBackupDestination}/>
           <Route path="/systemlogs" component={SystemLogs}/>
         </Route>
       </Router>

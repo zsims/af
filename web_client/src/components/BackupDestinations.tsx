@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {observer, inject} from 'mobx-react';
+import {Link} from 'react-router';
 
 import FlatButton from 'material-ui/FlatButton';
 import {List, ListItem} from 'material-ui/List';
@@ -18,10 +19,6 @@ export default class BackupDestinations extends React.Component<BackupDestinatio
     super(props);
   }
 
-  addDestination() {
-    this.props.destinationStore.createDestination('HI', {});
-  }
-
   render() {
     return (
       <div>
@@ -31,12 +28,12 @@ export default class BackupDestinations extends React.Component<BackupDestinatio
             return <ListItem
               key={destination.id}
               primaryText={destination.name}
-              secondaryText={destination.settings.path}
+              secondaryText={destination.summary}
               leftIcon={<ContentArchive/>}
             />;
           })}
         </List>
-        <FlatButton label="Add destination" icon={<ContentAdd/>} onTouchTap={() => this.addDestination()}/>
+        <FlatButton label="Add destination" icon={<ContentAdd/>} containerElement={<Link to="/settings/adddestination" />} linkButton={true} />
       </div>
     );
   }
