@@ -3,36 +3,28 @@ import {observer, inject} from 'mobx-react';
 
 import FlatButton from 'material-ui/FlatButton';
 import RaisedButton from 'material-ui/RaisedButton';
-import {List, ListItem, makeSelectable} from 'material-ui/List';
+import {List, ListItem} from 'material-ui/List';
 import TextField from 'material-ui/TextField';
 import FileFolder from 'material-ui/svg-icons/file/folder-open';
 import Lens from 'material-ui/svg-icons/image/lens';
 import {Step, Stepper, StepLabel} from 'material-ui/Stepper';
 
 import {
-  IDestinationModel,
-  NullDestinationModel,
-  DirectoryDestinationModel,
+  DestinationModel,
+  DestinationType,
+  DestinationSettings,
   TYPE_NULL,
   TYPE_DIRECTORY} from '../models/DestinationModel';
 import DestinationStore from '../stores/DestinationStore';
 
-class NullSettings extends React.Component<{
-  destinationUpdated: (destination: IDestinationModel) => void;
-}, any> {
-  constructor(props: any) {
-    super(props);
-    props.destinationUpdated(new NullDestinationModel());
-  }
-
+class NullSettings extends React.Component<any, any> {
   render() {
     return <i>Nothing to configure</i>;
   }
 }
 
-class DirectorySettings extends React.Component<{
-  destination: DirectoryDestinationModel,
-  destinationUpdated: (destination: IDestinationModel) => void;
+export class DirectorySettings extends React.Component<{
+  destinationSettingsUpdated: (destinationSettings: DestinationSettings) => void;
 }, {path: string, pathError: string}> {
   constructor(props: any) {
     super(props);
@@ -52,17 +44,16 @@ class DirectorySettings extends React.Component<{
         pathError: 'Full Path is Required',
         path: value
       });
-      this.props.destinationUpdated(null);
-      return;
+      this.props.destinationSettingsUpdated(null);
     }
     else {
       this.setState({
         pathError: '',
         path: value
       });
-      var destination = new DirectoryDestinationModel();
-      destination.settings.path = value;
-      this.props.destinationUpdated(destination);
+      this.props.destinationSettingsUpdated({
+        path: value
+      });
     }
   }
 
@@ -78,30 +69,30 @@ class DirectorySettings extends React.Component<{
   }
 }
 
-interface AddBackupDestinationState {
+export interface IAddBackupDestinationState {
     stepIndex: number;
-    destinationType: string;
-    destination?: IDestinationModel
+    destinationType: DestinationType;
+    destinationSettings: DestinationSettings;
 }
 
-interface AddBackupDestinationProps {
+export interface IAddBackupDestinationProps {
     destinationStore: DestinationStore;
     router: any;
 }
 
-@inject('destinationStore') @observer
-export default class AddBackupDestination extends React.Component<AddBackupDestinationProps, AddBackupDestinationState> {
+@observer
+export class AddBackupDestination extends React.Component<IAddBackupDestinationProps, IAddBackupDestinationState> {
   constructor(props: any) {
     super(props);
     this.state = {
       stepIndex: 0,
       destinationType: TYPE_DIRECTORY,
-      destination: null
+      destinationSettings: null
     }
   }
 
   handleCreate = () => {
-      this.props.destinationStore.createDestination(this.state.destination);
+      this.props.destinationStore.createDestination(this.state.destinationType, this.state.destinationSettings);
       this.props.router.push('/settings');
   };
 
@@ -113,31 +104,33 @@ export default class AddBackupDestination extends React.Component<AddBackupDesti
   };
 
   handleSelectDirectoryType = () => {
-      const {stepIndex} = this.state;
       this.setState({
-        stepIndex: stepIndex + 1,
-        destination: null,
+        stepIndex: this.state.stepIndex + 1,
         destinationType: TYPE_DIRECTORY,
+        destinationSettings: null
       });
   };
 
   handleSelectNullType = () => {
-      const {stepIndex} = this.state;
       this.setState({
-        stepIndex: stepIndex + 1,
-        destination: null,
-        destinationType: TYPE_NULL
+        stepIndex: this.state.stepIndex + 1,
+        destinationType: TYPE_NULL,
+        destinationSettings: {}
       });
   }
 
-  onDestinationUpdated = (destination: IDestinationModel) => {
+  onDestinationSettingsUpdated = (destinationSettings: DestinationSettings) => {
     this.setState({
-      destination: destination
+      destinationSettings: destinationSettings
     });
   };
 
   canCreate() {
-    return this.state.stepIndex === 1 && this.state.destination !== null;
+    return this.state.stepIndex === 1 && this.state.destinationSettings !== null;
+  }
+
+  canGoBack() {
+    return this.state.stepIndex > 0;
   }
 
   renderDestinationType() {
@@ -160,10 +153,10 @@ export default class AddBackupDestination extends React.Component<AddBackupDesti
       case 1:
         switch(this.state.destinationType) {
           case TYPE_NULL:
-            return <NullSettings destinationUpdated={this.onDestinationUpdated} />
+            return <NullSettings />
           case TYPE_DIRECTORY:
           default:
-            return <DirectorySettings destination={new DirectoryDestinationModel()} destinationUpdated={this.onDestinationUpdated} />
+            return <DirectorySettings destinationSettingsUpdated={this.onDestinationSettingsUpdated} />
         }
       case 0:
       default:
@@ -189,7 +182,7 @@ export default class AddBackupDestination extends React.Component<AddBackupDesti
             <div style={{ marginTop: 12 }}>
               <FlatButton
                 label="Back"
-                disabled={stepIndex === 0}
+                disabled={!this.canGoBack()}
                 onTouchTap={this.handlePrev}
                 style={{ marginRight: 12 }} />
                 <FlatButton

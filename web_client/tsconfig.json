@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "outDir": "./obj",
         "sourceMap": true,
         "noImplicitAny": true,
         "allowJs": true,

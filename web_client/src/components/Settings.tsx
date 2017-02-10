@@ -5,12 +5,13 @@ import Divider from 'material-ui/Divider';
 
 import BackupSources from './BackupSources';
 import BackupDestinations from './BackupDestinations';
+import DestinationStore from '../stores/DestinationStore';
 
 interface ISettingsProps {
-  destinationStore: any;
+  destinationStore: DestinationStore;
 }
 
-@inject('destinationStore') @observer
+@observer
 export default class Settings extends React.Component<ISettingsProps, any> {
   render() {
     return (

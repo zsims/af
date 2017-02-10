@@ -1,8 +1,14 @@
 import { observable, reaction } from 'mobx';
-import {IDestinationModel, NullDestinationModel, DirectoryDestinationModel} from '../models/DestinationModel';
+import {
+    DestinationType,
+    DestinationModel,
+    DestinationSettings,
+    TYPE_NULL,
+    TYPE_DIRECTORY
+} from '../models/DestinationModel';
 
 export default class DestinationStore {
-    @observable destinations: IDestinationModel[] = [];
+    @observable destinations: DestinationModel[] = [];
 
     constructor() {
         this.loadDestinations();
@@ -12,15 +18,15 @@ export default class DestinationStore {
      * Loads all destinations from the server
      */
     loadDestinations() {
-        this.createDestination(new NullDestinationModel());
-        this.createDestination(new DirectoryDestinationModel());
+        this.createDestination(TYPE_DIRECTORY, {
+            path: "C:\\example"
+        });
     }
 
     /**
      *  Creates a new destination
      */
-    createDestination(destination: IDestinationModel) {
-        destination.id = Math.random();
-        this.destinations.push(destination);
+    createDestination(type: DestinationType, settings: DestinationSettings) {
+        this.destinations.push(new DestinationModel(Math.random(), type, settings));
     }
 }
