@@ -1,4 +1,0 @@
---compilers ts:ts-node/register,tsx:ts-node/register
---require ignore-styles
---recursive
-src/**/*.spec.tsx
