@@ -6,6 +6,7 @@ node_modules
 # testing
 coverage
 test_results.xml
+.tmp
 
 # production
 dist

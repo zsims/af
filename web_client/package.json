@@ -13,17 +13,20 @@
     "css-loader": "^0.26.1",
     "enzyme": "^2.7.1",
     "html-webpack-plugin": "^2.28.0",
-    "ignore-styles": "^5.0.1",
+    "ignore-loader": "^0.1.2",
+    "jsdom": "^9.10.0",
     "mocha": "^3.2.0",
+    "mocha-webpack": "^0.7.0",
     "react-addons-test-utils": "^15.4.2",
+    "rimraf": "^2.5.4",
     "sinon": "^1.17.7",
     "source-map-loader": "^0.1.6",
+    "source-map-support": "^0.4.11",
     "style-loader": "^0.13.1",
-    "ts-loader": "^2.0.0",
-    "ts-node": "^2.0.0",
     "typescript": "^2.1.5",
     "webpack": "^2.2.1",
-    "webpack-dev-server": "^2.2.1"
+    "webpack-dev-server": "^2.2.1",
+    "webpack-node-externals": "^1.5.4"
   },
   "dependencies": {
     "@types/chart.js": "^0.0.12",
@@ -34,6 +37,9 @@
     "@types/react-tap-event-plugin": "0.0.30",
     "chart.js": "^2.4.0",
     "material-ui": "^0.16.7",
+    "mobx": "^3.1.0",
+    "mobx-react": "^4.1.0",
+    "mobx-react-devtools": "^4.2.11",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "react-router": "^3.0.1",
@@ -42,8 +48,8 @@
   "scripts": {
     "start": "webpack-dev-server",
     "build": "webpack",
-    "test": "mocha --opts mocha.opts",
-    "test:xunit": "mocha --opts mocha.opts --reporter XUnit --reporter-options output=test_results.xml",
-    "test:watch": "mocha --opts mocha.opts --watch"
+    "test": "mocha-webpack --opts mocha-webpack.opts --colors",
+    "test:xunit": "mocha-webpack --opts mocha-webpack.opts --reporter XUnit --reporter-options output=test_results.xml",
+    "test:watch": "mocha-webpack --opts mocha-webpack.opts --watch"
   }
 }

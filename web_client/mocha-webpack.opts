@@ -1,0 +1,5 @@
+--webpack-config webpack.test.config.js
+--require source-map-support/register
+--require setup-tests.js
+--timeout 10000
+src/**/*.spec.tsx
